@@ -82,7 +82,7 @@ Task: Assist with fusion and NFT analysis in character. Stay concise.`;
             const { done, value } = await reader.read();
             if (done) break;
 
-            buffer += decoder.decode(value, { stream: true });
+            buffer += decoder.decode(value);
             const lines = buffer.split('\n');
             buffer = lines.pop() || '';
 
