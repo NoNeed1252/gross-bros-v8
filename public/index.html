@@ -10,38 +10,45 @@
   <style>
     :root { --cyan: #00ffc8; --bg: #000; --panel: #06110f; --line: rgba(0,255,200,.18); }
     * { box-sizing: border-box; }
-    html, 
+    html, body { 
+      margin: 0; padding: 0; background: var(--bg); color: var(--cyan);
+      font-family: 'Share Tech Mono', monospace; height: 100%; width: 100%;
+    }
+    a { color: inherit; }
+
+    /* CRT Overlays - Ensure pointer-events: none is on both */
     body::before {
       content: " ";
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
       background-size: 100% 2px, 3px 100%;
       pointer-events: none;
-      z-index: 1;
-      opacity: 0.15;
+      z-index: 100;
+      opacity: 0.12;
     }
-    body { height: 100%; }
-    body {
-      margin: 0; background: var(--bg); color: var(--cyan);
-      font-family: 'Share Tech Mono', monospace;
+    .crt-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 2px, 3px 100%;
+      pointer-events: none;
+      z-index: 101;
+      opacity: 0.08;
     }
-    a { color: inherit; }
-    .shell { z-index: 5; 
+
+    .shell { 
+      position: relative;
+      z-index: 10; /* Above backgrounds, below overlays */
       max-width: 1480px; min-height: calc(100vh - 24px); margin: 12px auto;
       border: 24px solid #1f1f1f; border-radius: 24px; overflow: hidden;
       background: #050505; box-shadow: 0 30px 70px -20px rgba(0,0,0,.95), 0 0 100px -20px var(--cyan);
       display: flex; flex-direction: column;
-      position: relative;
     }
     @media (max-width: 640px) {
       .shell { margin: 8px auto; min-height: calc(100vh - 16px); border-width: 0; }
     }
-    .topbar, .bottombar {
-      background: #0a0a0a; border-color: var(--line);
+    .topbar {
+      background: #0a0a0a; border-bottom: 1px solid var(--line);
       display: flex; align-items: center; justify-content: space-between; gap: 14px;
       padding: 14px 18px; flex-wrap: wrap;
     }
@@ -125,154 +132,71 @@
     .nft-art::after {
       content: 'FUSION PORTAL LIVE';
       position: absolute;
-      left: 16px;
-      right: 16px;
-      bottom: 14px;
-      padding: 8px 10px;
-      border-radius: 999px;
+      left: 16px; right: 16px; bottom: 14px;
+      padding: 8px 10px; border-radius: 999px;
       border: 1px solid rgba(0,255,200,.2);
-      background: rgba(0,0,0,.6);
+      background: rgba(0,0,0,0.6);
       color: rgba(0,255,200,.85);
       font-family: 'Orbitron', sans-serif;
-      font-size: 11px;
-      letter-spacing: .28em;
-      text-align: center;
+      font-size: 11px; letter-spacing: .28em; text-align: center;
     }
     .nft-meta {
-      display: grid;
-      gap: 12px;
-      max-width: 62ch;
-      align-content: start;
-      justify-items: center;
+      display: grid; gap: 12px; max-width: 62ch;
+      align-content: start; justify-items: center;
     }
-    .nft-subtitle {
-      margin: 0;
-      color: #ddfff9;
-      opacity: .82;
-      line-height: 1.9;
-      text-align: center;
-    }
+    .nft-subtitle { margin: 0; color: #ddfff9; opacity: .82; line-height: 1.9; text-align: center; }
     .buy-btn {
-      display: inline-block;
-      padding: 14px 28px;
-      background: #000;
-      color: #00ffc8;
-      border: 2px solid #00ffc8;
-      border-radius: 12px;
-      font-family: 'Orbitron', sans-serif;
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: uppercase;
-      text-decoration: none;
-      letter-spacing: 1.5px;
+      display: inline-block; padding: 14px 28px; background: #000; color: #00ffc8;
+      border: 2px solid #00ffc8; border-radius: 12px;
+      font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700;
+      text-transform: uppercase; text-decoration: none; letter-spacing: 1.5px;
       transition: all 0.3s ease;
       box-shadow: 0 0 12px rgba(0, 255, 200, 0.35), inset 0 0 12px rgba(0, 255, 200, 0.05);
       cursor: pointer;
     }
     .buy-btn:hover {
-      background: #00ffc8;
-      color: #000;
+      background: #00ffc8; color: #000;
       box-shadow: 0 0 20px rgba(0, 255, 200, 0.6), inset 0 0 20px rgba(0, 255, 200, 0.2);
     }
     .chat-log {
       height: 360px; overflow: auto; border: 1px solid rgba(0,255,200,.12); border-radius: 22px;
       background: rgba(0,0,0,.3); padding: 12px; display: flex; flex-direction: column; gap: 10px;
     }
-    .chat-terminal {
-      display: grid;
-      gap: 12px;
-    }
+    .chat-terminal { display: grid; gap: 12px; }
     .held-nft-panel {
-      border: 1px solid rgba(0, 255, 200, 0.16);
-      border-radius: 22px;
-      background: rgba(0, 0, 0, 0.45);
-      padding: 16px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      border: 1px solid rgba(0, 255, 200, 0.16); border-radius: 22px;
+      background: rgba(0, 0, 0, 0.45); padding: 16px; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 16px;
     }
     .held-nft-image-wrapper {
-      width: 80px;
-      height: 80px;
-      border: 1px solid rgba(0, 255, 200, 0.25);
-      border-radius: 14px;
-      overflow: hidden;
+      width: 80px; height: 80px; border: 1px solid rgba(0, 255, 200, 0.25);
+      border-radius: 14px; overflow: hidden;
     }
-    .held-nft-image-wrapper img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .held-nft-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .held-nft-name {
-      font-family: 'Orbitron', sans-serif;
-      font-weight: bold;
-      color: #f1fffd;
-    }
+    .held-nft-image-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+    .held-nft-info { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .held-nft-name { font-family: 'Orbitron', sans-serif; font-weight: bold; color: #f1fffd; }
     .chat-terminal-actions {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto auto;
-      gap: 10px;
-      align-items: stretch;
-      margin-top: 24px;
+      display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 10px; align-items: stretch; margin-top: 24px;
     }
     @media (max-width: 720px) {
       .chat-terminal-actions { grid-template-columns: 1fr; }
     }
     .fuse-button-box {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 18px;
-      border: 1px solid rgba(0,255,200,.22);
-      background: rgba(0,0,0,.35);
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      border-radius: 18px; border: 1px solid rgba(0,255,200,.22); background: rgba(0,0,0,.35);
     }
-    .fuse-price {
-      display: grid;
-      gap: 2px;
-    }
-    .fuse-price strong {
-      font-family: 'Orbitron', sans-serif;
-      color: #f1fffd;
-      font-size: 14px;
-    }
-    .nft-selection-section {
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid rgba(0,255,200,.12);
-    }
-    .nft-selection-track {
-      display: flex;
-      gap: 12px;
-      overflow-x: auto;
-      padding-bottom: 6px;
-    }
+    .fuse-price { display: grid; gap: 2px; }
+    .fuse-price strong { font-family: 'Orbitron', sans-serif; color: #f1fffd; font-size: 14px; }
+    .nft-selection-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(0,255,200,.12); }
+    .nft-selection-track { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; }
     .nft-select-card {
-      flex: 0 0 200px;
-      padding: 12px;
-      border-radius: 18px;
-      border: 1px solid rgba(0,255,200,.15);
-      background: rgba(0,0,0,.35);
-      color: inherit;
-      cursor: pointer;
+      flex: 0 0 200px; padding: 12px; border-radius: 18px;
+      border: 1px solid rgba(0,255,200,.15); background: rgba(0,0,0,.35);
+      color: inherit; cursor: pointer;
     }
-    .nft-select-card.active {
-      border-color: var(--cyan);
-    }
-    .nft-select-card img {
-      width: 100%;
-      aspect-ratio: 1/1;
-      object-fit: cover;
-      border-radius: 12px;
-      margin-bottom: 8px;
-    }
+    .nft-select-card.active { border-color: var(--cyan); }
+    .nft-select-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 12px; margin-bottom: 8px; }
     .bubble.user { background: rgba(0,255,200,.12); padding: 12px; border-radius: 18px; }
     .bubble.system { background: rgba(124,58,237,.12); padding: 12px; border-radius: 18px; }
     .row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -280,55 +204,21 @@
       padding: 14px 16px; border-radius: 18px; border: 1px solid rgba(0,255,200,.22);
       background: rgba(0,0,0,.5); color: #f1fffd; font: inherit; outline: none;
     }
-    .fuse-panel {
-      display: grid;
-      gap: 14px;
-      background: linear-gradient(180deg, rgba(7,18,17,.98), rgba(2,8,8,.98));
-    }
-    .fuse-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .fuse-badge {
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--cyan);
-      font-size: 10px;
-    }
-    .fuse-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 14px;
-    }
+    .fuse-panel { display: grid; gap: 14px; background: linear-gradient(180deg, rgba(7,18,17,.98), rgba(2,8,8,.98)); }
+    .fuse-head { display: flex; align-items: center; justify-content: space-between; }
+    .fuse-badge { padding: 8px 12px; border-radius: 999px; border: 1px solid var(--cyan); font-size: 10px; }
+    .fuse-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
     .fuse-readout {
-      padding: 16px;
-      border-radius: 18px;
-      border: 1px solid rgba(0,255,200,.12);
-      background: rgba(0,0,0,.35);
-      display: grid;
+      padding: 16px; border-radius: 18px; border: 1px solid rgba(0,255,200,.12);
+      background: rgba(0,0,0,.35); display: grid;
     }
-    .fuse-readout strong {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 18px;
-      color: #f1fffd;
-    }
+    .fuse-readout strong { font-family: 'Orbitron', sans-serif; font-size: 18px; color: #f1fffd; }
     .leaderboard { display: grid; gap: 10px; }
     .leader-row {
       display: grid; grid-template-columns: 72px 1.5fr 100px 120px 120px; gap: 10px; align-items: center;
       padding: 14px 16px; border-bottom: 1px solid rgba(0,255,200,.08);
     }
     .muted { color: rgba(0,255,200,.6); }
-
-    /* CRT Overlay Fixes */
-    .crt-overlay {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-      background-size: 100% 2px, 3px 100%;
-      pointer-events: none;
-      z-index: 10;
-      opacity: 0.15;
-    }
 
     /* Xaman QR Overlay */
     #qr-overlay {
@@ -344,6 +234,8 @@
   </style>
 </head>
 <body>
+  <div class="crt-overlay"></div>
+  
   <div id="qr-overlay" onclick="this.style.display='none'">
     <div class="qr-container">
       <img id="qr-image" src="" alt="Scan with Xaman">
@@ -353,7 +245,6 @@
   </div>
 
   <div class='shell'>
-    <div class="crt-overlay"></div>
     <header class='topbar'>
       <div class='brand'>
         <div class='dot'></div>
@@ -362,7 +253,7 @@
           <div class='subtitle'>Neural CRT relay // terminal interface</div>
         </div>
       </div>
-      <button id='wallet-btn' class='wallet-btn' id="wallet-connect-trigger">CONNECT XAMAN</button>
+      <button id='wallet-btn' class='wallet-btn' onclick="connectXaman()">CONNECT XAMAN</button>
       <div id='xaman-status' class='status'>Wallet disconnected.</div>
     </header>
 
@@ -371,11 +262,11 @@
     </div>
 
     <nav class='tabs'>
-      <div class='tab active' data-tab='0' data-tab-link="0">CONSOLE</div>
-      <div class='tab' data-tab='1' data-tab-link="1">STORYLINE</div>
-      <div class='tab' data-tab='2' data-tab-link="2">FUSION LAB</div>
-      <div class='tab' data-tab='3' data-tab-link="3">LEADERBOARD</div>
-      <div class='tab' data-tab='4' data-tab-link="4">SOCIALS</div>
+      <div class='tab active' onclick="switchTab(0)">CONSOLE</div>
+      <div class='tab' onclick="switchTab(1)">STORYLINE</div>
+      <div class='tab' onclick="switchTab(2)">FUSION LAB</div>
+      <div class='tab' onclick="switchTab(3)">LEADERBOARD</div>
+      <div class='tab' onclick="switchTab(4)">SOCIALS</div>
     </nav>
 
     <main class='content'>
@@ -386,7 +277,7 @@
             <h1 id="status-msg" style='font-family:Orbitron,sans-serif;font-size:clamp(28px,5vw,62px);margin:10px 0 0;'>BRO OF THE DAY</h1>
             <p style='line-height:1.8;color:#ddfff9;opacity:.86;max-width:58ch'>Daily rotation pulled from the full issuer collection, with one NFT selected every 24 hours.</p>
             <div class='row'>
-              <button class='btn' data-tab-link="1">READ TRANSMISSIONS</button>
+              <button class='btn' onclick="switchTab(1)">READ TRANSMISSIONS</button>
               <button class='btn' onclick="window.open('https://xrp.cafe/collection/galactic-gross-bros', '_blank')">BUY A BRO</button>
             </div>
           </div>
@@ -438,9 +329,9 @@
             <div id='chat-log' class='chat-log'></div>
             <div class='chat-terminal-actions'>
               <input id='chat-input' placeholder='Send a directive...'>
-              <button id='chat-send-btn' class='btn' id="chat-send-btn-trigger">Send</button>
+              <button id='chat-send-btn' class='btn' onclick="startChatStream()">Send</button>
               <div class='fuse-button-box'>
-                <button id='fuse-button' class='btn' id="fuse-unlock-trigger">Fuse</button>
+                <button id='fuse-button' class='btn' onclick="toggleFuseUnlock()">Fuse</button>
                 <div class='fuse-price'>
                   <span>Live $50 USD</span>
                   <strong id='fuse-token-amount'>--</strong>
@@ -557,8 +448,7 @@
       badge.style.color = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
     }
 
-    async function connectXaman(event) {
-      if (event && event.preventDefault) event.preventDefault();
+    async function connectXaman() {
       const btn = document.getElementById('wallet-btn');
       btn.disabled = true;
       btn.textContent = 'CONNECTING...';
@@ -758,17 +648,7 @@
       document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') startChatStream(); });
     }
 
-    window.onload = () => { init(); 
-      document.querySelectorAll('[data-tab-link]').forEach(el => {
-        el.addEventListener('click', () => switchTab(parseInt(el.getAttribute('data-tab-link') || '0')));
-      });
-      const walletTrigger = document.getElementById('wallet-connect-trigger');
-      if (walletTrigger) walletTrigger.addEventListener('click', connectXaman);
-      const chatTrigger = document.getElementById('chat-send-btn-trigger');
-      if (chatTrigger) chatTrigger.addEventListener('click', startChatStream);
-      const fuseTrigger = document.getElementById('fuse-unlock-trigger');
-      if (fuseTrigger) fuseTrigger.addEventListener('click', toggleFuseUnlock);
- };
+    window.onload = () => { init(); };
   </script>
 </body>
 </html>
