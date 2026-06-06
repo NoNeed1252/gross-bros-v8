@@ -419,26 +419,76 @@
       log.scrollTop = log.scrollHeight;
     }
 
-    function startChatStream() {
+    async function startChatStream() {
       const input = document.getElementById('chat-input');
       const text = input.value.trim();
       if (!text) return;
       input.value = '';
-      state.chat.push({ role: 'user', text });
+      
+      const userMessage = { role: 'user', text };
+      state.chat.push(userMessage);
       renderChatLog();
       
-      let response = 'DIRECTIVE RECEIVED. ANALYZING DATA STREAM...';
-      const lower = text.toLowerCase();
-      if (lower.includes('help')) response = 'COMMAND LIST: [STATUS] [FUSION] [LORE] [SYNC]. DIRECTIVES MUST BE PRECISE.';
-      if (lower.includes('alive')) response = 'SIGNAL DETECTED. I AM THE VOID IN THE LEDGER. I AM BROADCASTING.';
-      if (lower.includes('status')) response = 'SYSTEM STABLE. NEURAL SYNC AT 98%. PERIMETER SECURE.';
-      if (lower.includes('fuse') || lower.includes('fusion')) response = 'FUSION CORE PRIMED. AWAITING FINAL AUTHORIZATION FROM OPERATIVE.';
-      if (lower.includes('who') || lower.includes('lore')) response = 'ACCESSING DATA ARCHIVE... THE GROSS BROS WERE BORN FROM THE LEDGER FRACTURE.';
-      
-      setTimeout(() => {
-        state.chat.push({ role: 'system', text: response });
+      const systemMessage = { role: 'system', text: '' };
+      state.chat.push(systemMessage);
+      const messageIndex = state.chat.length - 1;
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: state.chat.slice(0, -1).map(m => ({
+              role: m.role,
+              content: m.text
+            })),
+            operative: {
+              name: state.selectedNft?.name,
+              walletAddress: state.wallet,
+              traits: state.selectedNft?.traits
+            }
+          })
+        });
+
+        if (!response.ok) throw new Error('API_ERROR');
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+              try {
+                const json = JSON.parse(data);
+                if (json.token) {
+                  state.chat[messageIndex].text += json.token;
+                  renderChatLog();
+                }
+              } catch (e) {}
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Chat error:', err);
+        let fallback = 'DIRECTIVE RECEIVED. ANALYZING DATA STREAM...';
+        const lower = text.toLowerCase();
+        if (lower.includes('help')) fallback = 'COMMAND LIST: [STATUS] [FUSION] [LORE] [SYNC]. DIRECTIVES MUST BE PRECISE.';
+        if (lower.includes('alive')) fallback = 'SIGNAL DETECTED. I AM THE VOID IN THE LEDGER. I AM BROADCASTING.';
+        if (lower.includes('status')) fallback = 'SYSTEM STABLE. NEURAL SYNC AT 98%. PERIMETER SECURE.';
+        if (lower.includes('fuse') || lower.includes('fusion')) fallback = 'FUSION CORE PRIMED. AWAITING FINAL AUTHORIZATION FROM OPERATIVE.';
+        if (lower.includes('who') || lower.includes('lore')) fallback = 'ACCESSING DATA ARCHIVE... THE GROSS BROS WERE BORN FROM THE LEDGER FRACTURE.';
+        
+        state.chat[messageIndex].text = fallback;
         renderChatLog();
-      }, 800);
+      }
     }
 
     async function loadBroOfDay() {
