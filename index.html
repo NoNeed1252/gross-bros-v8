@@ -397,7 +397,7 @@
         container.innerHTML = '<div class="held-nft-empty">NO OPERATIVE HELD</div>';
         return;
       }
-      container.innerHTML = `<div class="held-nft-info"><span class="held-nft-name">${sanitizeMarkup(nft.name)}</span></div>`;
+      container.innerHTML = \`<div class="held-nft-info"><span class="held-nft-name">\${sanitizeMarkup(nft.name)}</span></div>\`;
     }
 
     function selectNft(index) {
@@ -410,12 +410,12 @@
 
     function renderChatLog() {
       const log = document.getElementById('chat-log');
-      log.innerHTML = state.chat.map(e => `
-        <div class="bubble ${e.role}">
-          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>
-          ${e.text}
+      log.innerHTML = state.chat.map(e => \`
+        <div class="bubble \${e.role}">
+          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">\${e.role.toUpperCase()}</div>
+          \${e.text}
         </div>
-      `).join('');
+      \`).join('');
       log.scrollTop = log.scrollHeight;
     }
 
@@ -478,19 +478,30 @@
       const rateEl = document.getElementById('fuse-token-rate');
       const protocolEl = document.getElementById('protocol-status');
       
-      setInterval(() => {
-        const rate = (Math.random() * 0.1 + 0.5).toFixed(4);
-        if (rateEl) rateEl.textContent = rate + ' XRP';
-        if (protocolEl) {
-          protocolEl.style.opacity = Math.random() > 0.1 ? '1' : '0.5';
+      const updateRate = async () => {
+        try {
+          const response = await fetch('/api/ticker');
+          const data = await response.json();
+          if (rateEl && data.xrp_price) {
+            rateEl.textContent = data.xrp_price.toFixed(4) + ' XRP';
+          }
+          if (protocolEl) {
+            protocolEl.style.opacity = '1';
+          }
+        } catch (error) {
+          console.error('Failed to fetch ticker:', error);
+          if (rateEl) rateEl.textContent = 'ERROR';
         }
-      }, 3000);
+      };
+      
+      updateRate();
+      setInterval(updateRate, 5000);
     }
 
     function init() {
       const ticker = document.getElementById('warning-ticker-track');
       const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
-      ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' " ');
+      ticker.innerHTML = items.concat(items).map(i => \`<span class="ticker-item">\${i}</span>\`).join(' " ');
       
       renderNftSelection();
       loadBroOfDay();
