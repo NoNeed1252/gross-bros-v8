@@ -24,6 +24,12 @@ export default async function handler(req) {
     });
 
     const data = await response.json();
+    
+    // Filter to ensure only NFTs issued by this account are returned
+    if (data.result && data.result.account_nfts) {
+      data.result.account_nfts = data.result.account_nfts.filter(nft => nft.Issuer === issuer);
+    }
+
     return new Response(JSON.stringify(data), {
       status: 200,
       headers: { 
