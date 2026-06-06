@@ -395,7 +395,7 @@
             </div>
           </div>
           <div class='fuse-grid'>
-            <div class='fuse-readout'><span>Token</span><select id='fuse-token-select'><option value='XRP'>XRP</option><option value='RLUSD'>RLUSD</option></select></div>
+            <div class='fuse-readout'><span>Token</span><select id='fuse-token-select' onchange='state.fuseToken = this.value; calculateFusePrice();'><option value='XRP'>XRP</option><option value='RLUSD'>RLUSD</option></select></div>
             <div class='fuse-readout'><span>Rate</span><strong id='fuse-token-rate'>--</strong></div>
             <div class='fuse-readout'><span>Status</span><strong id='fuse-payment-status'>Awaiting</strong></div>
           </div>
@@ -428,12 +428,17 @@
       GATEWAY: "https://ipfs.io/ipfs/"
     };
     
-    // Keep legacy variable names for backward compatibility
-    const BRO_COLLECTION_ISSUER = CONFIG.ISSUER;
-    const XRPL_RPC_ENDPOINT = CONFIG.RPC;
-    const IPFS_GATEWAY = CONFIG.GATEWAY;
-    
-    const state = { connected: false, wallet: "", chat: [], fuseUnlocked: false, fuseToken: "XRP", selectedNft: null, userNfts: [], fuseTargetUsd: 50 };
+    const state = { 
+      connected: false, 
+      wallet: "", 
+      chat: [], 
+      fuseUnlocked: false, 
+      fuseToken: "XRP", 
+      selectedNft: null, 
+      userNfts: [], 
+      fuseTargetUsd: 50,
+      xrpPrice: 0
+    };
 
     function xrplUriToHttp(uri) {
       if (!uri) return '';
@@ -443,12 +448,12 @@
         for (let i = 0; i < uri.length; i += 2) bytes[i / 2] = parseInt(uri.slice(i, i + 2), 16);
         value = new TextDecoder().decode(bytes);
       }
-      if (value.startsWith('ipfs://')) return IPFS_GATEWAY + value.slice(7).replace(/^\/+/, '');
+      if (value.startsWith('ipfs://')) return CONFIG.GATEWAY + value.slice(7).replace(/^\/+/, '');
       return value;
     }
 
     async function fetchJsonRpc(method, params) {
-      const res = await fetch(XRPL_RPC_ENDPOINT, {
+      const res = await fetch(CONFIG.RPC, {
         method: "POST",
         body: JSON.stringify({ method, params: [params] })
       });
@@ -461,30 +466,14 @@
       const statusEl = document.getElementById("bro-of-day-status");
       try {
         statusEl.textContent = "Crawl in progress...";
-        
-        // Call backend proxy to fetch NFTs
-        const response = await fetch(`/api/nft?issuer=${CONFIG.ISSUER}`);
+        const response = await fetch(\`/api/nft?issuer=\${CONFIG.ISSUER}\`);
         const data = await response.json();
-        
-        if (data.result?.error) {
-          throw new Error(data.result.error);
-        }
-        
-        // Extract NFTs with taxon === 1
         const allNfts = data.result?.account_nfts || [];
         const nfts = allNfts.filter(nft => nft.NFTokenTaxon === 1);
-        
-        if (nfts.length === 0) {
-          throw new Error("No NFTs found with taxon 1");
-        }
-        
-        // Select a random NFT
+        if (nfts.length === 0) throw new Error("No NFTs found with taxon 1");
         const selected = nfts[Math.floor(Math.random() * nfts.length)];
-        
-        // Fetch metadata and display
         const metaUri = xrplUriToHttp(selected.URI);
         const meta = await (await fetch(metaUri)).json();
-        
         document.getElementById("bro-of-day-image").src = xrplUriToHttp(meta.image);
         document.getElementById("bro-of-day-description").textContent = meta.description || meta.lore || "No lore found.";
         statusEl.textContent = "Signal synchronized.";
@@ -493,17 +482,118 @@
       }
     }
 
+    function calculateFusePrice() {
+      const amountEl = document.getElementById("fuse-token-amount");
+      if (state.fuseToken === 'RLUSD') {
+        amountEl.textContent = state.fuseTargetUsd + ' RLUSD';
+      } else if (state.xrpPrice > 0) {
+        amountEl.textContent = (state.fuseTargetUsd / state.xrpPrice).toFixed(2) + ' XRP';
+      } else {
+        amountEl.textContent = '--';
+      }
+    }
+
+    async function updateTicker() {
+      try {
+        const res = await fetch('/api/ticker');
+        const data = await res.json();
+        if (data.xrp_price) {
+          state.xrpPrice = data.xrp_price;
+          document.getElementById('fuse-token-rate').textContent = state.xrpPrice.toFixed(4) + ' USD';
+          calculateFusePrice();
+        }
+      } catch (e) { console.error('Ticker error', e); }
+    }
+
+    function toggleFuseUnlock() {
+      state.fuseUnlocked = !state.fuseUnlocked;
+      const badge = document.getElementById('fuse-lock-badge');
+      badge.textContent = state.fuseUnlocked ? 'UNLOCKED' : 'LOCKED';
+      badge.style.borderColor = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
+      badge.style.color = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
+    }
+
+    async function startChatStream() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      state.chat.push({ role: 'user', content: text });
+      renderChatLog();
+
+      const log = document.getElementById('chat-log');
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble system';
+      bubble.innerHTML = '<div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">SYSTEM</div><div class="msg-content">...</div>';
+      log.appendChild(bubble);
+      const contentEl = bubble.querySelector('.msg-content');
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            messages: state.chat,
+            operative: { name: 'Operative', walletAddress: state.wallet }
+          })
+        });
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+        contentEl.textContent = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const lines = decoder.decode(value).split('\n');
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const dataText = line.slice(6);
+            if (dataText === '[DONE]') break;
+            try {
+              const json = JSON.parse(dataText);
+              if (json.token) {
+                fullText += json.token;
+                contentEl.textContent = fullText;
+                log.scrollTop = log.scrollHeight;
+              }
+            } catch (e) {}
+          }
+        }
+        state.chat.push({ role: 'assistant', content: fullText });
+      } catch (e) {
+        contentEl.textContent = 'ERROR: SIGNAL LOST';
+      }
+    }
+
+    function renderChatLog() {
+      const log = document.getElementById('chat-log');
+      log.innerHTML = state.chat.map(e => \`
+        <div class="bubble \${e.role === 'user' ? 'user' : 'system'}">
+          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">\${e.role.toUpperCase()}</div>
+          \${e.content}
+        </div>
+      \`).join('');
+      log.scrollTop = log.scrollHeight;
+    }
+
     function switchTab(index) {
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
     }
 
-    function bootApp() {
+    function init() {
+      const ticker = document.getElementById('warning-ticker-track');
+      const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
+      ticker.innerHTML = items.concat(items).map(i => \`<span class="ticker-item">\${i}</span>\`).join(' " ');
       loadBroOfDay();
-      setInterval(loadBroOfDay, 3600000);
+      updateTicker();
+      setInterval(updateTicker, 15000);
+      document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') startChatStream(); });
     }
-    
-    window.onload = bootApp;
+
+    window.onload = init;
   </script>
 </body>
 </html>
