@@ -406,7 +406,9 @@
       let value = uri;
       if (/^[0-9a-fA-F]+$/.test(uri)) {
         const bytes = new Uint8Array(uri.length / 2);
-        for (let i = 0; i < i + 2; i += 2) bytes[i / 2] = parseInt(uri.slice(i, i + 2), 16);
+        for (let i = 0; i < uri.length; i += 2) {
+          bytes[i / 2] = parseInt(uri.slice(i, i + 2), 16);
+        }
         value = new TextDecoder().decode(bytes);
       }
       if (value.startsWith('ipfs://')) return CONFIG.GATEWAY + value.slice(7).replace(/^\/+/, '');
@@ -544,18 +546,22 @@
         const result = await response.json();
         const nfts = result?.result?.account_nfts || [];
         const filtered = nfts.filter(n => n.Issuer === CONFIG.ISSUER && n.NFTokenTaxon === 1);
+        
         if (filtered.length > 0) {
-          state.userNfts = [];
-          for (const n of filtered) {
-             try {
-               const metaUri = xrplUriToHttp(n.URI);
-               const meta = await (await fetch(metaUri)).json();
-               state.userNfts.push({
-                 name: meta.name || 'BRO #' + n.NFTokenID.slice(-4),
-                 image: xrplUriToHttp(meta.image)
-               });
-             } catch(e){}
-          }
+          const nftData = await Promise.all(filtered.map(async (n) => {
+            try {
+              const metaUri = xrplUriToHttp(n.URI);
+              const meta = await (await fetch(metaUri)).json();
+              return {
+                name: meta.name || 'BRO #' + n.NFTokenID.slice(-4),
+                image: xrplUriToHttp(meta.image)
+              };
+            } catch (e) {
+              return null;
+            }
+          }));
+          
+          state.userNfts = nftData.filter(Boolean);
           renderNftSelection();
           if (state.userNfts.length > 0) selectNft(0);
         }
