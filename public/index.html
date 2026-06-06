@@ -10,13 +10,27 @@
   <style>
     :root { --cyan: #00ffc8; --bg: #000; --panel: #06110f; --line: rgba(0,255,200,.18); }
     * { box-sizing: border-box; }
-    html, body { height: 100%; }
+    html, 
+    body::before {
+      content: " ";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+      background-size: 100% 2px, 3px 100%;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.15;
+    }
+    body { height: 100%; }
     body {
       margin: 0; background: var(--bg); color: var(--cyan);
       font-family: 'Share Tech Mono', monospace;
     }
     a { color: inherit; }
-    .shell {
+    .shell { z-index: 5; 
       max-width: 1480px; min-height: calc(100vh - 24px); margin: 12px auto;
       border: 24px solid #1f1f1f; border-radius: 24px; overflow: hidden;
       background: #050505; box-shadow: 0 30px 70px -20px rgba(0,0,0,.95), 0 0 100px -20px var(--cyan);
@@ -348,7 +362,7 @@
           <div class='subtitle'>Neural CRT relay // terminal interface</div>
         </div>
       </div>
-      <button id='wallet-btn' class='wallet-btn' onclick='connectXaman(event)'>CONNECT XAMAN</button>
+      <button id='wallet-btn' class='wallet-btn' id="wallet-connect-trigger">CONNECT XAMAN</button>
       <div id='xaman-status' class='status'>Wallet disconnected.</div>
     </header>
 
@@ -357,11 +371,11 @@
     </div>
 
     <nav class='tabs'>
-      <div class='tab active' data-tab='0' onclick='switchTab(0)'>CONSOLE</div>
-      <div class='tab' data-tab='1' onclick='switchTab(1)'>STORYLINE</div>
-      <div class='tab' data-tab='2' onclick='switchTab(2)'>FUSION LAB</div>
-      <div class='tab' data-tab='3' onclick='switchTab(3)'>LEADERBOARD</div>
-      <div class='tab' data-tab='4' onclick='switchTab(4)'>SOCIALS</div>
+      <div class='tab active' data-tab='0' data-tab-link="0">CONSOLE</div>
+      <div class='tab' data-tab='1' data-tab-link="1">STORYLINE</div>
+      <div class='tab' data-tab='2' data-tab-link="2">FUSION LAB</div>
+      <div class='tab' data-tab='3' data-tab-link="3">LEADERBOARD</div>
+      <div class='tab' data-tab='4' data-tab-link="4">SOCIALS</div>
     </nav>
 
     <main class='content'>
@@ -372,7 +386,7 @@
             <h1 id="status-msg" style='font-family:Orbitron,sans-serif;font-size:clamp(28px,5vw,62px);margin:10px 0 0;'>BRO OF THE DAY</h1>
             <p style='line-height:1.8;color:#ddfff9;opacity:.86;max-width:58ch'>Daily rotation pulled from the full issuer collection, with one NFT selected every 24 hours.</p>
             <div class='row'>
-              <button class='btn' onclick='switchTab(1)'>READ TRANSMISSIONS</button>
+              <button class='btn' data-tab-link="1">READ TRANSMISSIONS</button>
               <button class='btn' onclick="window.open('https://xrp.cafe/collection/galactic-gross-bros', '_blank')">BUY A BRO</button>
             </div>
           </div>
@@ -424,9 +438,9 @@
             <div id='chat-log' class='chat-log'></div>
             <div class='chat-terminal-actions'>
               <input id='chat-input' placeholder='Send a directive...'>
-              <button id='chat-send-btn' class='btn' onclick='startChatStream()'>Send</button>
+              <button id='chat-send-btn' class='btn' id="chat-send-btn-trigger">Send</button>
               <div class='fuse-button-box'>
-                <button id='fuse-button' class='btn' onclick='toggleFuseUnlock()'>Fuse</button>
+                <button id='fuse-button' class='btn' id="fuse-unlock-trigger">Fuse</button>
                 <div class='fuse-price'>
                   <span>Live $50 USD</span>
                   <strong id='fuse-token-amount'>--</strong>
@@ -496,7 +510,7 @@
       const statusEl = document.getElementById("bro-of-day-status");
       try {
         statusEl.textContent = "Crawl in progress...";
-        const response = await fetch(\`/api/nft?issuer=\${CONFIG.ISSUER}\`);
+        const response = await fetch(`/api/nft?issuer=${CONFIG.ISSUER}`);
         const data = await response.json();
         const allNfts = data.result?.account_nfts || [];
         const nfts = allNfts.filter(nft => nft.NFTokenTaxon === 1);
@@ -647,9 +661,9 @@
       if (!track) return;
       track.innerHTML = state.userNfts.map((nft, index) => {
         const active = state.selectedNft?.name === nft.name;
-        return \`<div class="nft-select-card \${active ? 'active' : ''}" onclick="selectNft(\${index})">
-          <img src="\${nft.image}" alt="">
-        </div>\`;
+        return `<div class="nft-select-card ${active ? 'active' : ''}" onclick="selectNft(${index})">
+          <img src="${nft.image}" alt="">
+        </div>`;
       }).join('');
     }
 
@@ -720,12 +734,12 @@
 
     function renderChatLog() {
       const log = document.getElementById('chat-log');
-      log.innerHTML = state.chat.map(e => \`
-        <div class="bubble \${e.role === 'user' ? 'user' : 'system'}">
-          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">\${e.role.toUpperCase()}</div>
-          \${e.content}
+      log.innerHTML = state.chat.map(e => `
+        <div class="bubble ${e.role === 'user' ? 'user' : 'system'}">
+          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>
+          ${e.content}
         </div>
-      \`).join('');
+      `).join('');
       log.scrollTop = log.scrollHeight;
     }
 
@@ -737,14 +751,24 @@
     function init() {
       const ticker = document.getElementById('warning-ticker-track');
       const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
-      ticker.innerHTML = items.concat(items).map(i => \`<span class="ticker-item">\${i}</span>\`).join(' " ');
+      ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' " ');
       loadBroOfDay();
       updateTicker();
       setInterval(updateTicker, 15000);
       document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') startChatStream(); });
     }
 
-    window.onload = init;
+    window.onload = () => { init(); 
+      document.querySelectorAll('[data-tab-link]').forEach(el => {
+        el.addEventListener('click', () => switchTab(parseInt(el.getAttribute('data-tab-link') || '0')));
+      });
+      const walletTrigger = document.getElementById('wallet-connect-trigger');
+      if (walletTrigger) walletTrigger.addEventListener('click', connectXaman);
+      const chatTrigger = document.getElementById('chat-send-btn-trigger');
+      if (chatTrigger) chatTrigger.addEventListener('click', startChatStream);
+      const fuseTrigger = document.getElementById('fuse-unlock-trigger');
+      if (fuseTrigger) fuseTrigger.addEventListener('click', toggleFuseUnlock);
+ };
   </script>
 </body>
 </html>
