@@ -21,6 +21,7 @@
       border: 24px solid #1f1f1f; border-radius: 24px; overflow: hidden;
       background: #050505; box-shadow: 0 30px 70px -20px rgba(0,0,0,.95), 0 0 100px -20px var(--cyan);
       display: flex; flex-direction: column;
+      position: relative;
     }
     @media (max-width: 640px) {
       .shell { margin: 8px auto; min-height: calc(100vh - 16px); border-width: 0; }
@@ -305,6 +306,16 @@
     }
     .muted { color: rgba(0,255,200,.6); }
 
+    /* CRT Overlay Fixes */
+    .crt-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+      background-size: 100% 2px, 3px 100%;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0.15;
+    }
+
     /* Xaman QR Overlay */
     #qr-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -328,6 +339,7 @@
   </div>
 
   <div class='shell'>
+    <div class="crt-overlay"></div>
     <header class='topbar'>
       <div class='brand'>
         <div class='dot'></div>
@@ -412,7 +424,7 @@
             <div id='chat-log' class='chat-log'></div>
             <div class='chat-terminal-actions'>
               <input id='chat-input' placeholder='Send a directive...'>
-              <button class='btn' onclick='startChatStream()'>Send</button>
+              <button id='chat-send-btn' class='btn' onclick='startChatStream()'>Send</button>
               <div class='fuse-button-box'>
                 <button id='fuse-button' class='btn' onclick='toggleFuseUnlock()'>Fuse</button>
                 <div class='fuse-price'>
