@@ -236,6 +236,13 @@
     }
     .muted { color: rgba(0,255,200,.6); }
 
+    @media (max-width: 480px) {
+      .chat-log { height: 260px; }
+      .held-nft-panel { margin-bottom: 12px; }
+      .held-nft-image-wrapper { max-width: 120px; margin: 0 auto; aspect-ratio: 3/4; border-radius: 12px; }
+      .held-nft-empty { padding: 40px 10px; }
+    }
+
     /* Xaman QR Overlay */
     #qr-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -336,7 +343,6 @@
           <div id='held-nft-display' class='held-nft-panel'>
             <div id="connected-nft-display" style="display:none; align-items:center; gap:16px; width:100%;">
                <div class="held-nft-image-wrapper"><img id="connected-nft-image" src="" alt=""></div>
-               <div class="held-nft-info"><span class="held-nft-name" id="connected-nft-name">--</span></div>
             </div>
             <div id="held-nft-empty" class="held-nft-empty" style="opacity:0.5; font-size:12px; letter-spacing:0.2em;">NO OPERATIVE HELD</div>
           </div>
@@ -586,7 +592,6 @@
       document.getElementById('held-nft-empty').style.display = 'none';
       document.getElementById('connected-nft-display').style.display = 'block';
       document.getElementById('connected-nft-image').src = nft.image;
-      document.getElementById('connected-nft-name').textContent = nft.name;
       renderNftSelection();
     }
 
