@@ -1,18 +1,32 @@
 {
-  "name": "gross-bros-v8",
-  "version": "1.0.1",
-  "description": "Galactic Gross Bros - Galactic Operatives Hub",
-  "type": "module",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
-    "build": "mkdir -p public && cp index.html public/index.html && echo \"SYNC COMPLETE\""
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "node-fetch": "^2.6.9",
-    "xrpl": "^3.0.0",
-    "@supabase/supabase-js": "^2.38.0"
-  }
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/nft",
+      "destination": "api/nft.js"
+    },
+    {
+      "source": "/api/chat",
+      "destination": "api/chat.js"
+    },
+    {
+      "source": "/api/ticker",
+      "destination": "api/ticker.js"
+    },
+    {
+      "source": "/api/xaman",
+      "destination": "api/xaman.js"
+    },
+    {
+      "source": "/api/callback",
+      "destination": "api/callback.js"
+    },
+    {
+      "source": "/api/fusion-gate",
+      "destination": "api/fusion-gate.js"
+    }
+  ],
+  "redeploy": "5"
 }
