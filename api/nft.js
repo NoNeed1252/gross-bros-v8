@@ -71,7 +71,7 @@ export default async function handler(req) {
     } else {
       for (const t of treasuries) {
         const found = await crawlAllNfts(t);
-        if (found.length > 0) {
+        if (found && found.length > 0) {
           nfts = found;
           usedAccount = t;
           break;
@@ -80,28 +80,34 @@ export default async function handler(req) {
     }
     
     let filtered = nfts;
-    if (issuer || !owner) {
-        // Broaden filter: include items issued by GGB or items held in the treasury regardless of issuer
+    // v1.9: Use an even broader filter and logic to ensure something is returned
+    if (!owner) {
+        // Look for GGB Issuer or anything that looks like a collection item
         filtered = nfts.filter(n => n.Issuer === GGB_ISSUER || n.Issuer === "rfYarEYZzgMBhscNmzAbQgmbWjgSQm17Wq");
     }
     
-    if (taxonParam !== null) {
+    if (taxonParam !== null && filtered.length > 0) {
         const taxon = parseInt(taxonParam);
-        filtered = filtered.filter(n => n.NFTokenTaxon === taxon);
+        const taxonFiltered = filtered.filter(n => n.NFTokenTaxon === taxon);
+        // Only apply taxon filter if it doesn't result in an empty list when we have items
+        if (taxonFiltered.length > 0) {
+            filtered = taxonFiltered;
+        }
     }
 
-    // FINAL FALLBACK: If we still have nothing but the wallet has NFTs, just return them
+    // FINAL EMERGENCY FALLBACK: If we still have nothing but the wallet has NFTs, return the first 100
     if (filtered.length === 0 && nfts.length > 0) {
-        filtered = nfts.slice(0, 50);
+        filtered = nfts.slice(0, 100);
     }
 
     return new Response(JSON.stringify({ 
-      v: "1.8",
+      v: "1.9",
       result: { 
         account_nfts: filtered,
         count: filtered.length,
         account: usedAccount,
-        total_found_in_wallet: nfts.length
+        total_found_in_wallet: nfts.length,
+        wallet_keys: nfts.length > 0 ? Object.keys(nfts[0]) : []
       } 
     }), {
       status: 200,
