@@ -59,7 +59,7 @@
     .grid-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
     .nft-panel { position: relative; overflow: hidden; background: radial-gradient(circle at top left, rgba(0,255,200,.12), transparent 42%), radial-gradient(circle at bottom right, rgba(124,58,237,.12), transparent 38%), linear-gradient(180deg, rgba(7,18,17,.98), rgba(2,8,8,.98)); }
     .nft-display { position: relative; display: grid; gap: 18px; justify-items: center; max-width: 760px; margin: 0 auto; text-align: center; }
-    .nft-art { position: relative; width: min(100%, 560px); aspect-ratio: 3 / 4; border-radius: 22px; border: 1px solid rgba(0,255,200,.22); background: radial-gradient(circle at 30% 20%, rgba(0,255,200,.22), rgba(0,0,0,.88) 55%), rgba(0,0,0,.65); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.03), 0 0 42px rgba(0,255,200,.08); display: flex; align-items: center; justify-content: center; }
+    .nft-art { position: relative; width: min(100%, 560px); aspect-ratio: 1 / 1; border-radius: 22px; border: 1px solid rgba(0,255,200,.22); background: radial-gradient(circle at 30% 20%, rgba(0,255,200,.22), rgba(0,0,0,.88) 55%), rgba(0,0,0,.65); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.03), 0 0 42px rgba(0,255,200,.08); display: flex; align-items: center; justify-content: center; }
     .nft-art img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: .95; }
     .nft-art::after { content: 'FUSION PORTAL LIVE'; position: absolute; left: 16px; right: 16px; bottom: 14px; padding: 8px 10px; border-radius: 999px; border: 1px solid rgba(0,255,200,.2); background: rgba(0,0,0,0.6); color: rgba(0,255,200,.85); font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: .28em; text-align: center; }
     .nft-meta { display: grid; gap: 12px; max-width: 62ch; align-content: start; justify-items: center; }
@@ -137,7 +137,6 @@
           <div class='panel nft-panel'>
             <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Daily signal</div>
             <div class='nft-display' style='margin-top:14px;'>
-              <div class='nft-art'><img id='bro-of-day-image' alt='Bro of the Day' src=''></div>
               <div class='nft-art'><img id='bro-of-day-image' alt='Bro of the Day' src=''></div>
               <div class='nft-meta'><p id='bro-of-day-description' class='nft-subtitle'>Live NFT lore is loading...</p><div id='bro-of-day-status' class='muted' style='font-size:10px;'>Initializing...</div></div>
             </div>
