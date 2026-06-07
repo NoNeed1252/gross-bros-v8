@@ -1,6 +1,6 @@
 {
   "name": "gross-bros-v8",
-  "version": "1.18.1",
+  "version": "1.18.2",
   "private": true,
   "dependencies": {
     "node-fetch": "^2.6.7"
