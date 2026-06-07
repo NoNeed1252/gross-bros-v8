@@ -356,7 +356,7 @@ letter-spacing: 1px;
               <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Fusion Lab</div>
               <div class='muted' style='text-align:center; letter-spacing:0.5em; font-size:10px; margin-bottom:8px; opacity: 0.7;'>IN-WORLD COMMS TERMINAL</div><h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:0 0 24px; text-align:center; text-shadow: 0 0 10px rgba(0,255,200,0.3);'>CHAT TERMINAL</h2>
             </div>
-            <div id='fuse-lock-badge' class='fuse-badge'>LOCKED</div>
+            <div id='fuse-lock-badge' class='fuse-badge' style='border-color: var(--cyan); color: var(--cyan);'>ACTIVE</div>
           </div>
           
           <div id='held-nft-display' class='held-nft-panel'>
@@ -364,7 +364,7 @@ letter-spacing: 1px;
                <div class="held-nft-image-wrapper"><img id="connected-nft-image" src="" alt=""></div>
                <div class="held-nft-info"><span class="held-nft-name" id="connected-nft-name">--</span></div>
             </div>
-            <div id="held-nft-empty" class="held-nft-empty" style="opacity:0.5; font-size:12px; letter-spacing:0.2em;">NO OPERATIVE HELD</div>
+            <div id="held-nft-empty" class="held-nft-empty" style="opacity:0.8; font-size:12px; letter-spacing:0.2em;">GUEST ACCESS</div>
           </div>
 
           <div id='chat-terminal' class='chat-terminal'>
@@ -436,7 +436,7 @@ letter-spacing: 1px;
       connected: false, 
       wallet: "", 
       chat: [], 
-      fuseUnlocked: false, 
+      fuseUnlocked: true, 
       fuseToken: "XRP", 
       selectedNft: null, 
       userNfts: [], 
@@ -566,7 +566,7 @@ letter-spacing: 1px;
     function toggleFuseUnlock() {
       state.fuseUnlocked = !state.fuseUnlocked;
       const badge = document.getElementById('fuse-lock-badge');
-      badge.textContent = state.fuseUnlocked ? 'UNLOCKED' : 'LOCKED';
+      badge.textContent = state.fuseUnlocked ? 'ACTIVE' : 'ENCRYPTED';
       badge.style.borderColor = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
       badge.style.color = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
     }
