@@ -732,6 +732,11 @@ letter-spacing: 1px;
           })
         });
 
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'SIGNAL LOST');
+        }
+
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
         let fullText = '';
@@ -757,7 +762,7 @@ letter-spacing: 1px;
         }
         state.chat.push({ role: 'assistant', content: fullText });
       } catch (e) {
-        contentEl.textContent = 'ERROR: SIGNAL LOST';
+        contentEl.textContent = 'ERROR: ' + e.message;
       }
     }
 
