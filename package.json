@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "type": "module",
   "scripts": {
-    "build": "mkdir -p public && cp index.html public/index.html && echo \"SYNC COMPLETE\""
+    "build": "echo \"Serving from root\""
   },
   "dependencies": {
     "xrpl": "^3.0.0"
