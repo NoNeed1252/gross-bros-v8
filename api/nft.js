@@ -7,23 +7,36 @@ export default async function handler(req) {
   const issuer = searchParams.get('issuer');
   const owner = searchParams.get('owner');
   const taxon = searchParams.get('taxon') || '1';
-  const list = searchParams.get('list') || 'nfts';
 
-  // Build the Bithomp URL based on provided params
-  let bithompUrl = `https://bithomp.com/api/v2/nfts?taxon=${taxon}&list=${list}`;
-  if (issuer) bithompUrl += `&issuer=${issuer}`;
-  if (owner) bithompUrl += `&owner=${owner}`;
+  // Gross Bros config
+  const GGB_ISSUER = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
+  const targetIssuer = issuer || GGB_ISSUER;
+
+  // We fetch account_nfts for the issuer or owner
+  const targetAccount = owner || targetIssuer;
+  
+  // XRPL JSON-RPC Request
+  const xrplBody = {
+    method: "account_nfts",
+    params: [
+      {
+        account: targetAccount,
+        ledger_index: "validated"
+      }
+    ]
+  };
 
   try {
-    const response = await fetch(bithompUrl, {
-      method: 'GET',
-      headers: { 
-        'Content-Type': 'application/json',
-      },
+    const response = await fetch("https://xrplcluster.com", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(xrplBody),
     });
 
     const data = await response.json();
 
+    // Map the response to a format the frontend expects (matching either Bithomp or pure XRPL)
+    // The current index.html expects data.result.account_nfts or result.nfts
     return new Response(JSON.stringify(data), {
       status: 200,
       headers: { 
