@@ -44,7 +44,7 @@ Task: Assist with fusion and NFT analysis in character. Stay concise.`;
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-            'HTTP-Referer': 'https://gross-bros.vercel.app',
+            'HTTP-Referer': 'https://grossbros.vercel.app',
             'X-Title': 'Gross Bros Terminal',
             'Content-Type': 'application/json',
           },
