@@ -381,11 +381,14 @@
     const CONFIG = {
       ISSUER: "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY",
       RPC: "https://xrplcluster.com",
-      GATEWAY: "https://ipfs.io/ipfs/"
+      GATEWAY: "https://ipfs.io/ipfs/",
+      BITHOMP: "https://bithomp.com/api/v2"
     };
-    
-    
-    
+
+    const BRO_COLLECTION_ISSUER = CONFIG.ISSUER;
+    const XRPL_RPC_ENDPOINT = CONFIG.RPC;
+    const IPFS_GATEWAY = CONFIG.GATEWAY;
+
     const state = { 
       connected: localStorage.getItem('xaman_connected') === 'true', 
       wallet: localStorage.getItem('xaman_wallet') || "", 
@@ -401,7 +404,221 @@
 
     let pollInterval = null;
 
-    async function connectXaman() {
+    function switchTab(index) {
+      document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
+      document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
+    }
+
+async function loadBroOfDay() {
+      setBroOfDayStatus("Crawl in progress...");
+      try {
+        let nfts = await fetchCollectionNfts(BRO_COLLECTION_ISSUER, 1);
+        
+        // Final fallback to hardcoded metadata if everything fails
+        if (!nfts.length) {
+          console.warn("No NFTs found via API, using static fallback array");
+          nfts = [
+            { URI: "ipfs://bafybeicv7z5a6i73v7v2a7v2a7v2a7v2a7v2a7v2a7v2a7v2a7v2a7v2a/1.json" },
+            { URI: "ipfs://bafybeicv7z5a6i73v7v2a7v2a7v2a7v2a7v2a7v2a7v2a7v2a7v2a7v2a/2.json" }
+          ];
+        }
+
+        const seed = dailyRotationSeed();
+        const selected = nfts[seed % nfts.length];
+        const metadataUri = xrplUriToHttp(selected.URI);
+        const metadata = await (await fetch(metadataUri)).json();
+        document.getElementById("bro-of-day-image").src = xrplUriToHttp(metadata?.image || "");
+        document.getElementById("bro-of-day-description").textContent = cleanLoreText(metadata);
+        setBroOfDayStatus("Signal synchronized.");
+      } catch (e) {
+        console.error(e);
+        setBroOfDayStatus("Signal lost: " + e.message);
+      }
+    }
+
+async function updateTicker() {
+      try {
+        const res = await fetch('/api/ticker');
+        const data = await res.json();
+        if (data.xrp_price) {
+          state.xrpPrice = data.xrp_price;
+          document.getElementById('fuse-token-rate').textContent = state.xrpPrice.toFixed(4) + ' USD';
+          calculateFusePrice();
+        }
+      } catch (e) {}
+    }
+
+async function fetchUserNfts(address) {
+      try {
+        // Use Bithomp for user NFTs too
+        const response = await fetch(`${CONFIG.BITHOMP}/nfts?owner=${address}&issuer=${CONFIG.ISSUER}&taxon=1&limit=100`);
+        const data = await response.json();
+        const nfts = data.nfts || [];
+        if (nfts.length > 0) {
+          const nftData = await Promise.all(nfts.map(async (n) => {
+            try {
+              const meta = await (await fetch(xrplUriToHttp(n.uri || n.URI))).json();
+              return { name: meta.name || 'BRO', image: xrplUriToHttp(meta.image) };
+            } catch (e) { return null; }
+          }));
+          state.userNfts = nftData.filter(Boolean);
+          renderNftSelection();
+          if (state.userNfts.length > 0) selectNft(0);
+        }
+      } catch (e) {}
+    }
+
+function setWalletUI(connected, address) {
+      const btn = document.getElementById('wallet-btn');
+      const status = document.getElementById('xaman-status');
+      
+      localStorage.setItem('xaman_connected', connected);
+      localStorage.setItem('xaman_wallet', address || "");
+      
+      if (connected) {
+        btn.textContent = 'LINKED';
+        btn.disabled = false;
+        status.textContent = address.slice(0, 6) + '...' + address.slice(-4);
+      } else {
+        btn.textContent = 'CONNECT XAMAN';
+        btn.disabled = false;
+        status.textContent = 'Wallet disconnected.';
+      }
+    }
+
+async function startChatStream() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      state.chat.push({ role: 'user', content: text });
+      renderChatLog();
+      const log = document.getElementById('chat-log');
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble system';
+      bubble.innerHTML = '<div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">SYSTEM</div><div class="msg-content">...</div>';
+      log.appendChild(bubble);
+      const contentEl = bubble.querySelector('.msg-content');
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: state.chat, operative: { name: 'Operative', walletAddress: state.wallet, traits: state.selectedNft ? [state.selectedNft.name] : [] } })
+        });
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const lines = decoder.decode(value).split('\n');
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const dataText = line.slice(6);
+            if (dataText === '[DONE]') break;
+            try {
+              const json = JSON.parse(dataText);
+              if (json.token) { fullText += json.token; contentEl.textContent = fullText; log.scrollTop = log.scrollHeight; }
+            } catch (e) {}
+          }
+        }
+        state.chat.push({ role: 'assistant', content: fullText });
+      } catch (e) { contentEl.textContent = 'ERROR: SIGNAL LOST'; }
+    }
+
+function toggleFuseUnlock() {
+      state.fuseUnlocked = !state.fuseUnlocked;
+      const badge = document.getElementById('fuse-lock-badge');
+      badge.textContent = state.fuseUnlocked ? 'UNLOCKED' : 'LOCKED';
+      badge.style.borderColor = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
+      badge.style.color = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
+    }
+
+function calculateFusePrice() {
+      const amountEl = document.getElementById("fuse-token-amount");
+      if (state.fuseToken === 'RLUSD') {
+        amountEl.textContent = state.fuseTargetUsd + ' RLUSD';
+      } else if (state.xrpPrice > 0) {
+        amountEl.textContent = (state.fuseTargetUsd / state.xrpPrice).toFixed(2) + ' XRP';
+      }
+    }
+
+function renderChatLog() {
+      const log = document.getElementById('chat-log');
+      log.innerHTML = state.chat.map(e => `<div class="bubble ${e.role === 'user' ? 'user' : 'system'}"><div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>${e.content}</div>`).join('');
+      log.scrollTop = log.scrollHeight;
+    }
+
+function renderNftSelection() {
+      const track = document.getElementById('nft-selection-track');
+      track.innerHTML = state.userNfts.map((nft, index) => `
+        <div class="nft-select-card ${state.selectedNft?.name === nft.name ? 'active' : ''}" onclick="selectNft(${index})">
+          <img src="${nft.image}" alt="">
+        </div>`).join('');
+    }
+
+function selectNft(index) {
+      state.selectedNft = state.userNfts[index];
+      document.getElementById('held-nft-empty').style.display = 'none';
+      document.getElementById('connected-nft-display').style.display = 'block';
+      document.getElementById('connected-nft-image').src = state.selectedNft.image;
+      renderNftSelection();
+    }
+
+function hexToUtf8(hexValue) {
+      const hex = String(hexValue || '').trim();
+      if (!hex || hex.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(hex)) return hex;
+      try {
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < hex.length; i += 2) bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+        return new TextDecoder().decode(bytes);
+      } catch (e) { return hex; }
+    }
+
+function xrplUriToHttp(uri) {
+      const value = String(uri || '').trim();
+      if (!value) return '';
+      if (/^[0-9a-fA-F]+$/.test(value)) return xrplUriToHttp(hexToUtf8(value));
+      if (value.startsWith('ipfs://')) return IPFS_GATEWAY + value.slice(7).replace(/^\/+/, '');
+      if (value.startsWith('ar://')) return 'https://arweave.net/' + value.slice(5).replace(/^\/+/, '');
+      return value;
+    }
+
+function dailyRotationSeed() {
+      const now = new Date();
+      return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 86400000);
+    }
+
+function cleanLoreText(metadata) {
+      const raw = metadata?.lore || metadata?.backstory || metadata?.story || metadata?.description || '';
+      const lines = String(raw).replace(/\r\n/g, '\n').split(/\n+/).map(l => l.trim()).filter(Boolean);
+      return lines.join(' ').replace(/\s{2,}/g, ' ').trim() || 'Live NFT lore is loading...';
+    }
+
+async function fetchCollectionNfts(issuer, taxon = 1) {
+      // Use Bithomp API for instant retrieval
+      try {
+        const response = await fetch(`${CONFIG.BITHOMP}/nfts?issuer=${issuer}&taxon=${taxon}&limit=100`);
+        if (!response.ok) throw new Error("Bithomp API error");
+        const data = await response.json();
+        if (data.nfts && data.nfts.length > 0) {
+          return data.nfts.map(n => ({
+             URI: n.uri || n.URI || "",
+             NFTokenID: n.nftokenID || n.NFTokenID || ""
+          }));
+        }
+      } catch (e) {
+        console.error("Bithomp fetch failed, falling back to legacy crawl", e);
+      }
+      return []; // Fallback to empty if Bithomp fails (handled by caller)
+    }
+
+function setBroOfDayStatus(message) {
+      const statusEl = document.getElementById("bro-of-day-status");
+      if (statusEl) statusEl.textContent = message || "";
+    }
+
+async function connectXaman() {
       const btn = document.getElementById('wallet-btn');
       
       // If we already have a pending payload, don't start a new one, just ensure polling is active
@@ -453,7 +670,7 @@
       }
     }
 
-    function pollPayload(uuid) {
+function pollPayload(uuid) {
       if (pollInterval) clearInterval(pollInterval);
       const btn = document.getElementById('wallet-btn');
       let attempts = 0;
@@ -494,36 +711,18 @@
       }, 2500);
     }
 
-    function stopPolling() {
+function stopPolling() {
       if (pollInterval) clearInterval(pollInterval);
       pollInterval = null;
       state.payloadUuid = null;
       localStorage.removeItem('xaman_payload_uuid');
     }
 
-    function setWalletUI(connected, address) {
-      const btn = document.getElementById('wallet-btn');
-      const status = document.getElementById('xaman-status');
-      
-      localStorage.setItem('xaman_connected', connected);
-      localStorage.setItem('xaman_wallet', address || "");
-      
-      if (connected) {
-        btn.textContent = 'LINKED';
-        btn.disabled = false;
-        status.textContent = address.slice(0, 6) + '...' + address.slice(-4);
-      } else {
-        btn.textContent = 'CONNECT XAMAN';
-        btn.disabled = false;
-        status.textContent = 'Wallet disconnected.';
-      }
-    }
-
-    function init() {
+function init() {
       const ticker = document.getElementById('warning-ticker-track');
       const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
       if (ticker) {
-        ticker.innerHTML = items.concat(items).map(i => \`<span class="ticker-item">\${i}</span>\`).join(' " ');
+        ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' " ');
       }
       
       // Restore UI if already connected
