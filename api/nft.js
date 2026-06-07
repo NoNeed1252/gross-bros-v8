@@ -57,9 +57,9 @@ export default async function handler(req) {
   const GGB_ISSUER = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
   
   const treasuries = [
-    "rNCY8dCi23nfyG74v8uE8V1G8Q8K265z6R",
     "rsuHaTvJh1bDmDoxX9QcKP7HEBSBt4XsHx",
-    "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY"
+    "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY",
+    "rNCY8dCi23nfyG74v8uE8V1G8Q8K265z6R"
   ];
 
   let nfts = [];
@@ -71,17 +71,20 @@ export default async function handler(req) {
       usedAccount = owner;
     } else {
       for (const t of treasuries) {
-        const found = await crawlAllNfts(t);
-        // Case-insensitive check for collection hits
-        const collectionHits = found.filter(n => 
-          String(n.Issuer || '').toLowerCase() === GGB_ISSUER.toLowerCase()
-        );
-        if (collectionHits.length > 0) {
-          nfts = found;
-          usedAccount = t;
-          break;
+        try {
+          const found = await crawlAllNfts(t);
+          // Case-insensitive check for collection hits
+          const collectionHits = found.filter(n => 
+            String(n.Issuer || '').toLowerCase() === GGB_ISSUER.toLowerCase()
+          );
+          if (collectionHits.length > 0) {
+            nfts = found;
+            usedAccount = t;
+            break;
+          }
+        } catch (e) {
+          console.error(`Error crawling ${t}:`, e);
         }
-        usedAccount = t;
       }
     }
     
@@ -107,7 +110,7 @@ export default async function handler(req) {
     }));
 
     return new Response(JSON.stringify({ 
-      v: "1.12",
+      v: "1.12.1",
       result: { 
         account_nfts: resultNfts,
         count: resultNfts.length,
