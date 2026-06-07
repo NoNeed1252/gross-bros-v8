@@ -2,133 +2,36 @@ export const config = {
   runtime: 'edge',
 };
 
-async function crawlAllNfts(account) {
-  let allNfts = [];
-  let marker = null;
-  let attempts = 0;
-  
-  do {
-    attempts++;
-    const xrplBody = {
-      method: "account_nfts",
-      params: [
-        {
-          account: account,
-          ledger_index: "validated",
-          limit: 400,
-          marker: marker
-        }
-      ]
-    };
+export default async function handler(req) {
+  // Hardcoded issuer per user instructions
+  const issuer = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
+  const BITHOMP_TOKEN = process.env.BITHOMP_API_KEY || "95b64250-f24f-4654-9b4b-b155a3a6867b";
 
-    const response = await fetch("https://xrplcluster.com", {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(xrplBody),
+  try {
+    const url = `https://bithomp.com/api/v2/nfts?taxon=1&list=nfts&issuer=${issuer}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-bithomp-token': BITHOMP_TOKEN
+      }
     });
 
     if (!response.ok) {
-        throw new Error(`XRPL Node returned ${response.status}`);
+      const errorText = await response.text();
+      return new Response(JSON.stringify({ error: `Bithomp API error: ${response.status}`, details: errorText }), {
+        status: response.status,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const data = await response.json();
-    
-    if (data.result && data.result.account_nfts) {
-      allNfts = allNfts.concat(data.result.account_nfts);
-      marker = data.result.marker;
-    } else {
-      marker = null;
-    }
-    
-    if (attempts > 10) break; 
-    
-  } while (marker);
-
-  return allNfts;
-}
-
-export default async function handler(req) {
-  const { searchParams } = new URL(req.url);
-  const issuerQuery = searchParams.get('issuer');
-  const owner = searchParams.get('owner');
-  const taxonParam = searchParams.get('taxon');
-  
-  // Normalized constant for internal filtering
-  const GGB_ISSUER = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
-  
-  // Treasury list - scanning multiple wallets where NFTs might be held
-  const treasuries = [
-    "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY"
-  ];
-
-  let nfts = [];
-  let usedAccount = "";
-
-  try {
-    if (owner) {
-      nfts = await crawlAllNfts(owner);
-      usedAccount = owner;
-    } else {
-      for (const t of treasuries) {
-        try {
-          const found = await crawlAllNfts(t);
-          // Check if this wallet has ANY NFTs from our target issuer
-          const collectionHits = found.filter(n => 
-            String(n.Issuer || '').toLowerCase() === GGB_ISSUER.toLowerCase()
-          );
-          
-          if (collectionHits.length > 0) {
-            nfts = found;
-            usedAccount = t;
-            break; 
-          }
-        } catch (e) {
-          console.error(`Error crawling ${t}:`, e);
-        }
-      }
-    }
-    
-    // Core filter logic: Filter by Issuer
-    const targetIssuer = (issuerQuery || GGB_ISSUER).toLowerCase();
-    let filtered = nfts.filter(n => 
-      String(n.Issuer || '').toLowerCase() === targetIssuer
-    );
-    
-    // Optional Taxon filter - If requested specifically, we filter.
-    // However, if the frontend calls without taxon, we return the whole collection (usually Taxon 1).
-    if (taxonParam !== null) {
-        const taxon = parseInt(taxonParam);
-        if (!isNaN(taxon)) {
-            filtered = filtered.filter(n => n.NFTokenTaxon === taxon);
-        }
-    }
-
-    // MAP TO FRONTEND EXPECTED KEYS (nftokenID, URI)
-    // Note: index.html uses camelCase 'nftokenID', while the XRP RPC uses 'NFTokenID'.
-    // We provide BOTH to ensure total compatibility with all frontend versions.
-    const resultNfts = filtered.map(n => ({
-      NFTokenID: n.NFTokenID,
-      nftokenID: n.NFTokenID,
-      URI: n.URI,
-      uri: n.URI,
-      Issuer: n.Issuer,
-      NFTokenTaxon: n.NFTokenTaxon
-    }));
-
-    return new Response(JSON.stringify({ 
-      v: "1.16.2",
-      result: { 
-        account_nfts: resultNfts,
-        count: resultNfts.length,
-        account: usedAccount,
-        total_found_in_wallet: nfts.length
-      } 
-    }), {
+    return new Response(JSON.stringify(data), {
       status: 200,
       headers: { 
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'no-store'
       },
     });
   } catch (error) {
