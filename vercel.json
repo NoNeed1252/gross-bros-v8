@@ -11,5 +11,6 @@
     { "source": "/api/xaman", "destination": "/api/xaman.js" },
     { "source": "/api/callback", "destination": "/api/callback.js" },
     { "source": "/api/fusion-gate", "destination": "/api/fusion-gate.js" }
-  ]
+  ],
+  "trailingSlash": false
 }
