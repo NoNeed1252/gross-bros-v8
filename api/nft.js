@@ -55,13 +55,12 @@ export default async function handler(req) {
   
   const GGB_ISSUER = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
   
-  // Try Treasury A first, then Treasury B if A is empty
+  // Try Treasury B first (most active), then Treasury A
   const treasuries = [
-    "rNCY8dCi23nfyG74v8uE8V1G8Q8K265z6R", // Treasury B (Known to have NFTs)
+    "rNCY8dCi23nfyG74v8uE8V1G8Q8K265z6R", // Treasury B (Confirmed with NFTs)
     "rsuHaTvJh1bDmDoxX9QcKP7HEBSBt4XsHx"  // Treasury A
   ];
 
-  let targetAccount = owner;
   let nfts = [];
   let usedAccount = owner || "";
 
@@ -69,11 +68,15 @@ export default async function handler(req) {
     if (owner) {
       nfts = await crawlAllNfts(owner);
     } else {
-      // If checking collection, try known treasuries
+      // Loop through treasuries until we find NFTs
       for (const t of treasuries) {
-        nfts = await crawlAllNfts(t);
-        usedAccount = t;
-        if (nfts.length > 0) break;
+        const found = await crawlAllNfts(t);
+        if (found && found.length > 0) {
+          nfts = found;
+          usedAccount = t;
+          break;
+        }
+        usedAccount = t; // Track which one we ended on if still empty
       }
     }
     
@@ -91,12 +94,13 @@ export default async function handler(req) {
     }
 
     return new Response(JSON.stringify({ 
-      v: "1.3",
+      v: "1.4",
       result: { 
         account_nfts: filtered,
         count: filtered.length,
         account: usedAccount,
-        total_found_in_wallet: nfts.length
+        total_found_in_wallet: nfts.length,
+        treasuries_attempted: owner ? [owner] : treasuries
       } 
     }), {
       status: 200,
