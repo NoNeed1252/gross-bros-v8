@@ -13,7 +13,7 @@
     html, body { 
       margin: 0; padding: 0; background: var(--bg); color: var(--cyan);
       font-family: 'Share Tech Mono', monospace; height: 100vh; width: 100vw;
-      overflow: hidden; /* Lock viewport */
+      overflow: hidden; 
     }
     a { color: inherit; text-decoration: none; }
 
@@ -68,19 +68,36 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.04); margin-bottom: 14px;
     }
 
-    /* Ultra-Compact Social Links for 320px */
-    .social-links { display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: center; }
-    .social-card {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(0,255,200,.15);
-      background: rgba(0,0,0,.35); transition: .2s ease; width: 100%;
+    /* Premium Social Link Boxes for 320px */
+    .social-links { display: flex; flex-direction: column; gap: 12px; flex: 1; justify-content: center; }
+    .social-link-box {
+      display: block; position: relative; padding: 16px; border-radius: 12px;
+      border: 1px solid rgba(0,255,200,.2); background: rgba(0,255,200,.03);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
-    .social-card:hover { border-color: var(--cyan); background: rgba(0,255,200,0.05); }
-    .social-card .label { font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 0.05em; color: var(--cyan); }
-    .social-card .desc { font-size: 9px; color: rgba(0,255,200,0.4); margin-top: 2px; }
-    .social-card .card-btn {
-      font-size: 10px; padding: 4px 10px; border: 1px solid var(--cyan); border-radius: 8px;
-      background: rgba(0,255,200,0.1); text-transform: uppercase;
+    .social-link-box::before {
+      content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      opacity: 0; transition: 0.3s;
+    }
+    .social-link-box:hover {
+      background: rgba(0,255,200,0.08); border-color: var(--cyan);
+      transform: translateY(-2px); box-shadow: 0 0 20px rgba(0,255,200,0.15);
+    }
+    .social-link-box:hover::before { opacity: 1; }
+    .social-link-box .label {
+      font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 0.1em;
+      color: var(--cyan); margin-bottom: 4px; text-shadow: 0 0 8px rgba(0,255,200,0.5);
+    }
+    .social-link-box .desc {
+      font-size: 10px; color: rgba(0,255,200,0.6); display: flex; align-items: center; gap: 6px;
+    }
+    .social-link-box .desc::before { content: ">"; color: var(--cyan); font-weight: bold; }
+    .social-link-box .scanline {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(to bottom, transparent 50%, rgba(0,255,200,0.03) 50%);
+      background-size: 100% 4px; pointer-events: none;
     }
 
     .muted { color: rgba(0,255,200,.6); font-size: 10px; }
@@ -156,19 +173,15 @@
           <div class='muted' style='text-transform:uppercase; margin-bottom: 4px;'>Comms Hub</div>
           <h2 style='font-family:Orbitron,sans-serif; font-size: 16px; margin: 0 0 14px;'>NEURAL CHANNELS</h2>
           <div class='social-links'>
-            <a href='https://x.com/thegrossbros?s=21' target='_blank' class='social-card'>
-              <div>
-                <div class='label'>X-SECURE TRANSMITTER</div>
-                <div class='desc'>@THEGROSSBROS</div>
-              </div>
-              <div class='card-btn'>OPEN</div>
+            <a href='https://x.com/thegrossbros?s=21' target='_blank' class='social-link-box'>
+              <div class="scanline"></div>
+              <div class='label'>X-SECURE TRANSMITTER</div>
+              <div class='desc'>@THEGROSSBROS</div>
             </a>
-            <a href='https://discord.gg/fcZYk7UcB' target='_blank' class='social-card'>
-              <div>
-                <div class='label'>THE DEN DECRYPTED</div>
-                <div class='desc'>PRIVATE DISCORD</div>
-              </div>
-              <div class='card-btn'>JOIN</div>
+            <a href='https://discord.gg/fcZYk7UcB' target='_blank' class='social-link-box'>
+              <div class="scanline"></div>
+              <div class='label'>THE DEN DECRYPTED</div>
+              <div class='desc'>PRIVATE DISCORD</div>
             </a>
           </div>
         </div>
