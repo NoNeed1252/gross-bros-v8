@@ -53,21 +53,34 @@ export default async function handler(req) {
   const owner = searchParams.get('owner');
   const taxonParam = searchParams.get('taxon');
   
-  // The address rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY was actually the ISSUER (minter).
-  // On XRPL, the issuer wallet is usually empty. We need the TREASURY or a known holder.
-  // Using rsuHaTvJh1bDmDoxX9QcKP7HEBSBt4XsHx (the known treasury from previous successful crawl)
   const GGB_ISSUER = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
-  const GGB_TREASURY = "rsuHaTvJh1bDmDoxX9QcKP7HEBSBt4XsHx";
   
-  const targetAccount = owner || GGB_TREASURY;
+  // Try Treasury A first, then Treasury B if A is empty
+  const treasuries = [
+    "rNCY8dCi23nfyG74v8uE8V1G8Q8K265z6R", // Treasury B (Known to have NFTs)
+    "rsuHaTvJh1bDmDoxX9QcKP7HEBSBt4XsHx"  // Treasury A
+  ];
+
+  let targetAccount = owner;
+  let nfts = [];
+  let usedAccount = owner || "";
 
   try {
-    const nfts = await crawlAllNfts(targetAccount);
+    if (owner) {
+      nfts = await crawlAllNfts(owner);
+    } else {
+      // If checking collection, try known treasuries
+      for (const t of treasuries) {
+        nfts = await crawlAllNfts(t);
+        usedAccount = t;
+        if (nfts.length > 0) break;
+      }
+    }
     
     let filtered = nfts;
     
-    // If checking collection (issuer param exists), filter for tokens issued by GGB
-    if (issuer) {
+    // Filter by issuer if checking collection
+    if (issuer || !owner) {
         filtered = nfts.filter(n => n.Issuer === GGB_ISSUER);
     }
     
@@ -78,11 +91,12 @@ export default async function handler(req) {
     }
 
     return new Response(JSON.stringify({ 
-      v: "1.2",
+      v: "1.3",
       result: { 
         account_nfts: filtered,
         count: filtered.length,
-        account: targetAccount
+        account: usedAccount,
+        total_found_in_wallet: nfts.length
       } 
     }), {
       status: 200,
