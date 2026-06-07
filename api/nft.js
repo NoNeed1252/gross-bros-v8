@@ -53,12 +53,12 @@ export default async function handler(req) {
   const owner = searchParams.get('owner');
   const taxonParam = searchParams.get('taxon');
   
-  const GGB_TREASURY = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
+  // The address rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY was actually the ISSUER (minter).
+  // On XRPL, the issuer wallet is usually empty. We need the TREASURY or a known holder.
+  // Using rsuHaTvJh1bDmDoxX9QcKP7HEBSBt4XsHx (the known treasury from previous successful crawl)
   const GGB_ISSUER = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
+  const GGB_TREASURY = "rsuHaTvJh1bDmDoxX9QcKP7HEBSBt4XsHx";
   
-  // Logic: 
-  // If owner is provided, check that specific wallet (User).
-  // If issuer is provided, we check the TREASURY wallet (Collection).
   const targetAccount = owner || GGB_TREASURY;
 
   try {
@@ -78,7 +78,7 @@ export default async function handler(req) {
     }
 
     return new Response(JSON.stringify({ 
-      v: "1.1",
+      v: "1.2",
       result: { 
         account_nfts: filtered,
         count: filtered.length,
@@ -89,6 +89,7 @@ export default async function handler(req) {
       headers: { 
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'no-store, max-age=0'
       },
     });
   } catch (error) {
