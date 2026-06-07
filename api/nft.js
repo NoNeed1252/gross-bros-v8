@@ -33,9 +33,6 @@ async function crawlAllNfts(account) {
 
     const data = await response.json();
     
-    // DEBUG: Log the raw result keys
-    // console.log("XRPL keys:", Object.keys(data.result || {}));
-
     if (data.result && data.result.account_nfts) {
       allNfts = allNfts.concat(data.result.account_nfts);
       marker = data.result.marker;
@@ -65,28 +62,18 @@ export default async function handler(req) {
   ];
 
   let nfts = [];
-  let usedAccount = owner || "";
-  let rawResponseExample = null;
+  let usedAccount = "";
 
   try {
-    // Single debug fetch for raw response format check
-    const debugAccount = owner || treasuries[0];
-    const xrplRes = await fetch("https://xrplcluster.com", {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        method: "account_nfts",
-        params: [{ account: debugAccount, ledger_index: "validated", limit: 1 }]
-      }),
-    });
-    rawResponseExample = await xrplRes.json();
-
     if (owner) {
       nfts = await crawlAllNfts(owner);
+      usedAccount = owner;
     } else {
       for (const t of treasuries) {
         const found = await crawlAllNfts(t);
-        if (found && found.length > 0) {
+        // Filter those specifically by the GGB Issuer inside the loop to see if we have collection hits
+        const collectionHits = found.filter(n => n.Issuer === GGB_ISSUER);
+        if (collectionHits.length > 0) {
           nfts = found;
           usedAccount = t;
           break;
@@ -99,17 +86,14 @@ export default async function handler(req) {
     if (issuer || !owner) {
         filtered = nfts.filter(n => n.Issuer === GGB_ISSUER);
     }
+    
     if (taxonParam !== null) {
         const taxon = parseInt(taxonParam);
         filtered = filtered.filter(n => n.NFTokenTaxon === taxon);
     }
 
     return new Response(JSON.stringify({ 
-      v: "1.5",
-      debug: {
-        raw_keys: rawResponseExample ? Object.keys(rawResponseExample.result || {}) : [],
-        raw_full: rawResponseExample
-      },
+      v: "1.6",
       result: { 
         account_nfts: filtered,
         count: filtered.length,
