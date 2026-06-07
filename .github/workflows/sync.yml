@@ -30,16 +30,25 @@ jobs:
             fi
             
             echo "Pulling latest code..."
-            git fetch origin main
-            git reset --hard origin/main
+            git fetch origin main || exit 1
+            git reset --hard origin/main || exit 1
             
             echo "Installing dependencies..."
-            npm install
+            npm install || exit 1
             
             echo "Restarting application..."
-            # Check if pm2 can find the process by name from ecosystem.config.js
-            pm2 restart gross-bros-v7 || pm2 start ecosystem.config.js || pm2 start server.js
+            # Use --update-env to pick up potential config changes
+            if pm2 list | grep -q "gross-bros-v7"; then
+              echo "Restarting existing process..."
+              pm2 restart gross-bros-v7 --update-env || exit 1
+            elif [ -f "ecosystem.config.js" ]; then
+              echo "Starting from ecosystem config..."
+              pm2 start ecosystem.config.js || exit 1
+            else
+              echo "Starting server.js directly..."
+              pm2 start server.js --name "gross-bros-v7" || exit 1
+            fi
             
             echo "Saving PM2 state..."
-            pm2 save
+            pm2 save || exit 1
             echo "Sync complete."
