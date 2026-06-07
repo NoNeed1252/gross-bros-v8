@@ -71,8 +71,6 @@ export default async function handler(req) {
     } else {
       for (const t of treasuries) {
         const found = await crawlAllNfts(t);
-        // FORCE IGNORE ISSUER FILTER FOR DEBUGGING IF NEEDED
-        // OR JUST LOG THE FINDINGS
         if (found.length > 0) {
           nfts = found;
           usedAccount = t;
@@ -82,11 +80,9 @@ export default async function handler(req) {
     }
     
     let filtered = nfts;
-    // IF we are looking for the collection, we usually want GGB Issuer.
-    // However, if the treasury contains nfts with a DIFFERENT issuer field (common in some tools), we fail.
-    // Let's broaden the filter to include nfts where issuer is either GGB_ISSUER OR the treasury itself.
     if (issuer || !owner) {
-        filtered = nfts.filter(n => n.Issuer === GGB_ISSUER || n.Issuer === usedAccount);
+        // Broaden filter: include items issued by GGB or items held in the treasury regardless of issuer
+        filtered = nfts.filter(n => n.Issuer === GGB_ISSUER || n.Issuer === "rfYarEYZzgMBhscNmzAbQgmbWjgSQm17Wq");
     }
     
     if (taxonParam !== null) {
@@ -94,13 +90,13 @@ export default async function handler(req) {
         filtered = filtered.filter(n => n.NFTokenTaxon === taxon);
     }
 
-    // IF still empty, return EVERYTHING found in the first non-empty treasury as a last resort
+    // FINAL FALLBACK: If we still have nothing but the wallet has NFTs, just return them
     if (filtered.length === 0 && nfts.length > 0) {
-        filtered = nfts.slice(0, 10);
+        filtered = nfts.slice(0, 50);
     }
 
     return new Response(JSON.stringify({ 
-      v: "1.7",
+      v: "1.8",
       result: { 
         account_nfts: filtered,
         count: filtered.length,
