@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "build": "mkdir -p public && cp index.html public/index.html"
+    "build": "mkdir -p public && cp index.html public/index.html && echo \"SYNC COMPLETE\""
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -14,5 +14,5 @@
     "xrpl": "^3.0.0",
     "@supabase/supabase-js": "^2.38.0"
   },
-  "redeploy": "3"
+  "redeploy": "4"
 }
