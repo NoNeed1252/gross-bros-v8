@@ -47,10 +47,12 @@
     .wallet-btn {
       border: 1px solid rgba(0,255,200,.5); background: rgba(0,255,200,.06); color: var(--cyan);
       border-radius: 12px; padding: 6px 10px; cursor: pointer; font-size: 10px; transition: .18s ease;
+      position: relative; z-index: 20;
     }
     
     .tabs {
       display: flex; border-bottom: 1px solid var(--line); background: #0b0b0b; flex-shrink: 0;
+      position: relative; z-index: 20;
     }
     .tab {
       flex: 1; padding: 12px 4px; text-align: center; cursor: pointer; font-size: 10px;
@@ -58,7 +60,7 @@
     }
     .tab.active { color: var(--cyan); background: linear-gradient(180deg, rgba(0,255,200,.14), rgba(0,255,200,.03)); box-shadow: inset 0 -1px 0 var(--cyan); }
     
-    .content { flex: 1; overflow-y: auto; padding: 14px; background: #000; position: relative; }
+    .content { flex: 1; overflow-y: auto; padding: 14px; background: #000; position: relative; z-index: 10; }
     .section { display: none; height: 100%; }
     .section.active { display: flex; flex-direction: column; }
     
@@ -66,17 +68,18 @@
       background: linear-gradient(180deg, rgba(7,18,17,.95), rgba(2,8,8,.95));
       border: 1px solid var(--line); border-radius: 16px; padding: 14px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.04); margin-bottom: 14px;
+      position: relative; z-index: 10;
     }
 
     /* Premium Social Link Boxes for 320px */
-    .social-links { display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center; }
+    .social-links { display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center; position: relative; z-index: 20; }
     
     .social-link-box {
       display: flex; align-items: center; justify-content: space-between;
       position: relative; padding: 18px 16px; border-radius: 4px;
       background: #0d0d0d; border: 1px solid rgba(0, 255, 200, 0.25);
       transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      overflow: hidden;
+      overflow: hidden; cursor: pointer;
       box-shadow: 0 4px 10px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,255,200,0.02);
     }
 
@@ -102,7 +105,7 @@
     }
     .social-link-box:hover::after { opacity: 1; background-size: 12px 12px; }
 
-    .social-info { display: flex; flex-direction: column; gap: 4px; z-index: 2; }
+    .social-info { display: flex; flex-direction: column; gap: 4px; z-index: 2; position: relative; }
 
     .social-link-box .label {
       font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
@@ -117,7 +120,7 @@
       font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700;
       color: var(--bg); background: var(--cyan); padding: 4px 8px;
       border-radius: 2px; text-transform: uppercase;
-      box-shadow: 0 0 10px var(--cyan); z-index: 2;
+      box-shadow: 0 0 10px var(--cyan); z-index: 2; position: relative;
     }
 
     .social-link-box .scanline {
