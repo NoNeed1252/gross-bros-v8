@@ -58,8 +58,6 @@ export default async function handler(req) {
   
   // Treasury list - scanning multiple wallets where NFTs might be held
   const treasuries = [
-    "rsuHaTvJh1bDmDoxX9QcKP7HEBSBt4XsHx",
-    "rNCY8dCi23nfyG74v8uE8V1G8Q8K265z6R",
     "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY"
   ];
 
