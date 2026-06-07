@@ -1,11 +1,11 @@
 {
   "name": "gross-bros-v8",
-  "version": "1.18.2",
+  "version": "1.18.3",
   "private": true,
   "dependencies": {
     "node-fetch": "^2.6.7"
   },
   "scripts": {
-    "redeploy": "echo 1780867801"
+    "redeploy": "echo 1780868520"
   }
 }
