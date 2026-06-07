@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/*.js": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "rewrites": [
     { "source": "/api/nft", "destination": "/api/nft.js" },
     { "source": "/api/chat", "destination": "/api/chat.js" },
@@ -11,6 +6,5 @@
     { "source": "/api/xaman", "destination": "/api/xaman.js" },
     { "source": "/api/callback", "destination": "/api/callback.js" },
     { "source": "/api/fusion-gate", "destination": "/api/fusion-gate.js" }
-  ],
-  "trailingSlash": false
+  ]
 }
