@@ -17,5 +17,29 @@ jobs:
           username: root
           password: vAUL03juyPr1hu
           script: |
-            # Sync update - Sunday, June 7, 2026
-            cd /root/gross-bros-v8 && git fetch origin && git reset --hard origin/main && npm install && pm2 restart all || pm2 start server.js && pm2 save
+            echo "Starting sync process..."
+            # Try to find the directory if the default doesn't exist
+            if [ -d "/root/gross-bros-v8" ]; then
+              cd /root/gross-bros-v8
+            elif [ -d "gross-bros-v8" ]; then
+              cd gross-bros-v8
+            else
+              echo "Error: Directory gross-bros-v8 not found in /root or home."
+              ls -la
+              exit 1
+            fi
+            
+            echo "Pulling latest code..."
+            git fetch origin main
+            git reset --hard origin/main
+            
+            echo "Installing dependencies..."
+            npm install
+            
+            echo "Restarting application..."
+            # Check if pm2 can find the process by name from ecosystem.config.js
+            pm2 restart gross-bros-v7 || pm2 start ecosystem.config.js || pm2 start server.js
+            
+            echo "Saving PM2 state..."
+            pm2 save
+            echo "Sync complete."
