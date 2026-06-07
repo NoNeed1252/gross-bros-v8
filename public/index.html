@@ -271,6 +271,14 @@
       <div class='tab' onclick="switchTab(4)">SOCIALS</div>
     </nav>
 
+    <nav class='tabs'>
+      <div class='tab active' onclick="switchTab(0)">CONSOLE</div>
+      <div class='tab' onclick="switchTab(1)">STORYLINE</div>
+      <div class='tab' onclick="switchTab(2)">FUSION LAB</div>
+      <div class='tab' onclick="switchTab(3)">LEADERBOARD</div>
+      <div class='tab' onclick="switchTab(4)">SOCIALS</div>
+    </nav>
+
     <main class='content'>
       <section id='section-0' class='section active'>
         <div class='grid grid-2'>
@@ -409,7 +417,7 @@
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
     }
 
-async function loadBroOfDay() {
+    async function loadBroOfDay() {
       setBroOfDayStatus("Crawl in progress...");
       try {
         let nfts = await fetchCollectionNfts(BRO_COLLECTION_ISSUER, 1);
@@ -436,7 +444,7 @@ async function loadBroOfDay() {
       }
     }
 
-async function updateTicker() {
+    async function updateTicker() {
       try {
         const res = await fetch('/api/ticker');
         const data = await res.json();
@@ -448,7 +456,7 @@ async function updateTicker() {
       } catch (e) {}
     }
 
-async function fetchUserNfts(address) {
+    async function fetchUserNfts(address) {
       try {
         // Use Bithomp for user NFTs too
         const response = await fetch(`${CONFIG.BITHOMP}/nfts?owner=${address}&issuer=${CONFIG.ISSUER}&taxon=1&limit=100`);
@@ -468,25 +476,7 @@ async function fetchUserNfts(address) {
       } catch (e) {}
     }
 
-function setWalletUI(connected, address) {
-      const btn = document.getElementById('wallet-btn');
-      const status = document.getElementById('xaman-status');
-      
-      localStorage.setItem('xaman_connected', connected);
-      localStorage.setItem('xaman_wallet', address || "");
-      
-      if (connected) {
-        btn.textContent = 'LINKED';
-        btn.disabled = false;
-        status.textContent = address.slice(0, 6) + '...' + address.slice(-4);
-      } else {
-        btn.textContent = 'CONNECT XAMAN';
-        btn.disabled = false;
-        status.textContent = 'Wallet disconnected.';
-      }
-    }
-
-async function startChatStream() {
+    async function startChatStream() {
       const input = document.getElementById('chat-input');
       const text = input.value.trim();
       if (!text) return;
@@ -526,7 +516,7 @@ async function startChatStream() {
       } catch (e) { contentEl.textContent = 'ERROR: SIGNAL LOST'; }
     }
 
-function toggleFuseUnlock() {
+    function toggleFuseUnlock() {
       state.fuseUnlocked = !state.fuseUnlocked;
       const badge = document.getElementById('fuse-lock-badge');
       badge.textContent = state.fuseUnlocked ? 'UNLOCKED' : 'LOCKED';
@@ -534,7 +524,7 @@ function toggleFuseUnlock() {
       badge.style.color = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
     }
 
-function calculateFusePrice() {
+    function calculateFusePrice() {
       const amountEl = document.getElementById("fuse-token-amount");
       if (state.fuseToken === 'RLUSD') {
         amountEl.textContent = state.fuseTargetUsd + ' RLUSD';
@@ -543,13 +533,13 @@ function calculateFusePrice() {
       }
     }
 
-function renderChatLog() {
+    function renderChatLog() {
       const log = document.getElementById('chat-log');
       log.innerHTML = state.chat.map(e => `<div class="bubble ${e.role === 'user' ? 'user' : 'system'}"><div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>${e.content}</div>`).join('');
       log.scrollTop = log.scrollHeight;
     }
 
-function renderNftSelection() {
+    function renderNftSelection() {
       const track = document.getElementById('nft-selection-track');
       track.innerHTML = state.userNfts.map((nft, index) => `
         <div class="nft-select-card ${state.selectedNft?.name === nft.name ? 'active' : ''}" onclick="selectNft(${index})">
@@ -557,7 +547,7 @@ function renderNftSelection() {
         </div>`).join('');
     }
 
-function selectNft(index) {
+    function selectNft(index) {
       state.selectedNft = state.userNfts[index];
       document.getElementById('held-nft-empty').style.display = 'none';
       document.getElementById('connected-nft-display').style.display = 'block';
@@ -565,7 +555,7 @@ function selectNft(index) {
       renderNftSelection();
     }
 
-function hexToUtf8(hexValue) {
+    function hexToUtf8(hexValue) {
       const hex = String(hexValue || '').trim();
       if (!hex || hex.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(hex)) return hex;
       try {
@@ -575,7 +565,7 @@ function hexToUtf8(hexValue) {
       } catch (e) { return hex; }
     }
 
-function xrplUriToHttp(uri) {
+    function xrplUriToHttp(uri) {
       const value = String(uri || '').trim();
       if (!value) return '';
       if (/^[0-9a-fA-F]+$/.test(value)) return xrplUriToHttp(hexToUtf8(value));
@@ -584,18 +574,18 @@ function xrplUriToHttp(uri) {
       return value;
     }
 
-function dailyRotationSeed() {
+    function dailyRotationSeed() {
       const now = new Date();
       return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 86400000);
     }
 
-function cleanLoreText(metadata) {
+    function cleanLoreText(metadata) {
       const raw = metadata?.lore || metadata?.backstory || metadata?.story || metadata?.description || '';
       const lines = String(raw).replace(/\r\n/g, '\n').split(/\n+/).map(l => l.trim()).filter(Boolean);
       return lines.join(' ').replace(/\s{2,}/g, ' ').trim() || 'Live NFT lore is loading...';
     }
 
-async function fetchCollectionNfts(issuer, taxon = 1) {
+    async function fetchCollectionNfts(issuer, taxon = 1) {
       // Use Bithomp API for instant retrieval
       try {
         const response = await fetch(`${CONFIG.BITHOMP}/nfts?issuer=${issuer}&taxon=${taxon}&limit=100`);
@@ -613,12 +603,30 @@ async function fetchCollectionNfts(issuer, taxon = 1) {
       return []; // Fallback to empty if Bithomp fails (handled by caller)
     }
 
-function setBroOfDayStatus(message) {
+    function setBroOfDayStatus(message) {
       const statusEl = document.getElementById("bro-of-day-status");
       if (statusEl) statusEl.textContent = message || "";
     }
 
-async function connectXaman() {
+    function setWalletUI(connected, address) {
+      const btn = document.getElementById('wallet-btn');
+      const status = document.getElementById('xaman-status');
+      if (connected) {
+        btn.textContent = 'SYNCED';
+        btn.disabled = true;
+        status.textContent = 'Connected: ' + address.slice(0, 6) + '...' + address.slice(-4);
+        localStorage.setItem('xaman_connected', 'true');
+        localStorage.setItem('xaman_wallet', address);
+      } else {
+        btn.textContent = 'CONNECT XAMAN';
+        btn.disabled = false;
+        status.textContent = 'Wallet disconnected.';
+        localStorage.removeItem('xaman_connected');
+        localStorage.removeItem('xaman_wallet');
+      }
+    }
+
+    async function connectXaman() {
       const btn = document.getElementById('wallet-btn');
       
       // If we already have a pending payload, don't start a new one, just ensure polling is active
@@ -635,7 +643,14 @@ async function connectXaman() {
         const res = await fetch('/api/xaman?action=create-payload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ txjson: { TransactionType: 'SignIn' } })
+          body: JSON.stringify({ 
+            txjson: { TransactionType: 'SignIn' },
+            options: { 
+              return_url: { 
+                web: window.location.href 
+              } 
+            } 
+          })
         });
         
         if (!res.ok) throw new Error('Failed to create payload');
@@ -670,7 +685,7 @@ async function connectXaman() {
       }
     }
 
-function pollPayload(uuid) {
+    function pollPayload(uuid) {
       if (pollInterval) clearInterval(pollInterval);
       const btn = document.getElementById('wallet-btn');
       let attempts = 0;
@@ -711,14 +726,14 @@ function pollPayload(uuid) {
       }, 2500);
     }
 
-function stopPolling() {
+    function stopPolling() {
       if (pollInterval) clearInterval(pollInterval);
       pollInterval = null;
       state.payloadUuid = null;
       localStorage.removeItem('xaman_payload_uuid');
     }
 
-function init() {
+    function init() {
       const ticker = document.getElementById('warning-ticker-track');
       const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
       if (ticker) {
@@ -747,6 +762,6 @@ function init() {
     }
 
     window.onload = () => { init(); };
-  </script>
+</script>
 </body>
 </html>
