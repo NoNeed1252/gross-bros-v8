@@ -393,10 +393,22 @@ letter-spacing: 1px;
         </div>
       </section>
 
+      
       <section id='section-3' class='section'>
         <div class='panel'>
           <h2 style='font-family:Orbitron,sans-serif;'>LEADERBOARD</h2>
-          <div class='leaderboard'><div class='leader-row'><div>#1</div><div>Operative Alpha</div><div>1024</div></div></div>
+          <div class='leaderboard' id='leaderboard-container'>
+            <div class='leader-row muted' style='border-bottom: 1px solid var(--cyan); padding-bottom: 10px; font-weight: bold;'>
+              <div>RANK</div>
+              <div>HANDLE</div>
+              <div>CHAT XP</div>
+              <div>TRADE SCORE</div>
+              <div>TOTAL</div>
+            </div>
+            <div id='leaderboard-rows'>
+              <div class='leader-row'><div>--</div><div>Loading data...</div><div>--</div><div>--</div><div>--</div></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -780,6 +792,29 @@ letter-spacing: 1px;
     function switchTab(index) {
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
+      if (index === 3) fetchLeaderboard();
+    }
+
+    
+    async function fetchLeaderboard() {
+      const rowsEl = document.getElementById('leaderboard-rows');
+      try {
+        const res = await fetch('/api/leaderboard');
+        const data = await res.json();
+        if (data.leaderboard) {
+          rowsEl.innerHTML = data.leaderboard.map((player, idx) => `
+            <div class='leader-row'>
+              <div>#${idx + 1}</div>
+              <div style="color: var(--cyan);">${player.name}</div>
+              <div>${player.chatXp}</div>
+              <div>${player.tradeScore}</div>
+              <strong style="color: #fff;">${player.totalScore}</strong>
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        rowsEl.innerHTML = "<div class='leader-row'><div style='grid-column: span 5;'>Error loading leaderboard.</div></div>";
+      }
     }
 
     function init() {
