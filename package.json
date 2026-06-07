@@ -20,5 +20,5 @@
     "tailwindcss": "^3.3.0"
   },
   "REVERT_TARGET": "eaded10290d763686e675eee875b55f682adfcdc",
-  "REDEPLOY_TRIGGER": "force-sync-v1.12.6"
+  "REDEPLOY_TRIGGER": "force-sync-v1.12.6-manual-2"
 }
