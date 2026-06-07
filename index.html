@@ -175,8 +175,9 @@
       width: 100%; height: auto; aspect-ratio: 1/1; border: none;
       border-bottom: 2px solid rgba(0, 255, 200, 0.4); border-radius: 0;
       background: #000;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
     }
-    .held-nft-image-wrapper img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; }
+    .held-nft-image-wrapper img { width: 100%; height: 100%; object-fit: contain; opacity: 0.9; }
     .held-nft-info { 
       width: 100%; padding: 22px; text-align: center;
       background: linear-gradient(180deg, rgba(0,255,200,0.15), transparent);
@@ -239,7 +240,7 @@
     @media (max-width: 480px) {
       .chat-log { height: 260px; }
       .held-nft-panel { margin-bottom: 12px; border: none; background: transparent; box-shadow: none; }
-      .held-nft-image-wrapper { max-width: 220px; margin: 0 auto; aspect-ratio: 3/4; border-radius: 12px; border: 1px solid var(--line); box-shadow: 0 0 20px var(--line); }
+      .held-nft-image-wrapper { max-width: 220px; margin: 0 auto; aspect-ratio: 1/1; border-radius: 12px; border: 1px solid var(--line); box-shadow: 0 0 20px var(--line); }
       .held-nft-empty { padding: 40px 10px; border: 1px solid var(--line); border-radius: 24px; background: rgba(0,0,0,0.7); }
       .fuse-panel { gap: 8px; }
       .fuse-head h2 { margin-bottom: 12px !important; }
@@ -427,11 +428,21 @@
       const statusEl = document.getElementById("bro-of-day-status");
       try {
         statusEl.textContent = "Crawl in progress...";
-        const response = await fetch(`/api/nft?issuer=${CONFIG.ISSUER}`);
+        // Call RPC directly to avoid any middle-man filtering issues in /api/nft
+        const response = await fetch(CONFIG.RPC, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            method: "account_nfts",
+            params: [{ account: CONFIG.ISSUER, ledger_index: "validated" }]
+          })
+        });
         const data = await response.json();
         const allNfts = data.result?.account_nfts || [];
-        const nfts = allNfts.filter(nft => nft.NFTokenTaxon === 1);
-        if (nfts.length === 0) throw new Error("No NFTs found with taxon 1");
+        // Filter for NFTs issued by the treasury itself or matching the taxon
+        const nfts = allNfts.filter(nft => nft.NFTokenTaxon === 1 || nft.Issuer === CONFIG.ISSUER);
+        if (nfts.length === 0) throw new Error("No NFTs found in treasury");
+        
         const selected = nfts[Math.floor(Math.random() * nfts.length)];
         const metaUri = xrplUriToHttp(selected.URI);
         const meta = await (await fetch(metaUri)).json();
