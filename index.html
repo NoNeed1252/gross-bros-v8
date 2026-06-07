@@ -415,8 +415,9 @@
         });
         const data = await response.json();
         const allNfts = data.result?.account_nfts || [];
-        const nfts = allNfts.filter(nft => nft.NFTokenTaxon === 1 || nft.Issuer === CONFIG.ISSUER);
-        if (nfts.length === 0) throw new Error("No NFTs found in treasury");
+        // Filter strictly for Galactic Gross Bros collection (Taxon 1)
+        const nfts = allNfts.filter(nft => nft.NFTokenTaxon === 1 && nft.Issuer === CONFIG.ISSUER);
+        if (nfts.length === 0) throw new Error("No GGB NFTs found in treasury");
         
         const selected = nfts[Math.floor(Math.random() * nfts.length)];
         const metaUri = xrplUriToHttp(selected.URI);
@@ -650,7 +651,6 @@
     }
 
     function init() {
-      // Trigger NFT load immediately
       loadBroOfDay();
       
       const ticker = document.getElementById('warning-ticker-track');
@@ -662,9 +662,7 @@
       document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') startChatStream(); });
     }
 
-    // Call init immediately and also on window.onload as a fallback
     init();
-    window.onload = () => { /* init already called */ };
   </script>
 </body>
 </html>
