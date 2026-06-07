@@ -49,17 +49,18 @@ async function crawlAllNfts(account) {
 
 export default async function handler(req) {
   const { searchParams } = new URL(req.url);
-  const issuer = searchParams.get('issuer');
+  const issuerQuery = searchParams.get('issuer');
   const owner = searchParams.get('owner');
   const taxonParam = searchParams.get('taxon');
   
-  // Normalized constants for comparison
+  // Normalized constant for internal filtering
   const GGB_ISSUER = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
   
+  // Treasury list
   const treasuries = [
+    "rNCY8dCi23nfyG74v8uE8V1G8Q8K265z6R",
     "rsuHaTvJh1bDmDoxX9QcKP7HEBSBt4XsHx",
-    "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY",
-    "rNCY8dCi23nfyG74v8uE8V1G8Q8K265z6R"
+    "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY"
   ];
 
   let nfts = [];
@@ -70,17 +71,19 @@ export default async function handler(req) {
       nfts = await crawlAllNfts(owner);
       usedAccount = owner;
     } else {
+      // Loop through treasuries until we find one containing our NFTs
       for (const t of treasuries) {
         try {
           const found = await crawlAllNfts(t);
-          // Case-insensitive check for collection hits
+          // Check if this wallet has ANY NFTs from our target issuer
           const collectionHits = found.filter(n => 
             String(n.Issuer || '').toLowerCase() === GGB_ISSUER.toLowerCase()
           );
+          
           if (collectionHits.length > 0) {
             nfts = found;
             usedAccount = t;
-            break;
+            break; 
           }
         } catch (e) {
           console.error(`Error crawling ${t}:`, e);
@@ -88,17 +91,19 @@ export default async function handler(req) {
       }
     }
     
-    // Core filter logic
-    let filtered = nfts;
-    if (issuer || !owner) {
-        filtered = nfts.filter(n => 
-          String(n.Issuer || '').toLowerCase() === GGB_ISSUER.toLowerCase()
-        );
-    }
+    // Core filter logic: Filter by Issuer
+    // We use GGB_ISSUER as the source of truth if issuerQuery is missing
+    const targetIssuer = (issuerQuery || GGB_ISSUER).toLowerCase();
+    let filtered = nfts.filter(n => 
+      String(n.Issuer || '').toLowerCase() === targetIssuer
+    );
     
+    // Optional Taxon filter
     if (taxonParam !== null) {
         const taxon = parseInt(taxonParam);
-        filtered = filtered.filter(n => n.NFTokenTaxon === taxon);
+        if (!isNaN(taxon)) {
+            filtered = filtered.filter(n => n.NFTokenTaxon === taxon);
+        }
     }
 
     // MAP TO FRONTEND EXPECTED KEYS (NFTokenID, URI)
@@ -110,7 +115,7 @@ export default async function handler(req) {
     }));
 
     return new Response(JSON.stringify({ 
-      v: "1.12.1",
+      v: "1.12.2",
       result: { 
         account_nfts: resultNfts,
         count: resultNfts.length,
