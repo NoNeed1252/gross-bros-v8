@@ -1,11 +1,10 @@
 {
   "name": "gross-bros-v8",
-  "version": "1.0.1",
-  "type": "module",
+  "version": "1.14.6",
+  "description": "Guardian Broadcast OS",
+  "main": "index.html",
   "scripts": {
-    "build": "mkdir -p public && cp index.html public/index.html && echo \"SYNC COMPLETE\""
+    "start": "echo 'Guardian OS Online'"
   },
-  "dependencies": {
-    "xrpl": "^3.0.0"
-  }
+  "dependencies": {}
 }
