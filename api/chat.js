@@ -30,9 +30,9 @@ Task: Assist with fusion and NFT analysis in character. Stay concise.`;
     ];
 
     const models = [
-      'meta-llama/llama-3.1-8b-instruct:free',
-      'meta-llama/llama-3.1-70b-instruct:free',
-      'google/gemma-2-9b-it:free'
+      'meta-llama/llama-3.1-8b-instruct',
+      'google/gemma-2-9b-it',
+      'meta-llama/llama-3.1-8b-instruct:free'
     ];
 
     let openRouterRes;
@@ -57,8 +57,10 @@ Task: Assist with fusion and NFT analysis in character. Stay concise.`;
 
         if (openRouterRes.ok) break;
         lastError = await openRouterRes.text();
+        console.error(`Model ${model} failed:`, lastError);
       } catch (err) {
         lastError = err.message;
+        console.error(`Model ${model} error:`, lastError);
       }
     }
 
