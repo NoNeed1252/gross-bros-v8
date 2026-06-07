@@ -32,8 +32,7 @@ async function crawlAllNfts(account) {
     }
 
     const data = await response.json();
-    console.log(`Crawl attempt ${attempts} for ${account}:`, data);
-
+    
     if (data.result && data.result.account_nfts) {
       allNfts = allNfts.concat(data.result.account_nfts);
       marker = data.result.marker;
@@ -54,12 +53,13 @@ export default async function handler(req) {
   const owner = searchParams.get('owner');
   const taxonParam = searchParams.get('taxon');
   
+  // Normalized constants for comparison
   const GGB_ISSUER = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
   
   const treasuries = [
-    "rn1SK8h8YgwGka5BqQoHTSdYzsxkKv3NFT",
     "rNCY8dCi23nfyG74v8uE8V1G8Q8K265z6R",
-    "rsuHaTvJh1bDmDoxX9QcKP7HEBSBt4XsHx"
+    "rsuHaTvJh1bDmDoxX9QcKP7HEBSBt4XsHx",
+    "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY"
   ];
 
   let nfts = [];
@@ -72,39 +72,47 @@ export default async function handler(req) {
     } else {
       for (const t of treasuries) {
         const found = await crawlAllNfts(t);
-        if (found && found.length > 0) {
+        // Case-insensitive check for collection hits
+        const collectionHits = found.filter(n => 
+          String(n.Issuer || '').toLowerCase() === GGB_ISSUER.toLowerCase()
+        );
+        if (collectionHits.length > 0) {
           nfts = found;
           usedAccount = t;
           break;
         }
+        usedAccount = t;
       }
     }
-
+    
+    // Core filter logic
     let filtered = nfts;
-    if (!owner) {
-        filtered = nfts.filter(n => n.Issuer === GGB_ISSUER || n.Issuer === "rfYarEYZzgMBhscNmzAbQgmbWjgSQm17Wq");
+    if (issuer || !owner) {
+        filtered = nfts.filter(n => 
+          String(n.Issuer || '').toLowerCase() === GGB_ISSUER.toLowerCase()
+        );
     }
     
-    if (taxonParam !== null && filtered.length > 0) {
+    if (taxonParam !== null) {
         const taxon = parseInt(taxonParam);
-        const taxonFiltered = filtered.filter(n => n.NFTokenTaxon === taxon);
-        if (taxonFiltered.length > 0) {
-            filtered = taxonFiltered;
-        }
+        filtered = filtered.filter(n => n.NFTokenTaxon === taxon);
     }
 
-    if (filtered.length === 0 && nfts.length > 0) {
-        filtered = nfts.slice(0, 50);
-    }
+    // MAP TO FRONTEND EXPECTED KEYS (NFTokenID, URI)
+    const resultNfts = filtered.map(n => ({
+      NFTokenID: n.NFTokenID,
+      URI: n.URI,
+      Issuer: n.Issuer,
+      NFTokenTaxon: n.NFTokenTaxon
+    }));
 
     return new Response(JSON.stringify({ 
-      v: "1.11",
+      v: "1.12",
       result: { 
-        account_nfts: filtered,
-        count: filtered.length,
+        account_nfts: resultNfts,
+        count: resultNfts.length,
         account: usedAccount,
-        total_found_in_wallet: nfts.length,
-        timestamp: new Date().toISOString()
+        total_found_in_wallet: nfts.length
       } 
     }), {
       status: 200,
