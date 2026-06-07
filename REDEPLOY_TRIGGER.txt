@@ -1,1 +1,1 @@
-Force redeploy: Add cyberpunk-styled buy button (ACQUIRE NOW) with neon green accent to BOTD NFT display area. Button styled with Orbitron font, dark background, and glowing border. Linked to https://xrp.cafe/collection/galactic-gross-bros
+trigger: manual redeploy Sunday, June 7, 2026, 9:01:57 AM EDT
