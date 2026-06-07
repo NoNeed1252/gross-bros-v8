@@ -2,6 +2,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "public",
   "rewrites": [
-    { "source": "/api/chat.js", "destination": "/api/chat" }
+    { "source": "/api/:path*", "destination": "/api/:path*" }
   ]
 }
