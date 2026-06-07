@@ -47,12 +47,10 @@
     .wallet-btn {
       border: 1px solid rgba(0,255,200,.5); background: rgba(0,255,200,.06); color: var(--cyan);
       border-radius: 12px; padding: 6px 10px; cursor: pointer; font-size: 10px; transition: .18s ease;
-      position: relative; z-index: 20;
     }
     
     .tabs {
       display: flex; border-bottom: 1px solid var(--line); background: #0b0b0b; flex-shrink: 0;
-      position: relative; z-index: 20;
     }
     .tab {
       flex: 1; padding: 12px 4px; text-align: center; cursor: pointer; font-size: 10px;
@@ -60,7 +58,7 @@
     }
     .tab.active { color: var(--cyan); background: linear-gradient(180deg, rgba(0,255,200,.14), rgba(0,255,200,.03)); box-shadow: inset 0 -1px 0 var(--cyan); }
     
-    .content { flex: 1; overflow-y: auto; padding: 14px; background: #000; position: relative; z-index: 10; }
+    .content { flex: 1; overflow-y: auto; padding: 14px; background: #000; position: relative; }
     .section { display: none; height: 100%; }
     .section.active { display: flex; flex-direction: column; }
     
@@ -68,11 +66,10 @@
       background: linear-gradient(180deg, rgba(7,18,17,.95), rgba(2,8,8,.95));
       border: 1px solid var(--line); border-radius: 16px; padding: 14px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.04); margin-bottom: 14px;
-      position: relative; z-index: 10;
     }
 
-    /* Premium Social Link Boxes for 320px */
-    .social-links { display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center; position: relative; z-index: 20; }
+    /* PREMIUM ARCADE SOCIAL BOXES - Self-contained */
+    .social-links { display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center; }
     
     .social-link-box {
       display: flex; align-items: center; justify-content: space-between;
@@ -83,7 +80,6 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,255,200,0.02);
     }
 
-    /* Corner Brackets Style */
     .social-link-box::after {
       content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       border: 1px solid transparent; pointer-events: none;
