@@ -2,9 +2,9 @@
   "buildCommand": "npm run build",
   "outputDirectory": "public",
   "cleanUrls": true,
-  "rewrites": [
-    { "source": "/api/nft", "destination": "api/nft.js" },
-    { "source": "/api/chat", "destination": "api/chat.js" },
-    { "source": "/api/xaman", "destination": "api/xaman.js" }
-  ]
+  "functions": {
+    "api/*.js": {
+      "runtime": "edge"
+    }
+  }
 }
