@@ -32,7 +32,8 @@ async function crawlAllNfts(account) {
     }
 
     const data = await response.json();
-    
+    console.log(`Crawl attempt ${attempts} for ${account}:`, data);
+
     if (data.result && data.result.account_nfts) {
       allNfts = allNfts.concat(data.result.account_nfts);
       marker = data.result.marker;
@@ -40,7 +41,7 @@ async function crawlAllNfts(account) {
       marker = null;
     }
     
-    if (attempts > 50) break; 
+    if (attempts > 10) break; 
     
   } while (marker);
 
@@ -56,9 +57,9 @@ export default async function handler(req) {
   const GGB_ISSUER = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
   
   const treasuries = [
+    "rn1SK8h8YgwGka5BqQoHTSdYzsxkKv3NFT",
     "rNCY8dCi23nfyG74v8uE8V1G8Q8K265z6R",
-    "rsuHaTvJh1bDmDoxX9QcKP7HEBSBt4XsHx",
-    "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY"
+    "rsuHaTvJh1bDmDoxX9QcKP7HEBSBt4XsHx"
   ];
 
   let nfts = [];
@@ -77,12 +78,6 @@ export default async function handler(req) {
           break;
         }
       }
-    }
-    
-    // IF STILL EMPTY, TRY ONE MORE TIME WITH A KNOWN SUCCESSFUL WALLET (hardcoded test)
-    if (nfts.length === 0) {
-        nfts = await crawlAllNfts("rn1SK8h8YgwGka5BqQoHTSdYzsxkKv3NFT");
-        usedAccount = "rn1SK8h8YgwGka5BqQoHTSdYzsxkKv3NFT";
     }
 
     let filtered = nfts;
@@ -103,12 +98,13 @@ export default async function handler(req) {
     }
 
     return new Response(JSON.stringify({ 
-      v: "1.10",
+      v: "1.11",
       result: { 
         account_nfts: filtered,
         count: filtered.length,
         account: usedAccount,
-        total_found_in_wallet: nfts.length
+        total_found_in_wallet: nfts.length,
+        timestamp: new Date().toISOString()
       } 
     }), {
       status: 200,
