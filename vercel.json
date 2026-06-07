@@ -2,7 +2,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "public",
   "rewrites": [
-    { "source": "/api/nft", "destination": "/api/nft.js" },
-    { "source": "/api/chat", "destination": "/api/chat.js" }
+    { "source": "/api/nft", "destination": "/api/nft" },
+    { "source": "/api/chat", "destination": "/api/chat" }
   ]
 }
