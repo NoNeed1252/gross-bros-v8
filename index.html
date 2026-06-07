@@ -396,35 +396,129 @@
       xrpPrice: 0
     };
 
-    function xrplUriToHttp(uri) {
-      if (!uri) return '';
-      let value = uri;
-      if (/^[0-9a-fA-F]+$/.test(uri)) {
-        const bytes = new Uint8Array(uri.length / 2);
-        for (let i = 0; i < uri.length; i += 2) bytes[i / 2] = parseInt(uri.slice(i, i + 2), 16);
-        value = new TextDecoder().decode(bytes);
+    
+    
+    function hexToUtf8(hex) {
+      if (!hex || typeof hex !== 'string') return '';
+      try {
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < hex.length; i += 2) {
+          bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+        }
+        return new TextDecoder().decode(bytes);
+      } catch (e) {
+        return '';
       }
-      if (value.startsWith('ipfs://')) return CONFIG.GATEWAY + value.slice(7).replace(/^\/+/, '');
+    }
+
+    function xrplUriToHttp(uri) {
+      const value = String(uri || '').trim();
+      if (!value) return '';
+      if (/^[0-9a-fA-F]+$/.test(value)) {
+        return xrplUriToHttp(hexToUtf8(value));
+      }
+      if (value.startsWith('ipfs://')) {
+        return CONFIG.GATEWAY + value.slice('ipfs://'.length).replace(/^\/+/ , '');
+      }
+      if (value.startsWith('ar://')) {
+        return 'https://arweave.net/' + value.slice('ar://'.length).replace(/^\/+/ , '');
+      }
       return value;
     }
 
-    async function loadBroOfDay() {
-      const statusEl = document.getElementById("bro-of-day-status");
+    function dailyRotationSeed() {
+      const now = new Date();
+      return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 86400000);
+    }
+
+    function normalizeTaxon(value) {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : null;
+    }
+
+    function cleanLoreText(metadata) {
+      const candidates = [metadata?.lore, metadata?.backstory, metadata?.story, metadata?.description];
+      const raw = candidates.find((value) => typeof value === 'string' && value.trim()) || '';
+      const lines = String(raw)
+        .replace(/\r\n/g, '\n')
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .filter((line) => !/^(traits?|attributes?|serial(?: number)?|background(?: type)?|token(?: id)?|issuer|taxon|edition|rarity|owner|contract)\b[:\-]*/i.test(line))
+        .filter((line) => !/^#\s*\d+/.test(line));
+      const text = lines.join(' ').replace(/\s{2,}/g, ' ').trim();
+      return text || 'Live NFT lore is loading from the full BRO collection.';
+    }
+
+    function setBroOfDayStatus(message) {
+      const el = document.getElementById("bro-of-day-status");
+      if (el) el.textContent = message;
+    }
+
+    async function fetchCollectionNfts(issuer, taxon = 1) {
+      const targetTaxon = normalizeTaxon(taxon) ?? 1;
+      const items = [];
+      const seen = new Set();
+      let marker = null;
+      
       try {
-        statusEl.textContent = "Crawl in progress...";
-        const response = await fetch(`/api/nft?issuer=${CONFIG.ISSUER}`);
-        const data = await response.json();
-        const allNfts = data.result?.account_nfts || [];
-        const nfts = allNfts.filter(nft => nft.NFTokenTaxon === 1);
-        if (nfts.length === 0) throw new Error("No NFTs found with taxon 1");
-        const selected = nfts[Math.floor(Math.random() * nfts.length)];
+        do {
+          const res = await fetch(CONFIG.RPC, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              method: 'account_tx',
+              params: [{
+                account: issuer,
+                ledger_index_min: -1,
+                ledger_index_max: -1,
+                limit: 400,
+                forward: false,
+                marker
+              }]
+            })
+          });
+          const data = await res.json();
+          const txs = data.result?.transactions || [];
+          marker = data.result?.marker;
+
+          for (const item of txs) {
+            const tx = item.tx || item;
+            if (tx.TransactionType === 'NFTokenMint' && normalizeTaxon(tx.NFTokenTaxon) === targetTaxon) {
+              const nftId = item.meta?.nftoken_id || item.meta?.NFTokenID;
+              if (nftId && !seen.has(nftId)) {
+                seen.add(nftId);
+                items.push({ nftokenID: nftId, URI: tx.URI });
+              }
+            }
+          }
+          if (items.length > 500) break;
+        } while (marker);
+      } catch (e) {
+        console.error('Crawl error:', e);
+      }
+      return items;
+    }
+
+    async function loadBroOfDay() {
+      const imgEl = document.getElementById("bro-of-day-image");
+      const descEl = document.getElementById("bro-of-day-description");
+      
+      try {
+        setBroOfDayStatus("Crawl in progress...");
+        const nfts = await fetchCollectionNfts(CONFIG.ISSUER);
+        if (nfts.length === 0) throw new Error("No NFTs found.");
+        
+        const seed = dailyRotationSeed();
+        const selected = nfts[seed % nfts.length];
         const metaUri = xrplUriToHttp(selected.URI);
         const meta = await (await fetch(metaUri)).json();
-        document.getElementById("bro-of-day-image").src = xrplUriToHttp(meta.image);
-        document.getElementById("bro-of-day-description").textContent = meta.description || meta.lore || "No lore found.";
-        statusEl.textContent = "Signal synchronized.";
+        
+        if (imgEl) imgEl.src = xrplUriToHttp(meta.image);
+        if (descEl) descEl.textContent = cleanLoreText(meta);
+        setBroOfDayStatus("Signal synchronized.");
       } catch (e) {
-        statusEl.textContent = "Signal lost: " + e.message;
+        setBroOfDayStatus("Signal lost: " + e.message);
       }
     }
 
