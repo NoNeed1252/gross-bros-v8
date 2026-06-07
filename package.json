@@ -1,32 +1,11 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "public",
-  "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/api/nft",
-      "destination": "api/nft.js"
-    },
-    {
-      "source": "/api/chat",
-      "destination": "api/chat.js"
-    },
-    {
-      "source": "/api/ticker",
-      "destination": "api/ticker.js"
-    },
-    {
-      "source": "/api/xaman",
-      "destination": "api/xaman.js"
-    },
-    {
-      "source": "/api/callback",
-      "destination": "api/callback.js"
-    },
-    {
-      "source": "/api/fusion-gate",
-      "destination": "api/fusion-gate.js"
-    }
-  ],
-  "redeploy": "5"
+  "name": "gross-bros-v8",
+  "version": "1.0.1",
+  "type": "module",
+  "scripts": {
+    "build": "mkdir -p public && cp index.html public/index.html && echo \"SYNC COMPLETE\""
+  },
+  "dependencies": {
+    "xrpl": "^3.0.0"
+  }
 }
