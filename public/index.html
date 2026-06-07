@@ -591,20 +591,15 @@
     function setWalletUI(connected, address) {
       const btn = document.getElementById('wallet-btn');
       const status = document.getElementById('xaman-status');
-      const msg = document.getElementById('status-msg');
       if (connected) {
         btn.textContent = 'LINKED';
         btn.disabled = false;
         status.textContent = address.slice(0, 6) + '...' + address.slice(-4);
-        if (msg) {
-          // msg.textContent = "AUTHENTICATION COMPLETE";
-          // msg.style.color = "var(--cyan)";
-        }
       }
     }
 
     async function fetchUserNfts(address) {
-      const cacheKey = `bithomp_user_nfts_${address}`;
+      const cacheKey = \`bithomp_user_nfts_\${address}\`;
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         try {
@@ -623,7 +618,7 @@
 
       try {
         console.log("Fetching user NFTs from Bithomp...");
-        const response = await fetch(`https://bithomp.com/api/v2/nfts?owner=${address}&issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);
+        const response = await fetch(\`https://bithomp.com/api/v2/nfts?owner=\${address}&issuer=\${CONFIG.ISSUER}&taxon=1&list=nfts\`);
         const result = await response.json();
         const nfts = result?.nfts || [];
         
@@ -655,9 +650,9 @@
       if (!track) return;
       track.innerHTML = state.userNfts.map((nft, index) => {
         const active = state.selectedNft?.name === nft.name;
-        return `<div class="nft-select-card ${active ? 'active' : ''}" onclick="selectNft(${index})">
-          <img src="${nft.image}" alt="">
-        </div>`;
+        return \`<div class="nft-select-card \${active ? 'active' : ''}" onclick="selectNft(\${index})">
+          <img src="\${nft.image}" alt="">
+        </div>\`;
       }).join('');
     }
 
@@ -705,7 +700,7 @@
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          const lines = decoder.decode(value).split('\n');
+          const lines = decoder.decode(value).split('\\n');
           for (const line of lines) {
             if (!line.startsWith('data: ')) continue;
             const dataText = line.slice(6);
@@ -728,12 +723,12 @@
 
     function renderChatLog() {
       const log = document.getElementById('chat-log');
-      log.innerHTML = state.chat.map(e => `
-        <div class="bubble ${e.role === 'user' ? 'user' : 'system'}">
-          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>
-          ${e.content}
+      log.innerHTML = state.chat.map(e => \`
+        <div class="bubble \${e.role === 'user' ? 'user' : 'system'}">
+          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">\${e.role.toUpperCase()}</div>
+          \${e.content}
         </div>
-      `).join('');
+      \`).join('');
       log.scrollTop = log.scrollHeight;
     }
 
@@ -745,7 +740,7 @@
     function init() {
       const ticker = document.getElementById('warning-ticker-track');
       const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
-      ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' " ');
+      ticker.innerHTML = items.concat(items).map(i => \`<span class="ticker-item">\${i}</span>\`).join(' " ');
       loadBroOfDay();
       updateTicker();
       setInterval(updateTicker, 15000);
