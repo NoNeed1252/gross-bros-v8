@@ -171,9 +171,25 @@
       box-shadow: 0 0 50px rgba(0, 255, 200, 0.15);
       position: relative;
     }
-    
-    .held-nft-image-wrapper img { width: 100%; height: 100%; object-fit: cover; }
-    
+    .held-nft-image-wrapper {
+      width: 100%; height: auto; aspect-ratio: 1/1; border: none;
+      border-bottom: 2px solid rgba(0, 255, 200, 0.4); border-radius: 0;
+      background: #000;
+    }
+    .held-nft-image-wrapper img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; }
+    .held-nft-info { 
+      width: 100%; padding: 22px; text-align: center;
+      background: linear-gradient(180deg, rgba(0,255,200,0.15), transparent);
+    }
+    .held-nft-name { 
+      font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: bold; 
+      color: var(--cyan); letter-spacing: 0.2em; text-transform: uppercase;
+      text-shadow: 0 0 15px var(--cyan);
+    }
+    .held-nft-empty {
+      padding: 80px 20px; text-align: center; color: rgba(0,255,200,0.25);
+      font-family: 'Orbitron', sans-serif; letter-spacing: 0.3em; text-transform: uppercase;
+    }
     
     .chat-terminal-actions {
       display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
@@ -231,9 +247,33 @@
       box-shadow: 0 0 30px var(--cyan);
     }
     .qr-container img { max-width: 300px; display: block; }
-    .cards { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-    .card { border: 1px solid rgba(0,255,200,.15); border-radius: 24px; padding: 18px; background: rgba(0,255,200,.03); text-decoration: none; }
-  </style>
+  
+.social-links { display: grid; gap: 16px; }
+.social-card { 
+display: flex; 
+align-items: center; 
+justify-content: space-between; 
+padding: 20px; 
+border: 1px solid rgba(0,255,200,0.2); 
+border-radius: 20px; 
+background: rgba(0,255,200,0.04); 
+text-decoration: none; 
+transition: all 0.2s ease;
+}
+.social-card:hover {
+background: rgba(0,255,200,0.08);
+border-color: var(--cyan);
+box-shadow: 0 0 15px rgba(0,255,200,0.1);
+}
+.social-card .label { 
+font-family: 'Orbitron', sans-serif; 
+font-size: 14px; 
+color: var(--cyan); 
+margin-bottom: 6px; 
+letter-spacing: 1px;
+}
+.social-card .desc { font-size: 12px; color: rgba(0,255,200,0.7); }
+</style>
 </head>
 <body>
   <div class="crt-overlay"></div>
@@ -262,14 +302,6 @@
     <div class='ticker'>
       <div id='warning-ticker-track' class='ticker-track'></div>
     </div>
-
-    <nav class='tabs'>
-      <div class='tab active' onclick="switchTab(0)">CONSOLE</div>
-      <div class='tab' onclick="switchTab(1)">STORYLINE</div>
-      <div class='tab' onclick="switchTab(2)">FUSION LAB</div>
-      <div class='tab' onclick="switchTab(3)">LEADERBOARD</div>
-      <div class='tab' onclick="switchTab(4)">SOCIALS</div>
-    </nav>
 
     <nav class='tabs'>
       <div class='tab active' onclick="switchTab(0)">CONSOLE</div>
@@ -369,17 +401,25 @@
       </section>
 
       <section id='section-4' class='section'>
-        <div class='cards'>
-          <a class='card' href='https://x.com/thegrossbros?s=21' target='_blank' rel='noreferrer' style='text-decoration:none;'>
-            <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>X-SECURE TRANSMITTER</div>
-            <div style='font-family:Orbitron,sans-serif;font-size:28px;margin-top:10px;'>X NETWORK</div>
-            <p style='line-height:1.8;color:#ddfff9;opacity:.86'>Signal the collective, publish relays, and keep the terminal alive.</p>
-          </a>
-          <a class='card' href='https://discord.gg/fcZYk7UcB' target='_blank' rel='noreferrer' style='text-decoration:none;'>
-            <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>COMM DECK</div>
-            <div style='font-family:Orbitron,sans-serif;font-size:28px;margin-top:10px;'>DISCORD</div>
-            <p style='line-height:1.8;color:#ddfff9;opacity:.86'>Enter the comms deck for live experiments, drops, and operative coordination.</p>
-          </a>
+        <div class='panel'>
+          <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Communications Hub</div>
+          <h2 style='font-family:Orbitron,sans-serif;margin:10px 0 24px;'>NEURAL TRANSMISSION CHANNELS</h2>
+          <div class='social-links'>
+            <a href='https://x.com/thegrossbros?s=21' target='_blank' class='social-card'>
+              <div>
+                <div class='label'>X-SECURE TRANSMITTER</div>
+                <div class='desc'>DIRECT FREQUENCY // @THEGROSSBROS</div>
+              </div>
+              <div class='btn'>OPEN</div>
+            </a>
+            <a href='https://discord.gg/fcZYk7UcB' target='_blank' class='social-card'>
+              <div>
+                <div class='label'>THE DEN DECRYPTED</div>
+                <div class='desc'>PRIVATE COMMS ENCRYPTED // DISCORD</div>
+              </div>
+              <div class='btn'>JOIN</div>
+            </a>
+          </div>
         </div>
       </section>
     </main>
@@ -389,58 +429,125 @@
     const CONFIG = {
       ISSUER: "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY",
       RPC: "https://xrplcluster.com",
-      GATEWAY: "https://ipfs.io/ipfs/",
-      BITHOMP: "https://bithomp.com/api/v2"
+      GATEWAY: "https://ipfs.io/ipfs/"
     };
-
-    const BRO_COLLECTION_ISSUER = CONFIG.ISSUER;
-    const XRPL_RPC_ENDPOINT = CONFIG.RPC;
-    const IPFS_GATEWAY = CONFIG.GATEWAY;
-
+    
     const state = { 
-      connected: localStorage.getItem('xaman_connected') === 'true', 
-      wallet: localStorage.getItem('xaman_wallet') || "", 
+      connected: false, 
+      wallet: "", 
       chat: [], 
       fuseUnlocked: false, 
       fuseToken: "XRP", 
       selectedNft: null, 
       userNfts: [], 
       fuseTargetUsd: 50,
-      xrpPrice: 0,
-      payloadUuid: localStorage.getItem('xaman_payload_uuid') || null
+      xrpPrice: 0
     };
 
-    let pollInterval = null;
+    function hexToUtf8(hex) {
+      if (!hex || typeof hex !== 'string') return '';
+      try {
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < hex.length; i += 2) {
+          bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+        }
+        return new TextDecoder().decode(bytes);
+      } catch (e) {
+        return '';
+      }
+    }
 
-    function switchTab(index) {
-      document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
-      document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
+    function xrplUriToHttp(uri) {
+      const value = String(uri || '').trim();
+      if (!value) return '';
+      if (/^[0-9a-fA-F]+$/.test(value)) {
+        return xrplUriToHttp(hexToUtf8(value));
+      }
+      if (value.startsWith('ipfs://')) {
+        return CONFIG.GATEWAY + value.slice('ipfs://'.length).replace(/^\/+/ , '');
+      }
+      if (value.startsWith('ar://')) {
+        return 'https://arweave.net/' + value.slice('ar://'.length).replace(/^\/+/ , '');
+      }
+      return value;
+    }
+
+    function dailyRotationSeed() {
+      const now = new Date();
+      return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 86400000);
+    }
+
+    function normalizeTaxon(value) {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : null;
+    }
+
+    function cleanLoreText(metadata) {
+      const candidates = [metadata?.lore, metadata?.backstory, metadata?.story, metadata?.description];
+      const raw = candidates.find((value) => typeof value === 'string' && value.trim()) || '';
+      const lines = String(raw)
+        .replace(/\r\n/g, '\n')
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .filter((line) => !/^(traits?|attributes?|serial(?: number)?|background(?: type)?|token(?: id)?|issuer|taxon|edition|rarity|owner|contract)\b[:\-]*/i.test(line))
+        .filter((line) => !/^#\s*\d+/.test(line));
+      const text = lines.join(' ').replace(/\s{2,}/g, ' ').trim();
+      return text || 'Live NFT lore is loading from the full BRO collection.';
+    }
+
+    function setBroOfDayStatus(message) {
+      const el = document.getElementById("bro-of-day-status");
+      if (el) el.textContent = message;
+    }
+
+    async function fetchCollectionNfts(issuer, taxon = 1) {
+      try {
+        console.log("Fetching collection NFTs via Bithomp Proxy...");
+        const response = await fetch(`/api/nft?issuer=${issuer}&taxon=${taxon}&list=nfts`);
+        const result = await response.json();
+        const nfts = result?.nfts || [];
+        
+        return nfts.map(n => ({
+          nftokenID: n.nftokenID,
+          URI: n.uri
+        }));
+      } catch (e) {
+        console.error('Bithomp crawl error:', e);
+        return [];
+      }
     }
 
     async function loadBroOfDay() {
-      setBroOfDayStatus("Crawl in progress...");
+      const imgEl = document.getElementById("bro-of-day-image");
+      const descEl = document.getElementById("bro-of-day-description");
+      
       try {
-        let nfts = await fetchCollectionNfts(BRO_COLLECTION_ISSUER, 1);
+        setBroOfDayStatus("Crawl in progress...");
+        const nfts = await fetchCollectionNfts(CONFIG.ISSUER);
+        if (nfts.length === 0) throw new Error("No NFTs found.");
         
-        // Final fallback to hardcoded metadata if everything fails
-        if (!nfts.length) {
-          console.warn("No NFTs found via API, using static fallback array");
-          nfts = [
-            { URI: "ipfs://bafybeicv7z5a6i73v7v2a7v2a7v2a7v2a7v2a7v2a7v2a7v2a7v2a7v2a/1.json" },
-            { URI: "ipfs://bafybeicv7z5a6i73v7v2a7v2a7v2a7v2a7v2a7v2a7v2a7v2a7v2a7v2a/2.json" }
-          ];
-        }
-
         const seed = dailyRotationSeed();
         const selected = nfts[seed % nfts.length];
-        const metadataUri = xrplUriToHttp(selected.URI);
-        const metadata = await (await fetch(metadataUri)).json();
-        document.getElementById("bro-of-day-image").src = xrplUriToHttp(metadata?.image || "");
-        document.getElementById("bro-of-day-description").textContent = cleanLoreText(metadata);
+        const metaUri = xrplUriToHttp(selected.URI);
+        const meta = await (await fetch(metaUri)).json();
+        
+        if (imgEl) imgEl.src = xrplUriToHttp(meta.image);
+        if (descEl) descEl.textContent = cleanLoreText(meta);
         setBroOfDayStatus("Signal synchronized.");
       } catch (e) {
-        console.error(e);
         setBroOfDayStatus("Signal lost: " + e.message);
+      }
+    }
+
+    function calculateFusePrice() {
+      const amountEl = document.getElementById("fuse-token-amount");
+      if (state.fuseToken === 'RLUSD') {
+        amountEl.textContent = state.fuseTargetUsd + ' RLUSD';
+      } else if (state.xrpPrice > 0) {
+        amountEl.textContent = (state.fuseTargetUsd / state.xrpPrice).toFixed(2) + ' XRP';
+      } else {
+        amountEl.textContent = '--';
       }
     }
 
@@ -453,67 +560,7 @@
           document.getElementById('fuse-token-rate').textContent = state.xrpPrice.toFixed(4) + ' USD';
           calculateFusePrice();
         }
-      } catch (e) {}
-    }
-
-    async function fetchUserNfts(address) {
-      try {
-        // Use Bithomp for user NFTs too
-        const response = await fetch(`${CONFIG.BITHOMP}/nfts?owner=${address}&issuer=${CONFIG.ISSUER}&taxon=1&limit=100`);
-        const data = await response.json();
-        const nfts = data.nfts || [];
-        if (nfts.length > 0) {
-          const nftData = await Promise.all(nfts.map(async (n) => {
-            try {
-              const meta = await (await fetch(xrplUriToHttp(n.uri || n.URI))).json();
-              return { name: meta.name || 'BRO', image: xrplUriToHttp(meta.image) };
-            } catch (e) { return null; }
-          }));
-          state.userNfts = nftData.filter(Boolean);
-          renderNftSelection();
-          if (state.userNfts.length > 0) selectNft(0);
-        }
-      } catch (e) {}
-    }
-
-    async function startChatStream() {
-      const input = document.getElementById('chat-input');
-      const text = input.value.trim();
-      if (!text) return;
-      input.value = '';
-      state.chat.push({ role: 'user', content: text });
-      renderChatLog();
-      const log = document.getElementById('chat-log');
-      const bubble = document.createElement('div');
-      bubble.className = 'bubble system';
-      bubble.innerHTML = '<div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">SYSTEM</div><div class="msg-content">...</div>';
-      log.appendChild(bubble);
-      const contentEl = bubble.querySelector('.msg-content');
-      try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: state.chat, operative: { name: 'Operative', walletAddress: state.wallet, traits: state.selectedNft ? [state.selectedNft.name] : [] } })
-        });
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let fullText = '';
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const lines = decoder.decode(value).split('\n');
-          for (const line of lines) {
-            if (!line.startsWith('data: ')) continue;
-            const dataText = line.slice(6);
-            if (dataText === '[DONE]') break;
-            try {
-              const json = JSON.parse(dataText);
-              if (json.token) { fullText += json.token; contentEl.textContent = fullText; log.scrollTop = log.scrollHeight; }
-            } catch (e) {}
-          }
-        }
-        state.chat.push({ role: 'assistant', content: fullText });
-      } catch (e) { contentEl.textContent = 'ERROR: SIGNAL LOST'; }
+      } catch (e) { console.error('Ticker error', e); }
     }
 
     function toggleFuseUnlock() {
@@ -524,244 +571,223 @@
       badge.style.color = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
     }
 
-    function calculateFusePrice() {
-      const amountEl = document.getElementById("fuse-token-amount");
-      if (state.fuseToken === 'RLUSD') {
-        amountEl.textContent = state.fuseTargetUsd + ' RLUSD';
-      } else if (state.xrpPrice > 0) {
-        amountEl.textContent = (state.fuseTargetUsd / state.xrpPrice).toFixed(2) + ' XRP';
-      }
-    }
-
-    function renderChatLog() {
-      const log = document.getElementById('chat-log');
-      log.innerHTML = state.chat.map(e => `<div class="bubble ${e.role === 'user' ? 'user' : 'system'}"><div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>${e.content}</div>`).join('');
-      log.scrollTop = log.scrollHeight;
-    }
-
-    function renderNftSelection() {
-      const track = document.getElementById('nft-selection-track');
-      track.innerHTML = state.userNfts.map((nft, index) => `
-        <div class="nft-select-card ${state.selectedNft?.name === nft.name ? 'active' : ''}" onclick="selectNft(${index})">
-          <img src="${nft.image}" alt="">
-        </div>`).join('');
-    }
-
-    function selectNft(index) {
-      state.selectedNft = state.userNfts[index];
-      document.getElementById('held-nft-empty').style.display = 'none';
-      document.getElementById('connected-nft-display').style.display = 'block';
-      document.getElementById('connected-nft-image').src = state.selectedNft.image;
-      renderNftSelection();
-    }
-
-    function hexToUtf8(hexValue) {
-      const hex = String(hexValue || '').trim();
-      if (!hex || hex.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(hex)) return hex;
-      try {
-        const bytes = new Uint8Array(hex.length / 2);
-        for (let i = 0; i < hex.length; i += 2) bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
-        return new TextDecoder().decode(bytes);
-      } catch (e) { return hex; }
-    }
-
-    function xrplUriToHttp(uri) {
-      const value = String(uri || '').trim();
-      if (!value) return '';
-      if (/^[0-9a-fA-F]+$/.test(value)) return xrplUriToHttp(hexToUtf8(value));
-      if (value.startsWith('ipfs://')) return IPFS_GATEWAY + value.slice(7).replace(/^\/+/, '');
-      if (value.startsWith('ar://')) return 'https://arweave.net/' + value.slice(5).replace(/^\/+/, '');
-      return value;
-    }
-
-    function dailyRotationSeed() {
-      const now = new Date();
-      return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 86400000);
-    }
-
-    function cleanLoreText(metadata) {
-      const raw = metadata?.lore || metadata?.backstory || metadata?.story || metadata?.description || '';
-      const lines = String(raw).replace(/\r\n/g, '\n').split(/\n+/).map(l => l.trim()).filter(Boolean);
-      return lines.join(' ').replace(/\s{2,}/g, ' ').trim() || 'Live NFT lore is loading...';
-    }
-
-    async function fetchCollectionNfts(issuer, taxon = 1) {
-      // Use Bithomp API for instant retrieval
-      try {
-        const response = await fetch(`${CONFIG.BITHOMP}/nfts?issuer=${issuer}&taxon=${taxon}&limit=100`);
-        if (!response.ok) throw new Error("Bithomp API error");
-        const data = await response.json();
-        if (data.nfts && data.nfts.length > 0) {
-          return data.nfts.map(n => ({
-             URI: n.uri || n.URI || "",
-             NFTokenID: n.nftokenID || n.NFTokenID || ""
-          }));
-        }
-      } catch (e) {
-        console.error("Bithomp fetch failed, falling back to legacy crawl", e);
-      }
-      return []; // Fallback to empty if Bithomp fails (handled by caller)
-    }
-
-    function setBroOfDayStatus(message) {
-      const statusEl = document.getElementById("bro-of-day-status");
-      if (statusEl) statusEl.textContent = message || "";
-    }
-
-    function setWalletUI(connected, address) {
-      const btn = document.getElementById('wallet-btn');
-      const status = document.getElementById('xaman-status');
-      if (connected) {
-        btn.textContent = 'SYNCED';
-        btn.disabled = true;
-        status.textContent = 'Connected: ' + address.slice(0, 6) + '...' + address.slice(-4);
-        localStorage.setItem('xaman_connected', 'true');
-        localStorage.setItem('xaman_wallet', address);
-      } else {
-        btn.textContent = 'CONNECT XAMAN';
-        btn.disabled = false;
-        status.textContent = 'Wallet disconnected.';
-        localStorage.removeItem('xaman_connected');
-        localStorage.removeItem('xaman_wallet');
-      }
-    }
-
     async function connectXaman() {
       const btn = document.getElementById('wallet-btn');
-      
-      // If we already have a pending payload, don't start a new one, just ensure polling is active
-      if (state.payloadUuid && btn.textContent === 'CONNECTING...') {
-         if (!pollInterval) pollPayload(state.payloadUuid);
-         return;
-      }
-
-      // If user clicks while in connecting state, or just wants to restart
       btn.disabled = true;
       btn.textContent = 'CONNECTING...';
-      
       try {
         const res = await fetch('/api/xaman?action=create-payload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            txjson: { TransactionType: 'SignIn' },
-            options: { 
-              return_url: { 
-                web: window.location.href 
-              } 
-            } 
-          })
+          body: JSON.stringify({ txjson: { TransactionType: 'SignIn' } })
         });
-        
-        if (!res.ok) throw new Error('Failed to create payload');
-        
         const payload = await res.json();
-        const uuid = payload?.uuid;
-        if (!uuid) throw new Error('No UUID returned from Xaman');
-        
-        state.payloadUuid = uuid;
-        localStorage.setItem('xaman_payload_uuid', uuid);
         
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        if (!isMobile && payload?.qrUrl) {
-          document.getElementById('qr-image').src = payload.qrUrl;
+        if (!isMobile && payload?.refs?.qr_png) {
+          document.getElementById('qr-image').src = payload.refs.qr_png;
           document.getElementById('qr-overlay').style.display = 'flex';
         }
 
-        const url = (isMobile && payload?.next) ? payload.next : (payload?.qrUrl ? null : payload?.next);
-        if (isMobile && url) {
-          setTimeout(() => { window.location.href = url; }, 500);
-          // We don't poll here because we are redirecting, but the next time they load the page, init() will resume polling
-          return; 
-        }
+        const url = (isMobile && payload?.next?.app_deep_link) ? payload.next.app_deep_link : payload?.next?.always;
+        if (isMobile && url) window.open(url, '_blank');
         
-        pollPayload(uuid);
-      } catch (error) {
-        console.error('Connection error:', error);
-        btn.disabled = false;
-        btn.textContent = 'CONNECT XAMAN';
-        state.payloadUuid = null;
-        localStorage.removeItem('xaman_payload_uuid');
-      }
-    }
-
-    function pollPayload(uuid) {
-      if (pollInterval) clearInterval(pollInterval);
-      const btn = document.getElementById('wallet-btn');
-      let attempts = 0;
-      
-      pollInterval = setInterval(async () => {
-        attempts += 1;
-        if (attempts > 120) { // 5 minutes
-          stopPolling();
-          if (!state.connected) {
+        const uuid = payload?.uuid;
+        let attempts = 0;
+        const timer = setInterval(async () => {
+          attempts += 1;
+          if (attempts > 60) {
+            clearInterval(timer);
             btn.disabled = false;
             btn.textContent = 'CONNECT XAMAN';
+            return;
           }
-          return;
-        }
-        try {
           const check = await fetch('/api/xaman?action=check-payload&uuid=' + encodeURIComponent(uuid));
-          if (!check.ok) return; // Keep trying on network errors
-          
           const status = await check.json();
-          if (status.signed) {
-            stopPolling();
+          if ((status.meta && status.meta.signed) || status.signed) {
+            clearInterval(timer);
             document.getElementById('qr-overlay').style.display = 'none';
-            const address = status.address;
+            const address = status?.response?.account || status?.account || status?.resolved?.account || '';
             if (address) {
               state.connected = true;
               state.wallet = address;
               setWalletUI(true, address);
               fetchUserNfts(address);
             }
-          } else if (status.expired || status.cancelled) {
-            stopPolling();
-            btn.disabled = false;
-            btn.textContent = 'CONNECT XAMAN';
           }
-        } catch (e) { 
-          console.error("Poll error", e); 
-        }
-      }, 2500);
+        }, 2500);
+      } catch (error) {
+        console.error(error);
+        btn.disabled = false;
+        btn.textContent = 'CONNECT XAMAN';
+      }
     }
 
-    function stopPolling() {
-      if (pollInterval) clearInterval(pollInterval);
-      pollInterval = null;
-      state.payloadUuid = null;
-      localStorage.removeItem('xaman_payload_uuid');
+    function setWalletUI(connected, address) {
+      const btn = document.getElementById('wallet-btn');
+      const status = document.getElementById('xaman-status');
+      const msg = document.getElementById('status-msg');
+      if (connected) {
+        btn.textContent = 'LINKED';
+        btn.disabled = false;
+        status.textContent = address.slice(0, 6) + '...' + address.slice(-4);
+        if (msg) {
+          // msg.textContent = "AUTHENTICATION COMPLETE";
+          // msg.style.color = "var(--cyan)";
+        }
+      }
+    }
+
+    async function fetchUserNfts(address) {
+      const cacheKey = `bithomp_user_nfts_${address}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < 600000) { // 10 minutes cache for user NFTs
+            console.log("Using cached user Bithomp results");
+            state.userNfts = data;
+            renderNftSelection();
+            if (state.userNfts.length > 0) selectNft(0);
+            return;
+          }
+        } catch (e) {
+          localStorage.removeItem(cacheKey);
+        }
+      }
+
+      try {
+        console.log("Fetching user NFTs from Bithomp Proxy...");
+        const response = await fetch(`/api/nft?owner=${address}&issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);
+        const result = await response.json();
+        const nfts = result?.nfts || [];
+        
+        state.userNfts = [];
+        for (const n of nfts) {
+           try {
+             const metaUri = xrplUriToHttp(n.uri);
+             const meta = await (await fetch(metaUri)).json();
+             state.userNfts.push({
+               name: meta.name || 'BRO #' + n.nftokenID.slice(-4),
+               image: xrplUriToHttp(meta.image)
+             });
+           } catch(e){}
+        }
+
+        if (state.userNfts.length > 0) {
+          localStorage.setItem(cacheKey, JSON.stringify({
+            data: state.userNfts,
+            timestamp: Date.now()
+          }));
+          renderNftSelection();
+          selectNft(0);
+        }
+      } catch (e) { console.error("Bithomp user NFT fetch error", e); }
+    }
+
+    function renderNftSelection() {
+      const track = document.getElementById('nft-selection-track');
+      if (!track) return;
+      track.innerHTML = state.userNfts.map((nft, index) => {
+        const active = state.selectedNft?.name === nft.name;
+        return `<div class="nft-select-card ${active ? 'active' : ''}" onclick="selectNft(${index})">
+          <img src="${nft.image}" alt="">
+        </div>`;
+      }).join('');
+    }
+
+    function selectNft(index) {
+      const nft = state.userNfts[index];
+      if (!nft) return;
+      state.selectedNft = nft;
+      document.getElementById('held-nft-empty').style.display = 'none';
+      document.getElementById('connected-nft-display').style.display = 'block';
+      document.getElementById('connected-nft-image').src = nft.image;
+      document.getElementById('connected-nft-name').textContent = nft.name;
+      renderNftSelection();
+    }
+
+    async function startChatStream() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      state.chat.push({ role: 'user', content: text });
+      renderChatLog();
+
+      const log = document.getElementById('chat-log');
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble system';
+      bubble.innerHTML = '<div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">SYSTEM</div><div class="msg-content">...</div>';
+      log.appendChild(bubble);
+      const contentEl = bubble.querySelector('.msg-content');
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            messages: state.chat,
+            operative: { name: 'Operative', walletAddress: state.wallet, traits: state.selectedNft ? [state.selectedNft.name] : [] }
+          })
+        });
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+        contentEl.textContent = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const lines = decoder.decode(value).split('\n');
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const dataText = line.slice(6);
+            if (dataText === '[DONE]') break;
+            try {
+              const json = JSON.parse(dataText);
+              if (json.token) {
+                fullText += json.token;
+                contentEl.textContent = fullText;
+                log.scrollTop = log.scrollHeight;
+              }
+            } catch (e) {}
+          }
+        }
+        state.chat.push({ role: 'assistant', content: fullText });
+      } catch (e) {
+        contentEl.textContent = 'ERROR: SIGNAL LOST';
+      }
+    }
+
+    function renderChatLog() {
+      const log = document.getElementById('chat-log');
+      log.innerHTML = state.chat.map(e => `
+        <div class="bubble ${e.role === 'user' ? 'user' : 'system'}">
+          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>
+          ${e.content}
+        </div>
+      `).join('');
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function switchTab(index) {
+      document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
+      document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
     }
 
     function init() {
       const ticker = document.getElementById('warning-ticker-track');
       const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
-      if (ticker) {
-        ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' " ');
-      }
-      
-      // Restore UI if already connected
-      if (state.connected && state.wallet) {
-        setWalletUI(true, state.wallet);
-        fetchUserNfts(state.wallet);
-      } else if (state.payloadUuid) {
-        // Resume polling if we were waiting for a signature
-        const btn = document.getElementById('wallet-btn');
-        btn.disabled = true;
-        btn.textContent = 'CONNECTING...';
-        pollPayload(state.payloadUuid);
-      }
-
+      ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' " ');
       loadBroOfDay();
       updateTicker();
       setInterval(updateTicker, 15000);
-      const chatInput = document.getElementById('chat-input');
-      if (chatInput) {
-        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') startChatStream(); });
-      }
+      document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') startChatStream(); });
     }
 
     window.onload = () => { init(); };
-</script>
+  </script>
 </body>
 </html>
