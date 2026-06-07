@@ -3,27 +3,27 @@
   "rewrites": [
     {
       "source": "/api/nft",
-      "destination": "api/nft.js"
+      "destination": "/api/nft.js"
     },
     {
       "source": "/api/chat",
-      "destination": "api/chat.js"
+      "destination": "/api/chat.js"
     },
     {
       "source": "/api/ticker",
-      "destination": "api/ticker.js"
+      "destination": "/api/ticker.js"
     },
     {
       "source": "/api/xaman",
-      "destination": "api/xaman.js"
+      "destination": "/api/xaman.js"
     },
     {
       "source": "/api/callback",
-      "destination": "api/callback.js"
+      "destination": "/api/callback.js"
     },
     {
       "source": "/api/fusion-gate",
-      "destination": "api/fusion-gate.js"
+      "destination": "/api/fusion-gate.js"
     }
   ]
 }
