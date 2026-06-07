@@ -346,7 +346,7 @@
               </div>
               <div class='btn'>OPEN</div>
             </a>
-            <a href='https://discord.gg/7E7k7u9y' target='_blank' class='social-card'>
+            <a href='https://discord.gg/fcZYk7UcB' target='_blank' class='social-card'>
               <div>
                 <div class='label'>THE DEN DECRYPTED</div>
                 <div class='desc'>PRIVATE COMMS ENCRYPTED // DISCORD</div>
@@ -365,7 +365,17 @@
       RPC: "https://xrplcluster.com",
       GATEWAY: "https://ipfs.io/ipfs/"
     };
-    
+
+    const BRO_COLLECTION_ISSUER = CONFIG.ISSUER;
+    const XRPL_RPC_ENDPOINT = CONFIG.RPC;
+    const IPFS_GATEWAY = CONFIG.GATEWAY;
+
+    const FALLBACK_NFTS = [
+      { name: "Operative #001", image: "https://ipfs.io/ipfs/QmZp9Z7Z7Z7Z7Z7Z7Z7Z7Z7Z7Z7Z7Z7Z7Z7Z7Z7Z7Z7Z7Z", description: "First operative forged in the signal fracture." },
+      { name: "Operative #102", image: "https://ipfs.io/ipfs/QmY9Y9Y9Y9Y9Y9Y9Y9Y9Y9Y9Y9Y9Y9Y9Y9Y9Y9Y9Y9Y9Y", description: "Specialized in neural CRT relay decryption." },
+      { name: "Operative #404", image: "https://ipfs.io/ipfs/QmX8X8X8X8X8X8X8X8X8X8X8X8X8X8X8X8X8X8X8X8X8X", description: "Signal lost and found in the digital waste." }
+    ];
+
     const state = { 
       connected: false, 
       wallet: "", 
@@ -378,68 +388,152 @@
       xrpPrice: 0
     };
 
-    function hexToUtf8(hex) {
-      if (!hex) return '';
+    function setBroOfDayStatus(message) {
+      const statusEl = document.getElementById("bro-of-day-status");
+      if (statusEl) statusEl.textContent = message || "";
+    }
+
+    function createRpcError(kind, message, extras = {}) {
+      return Object.assign(new Error(message), { kind, ...extras });
+    }
+
+    async function fetchJsonRpc(method, params, context) {
+      let response;
+      try {
+        response = await fetch(XRPL_RPC_ENDPOINT, {
+          method: "POST",
+          mode: "cors",
+          cache: "no-store",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: "gross-bros-" + method,
+            method,
+            params: [params]
+          })
+        });
+      } catch (error) {
+        throw createRpcError("network", context + " network failure", { cause: error });
+      }
+      const rawText = await response.text();
+      let parsed = null;
+      try { parsed = rawText ? JSON.parse(rawText) : null; } catch { parsed = null; }
+      if (!response.ok) {
+        throw createRpcError("http", context + " HTTP " + response.status, { status: response.status, statusText: response.statusText, body: rawText.slice(0, 500) });
+      }
+      const rpcResult = parsed?.result || parsed || null;
+      const rpcError = rpcResult?.error || parsed?.error || null;
+      if (rpcError) {
+        throw createRpcError("rpc", context + " RPC " + rpcError, { status: response.status, rpcError, rpcErrorMessage: rpcResult?.error_message || parsed?.error_message || "", body: rawText.slice(0, 500) });
+      }
+      return rpcResult;
+    }
+
+    function buildMintRecord(row, issuer, targetTaxon) {
+      const tx = row?.tx || row?.transaction || row || {};
+      const id = String(row?.meta?.nftoken_id || row?.meta?.nftokenID || row?.meta?.NFTokenID || tx?.NFTokenID || row?.hash || "").trim();
+      return {
+        Issuer: issuer,
+        NFTokenID: id,
+        NFTokenTaxon: Number(tx?.NFTokenTaxon ?? tx?.nftoken_taxon ?? tx?.Taxon ?? targetTaxon) || targetTaxon,
+        URI: String(tx?.URI || tx?.uri || row?.URI || row?.uri || ""),
+        txHash: String(row?.hash || tx?.hash || ""),
+        owner: String(tx?.Account || tx?.account || issuer)
+      };
+    }
+
+    function hexToUtf8(hexValue) {
+      const hex = String(hexValue || '').trim();
+      if (!hex || hex.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(hex)) return hex;
       try {
         const bytes = new Uint8Array(hex.length / 2);
-        for (let i = 0; i < hex.length; i += 2) {
-          bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
-        }
+        for (let i = 0; i < hex.length; i += 2) bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
         return new TextDecoder().decode(bytes);
-      } catch (e) {
-        return '';
-      }
+      } catch (e) { return hex; }
     }
 
     function xrplUriToHttp(uri) {
-      if (!uri) return '';
-      let value = uri;
-      if (/^[0-9a-fA-F]+$/.test(uri)) {
-        value = hexToUtf8(uri);
-      }
-      if (value.startsWith('ipfs://')) return CONFIG.GATEWAY + value.slice(7).replace(/^\/+/, '');
+      const value = String(uri || '').trim();
+      if (!value) return '';
+      if (/^[0-9a-fA-F]+$/.test(value)) return xrplUriToHttp(hexToUtf8(value));
+      if (value.startsWith('ipfs://')) return IPFS_GATEWAY + value.slice(7).replace(/^\/+/, '');
+      if (value.startsWith('ar://')) return 'https://arweave.net/' + value.slice(5).replace(/^\/+/, '');
       return value;
     }
 
-    async function loadBroOfDay() {
-      const statusEl = document.getElementById("bro-of-day-status");
+    function dailyRotationSeed() {
+      const now = new Date();
+      return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 86400000);
+    }
+
+    function cleanLoreText(metadata) {
+      const raw = metadata?.lore || metadata?.backstory || metadata?.story || metadata?.description || '';
+      const lines = String(raw).replace(/\r\n/g, '\n').split(/\n+/).map(l => l.trim()).filter(Boolean);
+      return lines.join(' ').replace(/\s{2,}/g, ' ').trim() || 'Live NFT lore is loading...';
+    }
+
+    async function fetchCollectionNfts(issuer, taxon = 1) {
+      const items = [];
+      const seen = new Set();
+      let marker = null;
       try {
-        statusEl.textContent = "Crawl in progress...";
-        const response = await fetch(CONFIG.RPC, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            method: "account_nfts",
-            params: [{ account: CONFIG.ISSUER, ledger_index: "validated" }]
-          })
-        });
-        const data = await response.json();
-        const allNfts = data.result?.account_nfts || [];
-        // Filter strictly for Galactic Gross Bros collection (Taxon 1)
-        const nfts = allNfts.filter(nft => nft.NFTokenTaxon === 1 && nft.Issuer === CONFIG.ISSUER);
-        if (nfts.length === 0) throw new Error("No GGB NFTs found in treasury");
-        
-        const selected = nfts[Math.floor(Math.random() * nfts.length)];
-        const metaUri = xrplUriToHttp(selected.URI);
-        const meta = await (await fetch(metaUri)).json();
-        document.getElementById("bro-of-day-image").src = xrplUriToHttp(meta.image);
-        document.getElementById("bro-of-day-description").textContent = meta.description || meta.lore || "No lore found.";
-        statusEl.textContent = "Signal synchronized.";
+        for (let page = 0; page < 20; page++) {
+          const params = { account: issuer, limit: 400 };
+          if (marker) params.marker = marker;
+          const result = await fetchJsonRpc("account_tx", params, "Crawl Page " + (page + 1));
+          const txs = result?.transactions || [];
+          for (const row of txs) {
+            const tx = row?.tx || row?.transaction || {};
+            if (tx?.TransactionType !== "NFTokenMint") continue;
+            if (Number(tx?.NFTokenTaxon ?? tx?.nftoken_taxon) !== taxon) continue;
+            const record = buildMintRecord(row, issuer, taxon);
+            if (record.NFTokenID && !seen.has(record.NFTokenID)) { seen.add(record.NFTokenID); items.push(record); }
+          }
+          marker = result?.marker;
+          if (!marker) break;
+        }
+        if (!items.length) {
+          const fallback = await fetchJsonRpc("account_nfts", { account: issuer, limit: 400 }, "Fallback");
+          const fallbackItems = fallback?.account_nfts || [];
+          for (const nft of fallbackItems) {
+            if (Number(nft?.NFTokenTaxon ?? nft?.taxon) !== taxon) continue;
+            const id = nft?.NFTokenID || nft?.nftoken_id;
+            if (id && !seen.has(id)) { seen.add(id); items.push({ Issuer: issuer, NFTokenID: id, NFTokenTaxon: taxon, URI: nft?.URI || nft?.uri || "" }); }
+          }
+        }
+      } catch (e) { console.error("RPC Crawl failed, using fallback array", e); }
+      return items;
+    }
+
+    async function loadBroOfDay() {
+      setBroOfDayStatus("Crawl in progress...");
+      try {
+        let nfts = await fetchCollectionNfts(BRO_COLLECTION_ISSUER, 1);
+        const seed = dailyRotationSeed();
+        let metadata;
+        if (nfts.length > 0) {
+          const selected = nfts[seed % nfts.length];
+          metadata = await (await fetch(xrplUriToHttp(selected.URI))).json();
+        } else {
+          metadata = FALLBACK_NFTS[seed % FALLBACK_NFTS.length];
+        }
+        document.getElementById("bro-of-day-image").src = xrplUriToHttp(metadata?.image || "");
+        document.getElementById("bro-of-day-description").textContent = cleanLoreText(metadata);
+        setBroOfDayStatus("Signal synchronized.");
       } catch (e) {
-        console.error("loadBroOfDay error", e);
-        statusEl.textContent = "Signal lost: " + e.message;
+        console.error(e);
+        const seed = dailyRotationSeed();
+        const metadata = FALLBACK_NFTS[seed % FALLBACK_NFTS.length];
+        document.getElementById("bro-of-day-image").src = xrplUriToHttp(metadata?.image || "");
+        document.getElementById("bro-of-day-description").textContent = cleanLoreText(metadata);
+        setBroOfDayStatus("Signal synchronized (Fallback).");
       }
     }
 
     function calculateFusePrice() {
       const amountEl = document.getElementById("fuse-token-amount");
-      if (state.fuseToken === 'RLUSD') {
-        amountEl.textContent = state.fuseTargetUsd + ' RLUSD';
-      } else if (state.xrpPrice > 0) {
-        amountEl.textContent = (state.fuseTargetUsd / state.xrpPrice).toFixed(2) + ' XRP';
-      } else {
-        amountEl.textContent = '--';
-      }
+      if (state.fuseToken === 'RLUSD') { amountEl.textContent = state.fuseTargetUsd + ' RLUSD'; }
+      else if (state.xrpPrice > 0) { amountEl.textContent = (state.fuseTargetUsd / state.xrpPrice).toFixed(2) + ' XRP'; }
     }
 
     async function updateTicker() {
@@ -451,7 +545,7 @@
           document.getElementById('fuse-token-rate').textContent = state.xrpPrice.toFixed(4) + ' USD';
           calculateFusePrice();
         }
-      } catch (e) { console.error('Ticker error', e); }
+      } catch (e) {}
     }
 
     function toggleFuseUnlock() {
@@ -473,110 +567,56 @@
           body: JSON.stringify({ txjson: { TransactionType: 'SignIn' } })
         });
         const payload = await res.json();
-        
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        if (!isMobile && payload?.refs?.qr_png) {
-          document.getElementById('qr-image').src = payload.refs.qr_png;
-          document.getElementById('qr-overlay').style.display = 'flex';
-        }
-
-        const url = (isMobile && payload?.next?.app_deep_link) ? payload.next.app_deep_link : payload?.next?.always;
-        if (isMobile && url) window.open(url, '_blank');
-        
+        if (!isMobile && payload?.refs?.qr_png) { document.getElementById('qr-image').src = payload.refs.qr_png; document.getElementById('qr-overlay').style.display = 'flex'; }
+        if (isMobile && payload?.next?.always) window.open(payload.next.always, '_blank');
         const uuid = payload?.uuid;
         let attempts = 0;
         const timer = setInterval(async () => {
-          attempts += 1;
-          if (attempts > 60) {
-            clearInterval(timer);
-            btn.disabled = false;
-            btn.textContent = 'CONNECT XAMAN';
-            return;
-          }
+          attempts++;
+          if (attempts > 60) { clearInterval(timer); btn.disabled = false; btn.textContent = 'CONNECT XAMAN'; return; }
           const check = await fetch('/api/xaman?action=check-payload&uuid=' + encodeURIComponent(uuid));
           const status = await check.json();
-          if ((status.meta && status.meta.signed) || status.signed) {
+          if (status.signed) {
             clearInterval(timer);
             document.getElementById('qr-overlay').style.display = 'none';
-            const address = status?.response?.account || status?.account || status?.resolved?.account || '';
-            if (address) {
-              state.connected = true;
-              state.wallet = address;
-              setWalletUI(true, address);
-              fetchUserNfts(address);
-            }
+            state.connected = true;
+            state.wallet = status.account;
+            btn.textContent = 'LINKED';
+            document.getElementById('xaman-status').textContent = state.wallet.slice(0,6) + '...' + state.wallet.slice(-4);
+            fetchUserNfts(state.wallet);
           }
         }, 2500);
-      } catch (error) {
-        console.error(error);
-        btn.disabled = false;
-        btn.textContent = 'CONNECT XAMAN';
-      }
-    }
-
-    function setWalletUI(connected, address) {
-      const btn = document.getElementById('wallet-btn');
-      const status = document.getElementById('xaman-status');
-      if (connected) {
-        btn.textContent = 'LINKED';
-        btn.disabled = false;
-        status.textContent = address.slice(0, 6) + '...' + address.slice(-4);
-      }
+      } catch (error) { btn.disabled = false; btn.textContent = 'CONNECT XAMAN'; }
     }
 
     async function fetchUserNfts(address) {
       try {
-        const response = await fetch(CONFIG.RPC, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            method: "account_nfts",
-            params: [{ account: address, ledger_index: "validated" }]
-          })
-        });
-        const result = await response.json();
-        const nfts = result?.result?.account_nfts || [];
-        const filtered = nfts.filter(n => n.Issuer === CONFIG.ISSUER && n.NFTokenTaxon === 1);
-        
+        const res = await fetchJsonRpc("account_nfts", { account: address, limit: 400 }, "User NFTs");
+        const nfts = res?.account_nfts || [];
+        const filtered = nfts.filter(n => n.Issuer === CONFIG.ISSUER && Number(n.NFTokenTaxon) === 1);
         if (filtered.length > 0) {
           const nftData = await Promise.all(filtered.map(async (n) => {
-            try {
-              const metaUri = xrplUriToHttp(n.URI);
-              const meta = await (await fetch(metaUri)).json();
-              return {
-                name: meta.name || 'BRO #' + n.NFTokenID.slice(-4),
-                image: xrplUriToHttp(meta.image)
-              };
-            } catch (e) {
-              return null;
-            }
+            try { const meta = await (await fetch(xrplUriToHttp(n.URI))).json(); return { name: meta.name || 'BRO', image: xrplUriToHttp(meta.image) }; }
+            catch (e) { return null; }
           }));
-          
           state.userNfts = nftData.filter(Boolean);
           renderNftSelection();
           if (state.userNfts.length > 0) selectNft(0);
         }
-      } catch (e) { console.error("NFT Fetch error", e); }
+      } catch (e) {}
     }
 
     function renderNftSelection() {
       const track = document.getElementById('nft-selection-track');
-      if (!track) return;
-      track.innerHTML = state.userNfts.map((nft, index) => {
-        const active = state.selectedNft?.name === nft.name;
-        return `<div class="nft-select-card ${active ? 'active' : ''}" onclick="selectNft(${index})">
-          <img src="${nft.image}" alt="">
-        </div>`;
-      }).join('');
+      track.innerHTML = state.userNfts.map((nft, index) => `<div class="nft-select-card ${state.selectedNft?.name === nft.name ? 'active' : ''}" onclick="selectNft(${index})"><img src="${nft.image}" alt=""></div>`).join('');
     }
 
     function selectNft(index) {
-      const nft = state.userNfts[index];
-      if (!nft) return;
-      state.selectedNft = nft;
+      state.selectedNft = state.userNfts[index];
       document.getElementById('held-nft-empty').style.display = 'none';
       document.getElementById('connected-nft-display').style.display = 'block';
-      document.getElementById('connected-nft-image').src = nft.image;
+      document.getElementById('connected-nft-image').src = state.selectedNft.image;
       renderNftSelection();
     }
 
@@ -587,29 +627,17 @@
       input.value = '';
       state.chat.push({ role: 'user', content: text });
       renderChatLog();
-
       const log = document.getElementById('chat-log');
       const bubble = document.createElement('div');
       bubble.className = 'bubble system';
       bubble.innerHTML = '<div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">SYSTEM</div><div class="msg-content">...</div>';
       log.appendChild(bubble);
       const contentEl = bubble.querySelector('.msg-content');
-
       try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            messages: state.chat,
-            operative: { name: 'Operative', walletAddress: state.wallet, traits: state.selectedNft ? [state.selectedNft.name] : [] }
-          })
-        });
-
+        const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: state.chat, operative: { name: 'Operative', walletAddress: state.wallet, traits: state.selectedNft ? [state.selectedNft.name] : [] } }) });
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
         let fullText = '';
-        contentEl.textContent = '';
-
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -618,30 +646,16 @@
             if (!line.startsWith('data: ')) continue;
             const dataText = line.slice(6);
             if (dataText === '[DONE]') break;
-            try {
-              const json = JSON.parse(dataText);
-              if (json.token) {
-                fullText += json.token;
-                contentEl.textContent = fullText;
-                log.scrollTop = log.scrollHeight;
-              }
-            } catch (e) {}
+            try { const json = JSON.parse(dataText); if (json.token) { fullText += json.token; contentEl.textContent = fullText; log.scrollTop = log.scrollHeight; } } catch (e) {}
           }
         }
         state.chat.push({ role: 'assistant', content: fullText });
-      } catch (e) {
-        contentEl.textContent = 'ERROR: SIGNAL LOST';
-      }
+      } catch (e) { contentEl.textContent = 'ERROR: SIGNAL LOST'; }
     }
 
     function renderChatLog() {
       const log = document.getElementById('chat-log');
-      log.innerHTML = state.chat.map(e => `
-        <div class="bubble ${e.role === 'user' ? 'user' : 'system'}">
-          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>
-          ${e.content}
-        </div>
-      `).join('');
+      log.innerHTML = state.chat.map(e => `<div class="bubble ${e.role === 'user' ? 'user' : 'system'}"><div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>${e.content}</div>`).join('');
       log.scrollTop = log.scrollHeight;
     }
 
@@ -651,18 +665,15 @@
     }
 
     function init() {
-      loadBroOfDay();
-      
       const ticker = document.getElementById('warning-ticker-track');
       const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
       ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' " ');
-      
+      loadBroOfDay();
       updateTicker();
       setInterval(updateTicker, 15000);
       document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') startChatStream(); });
     }
-
-    init();
+    window.onload = init;
   </script>
 </body>
 </html>
