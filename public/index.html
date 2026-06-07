@@ -361,6 +361,7 @@
       <section id='section-4' class='section'>
         <div class='cards'>
           <a class='card' href='https://x.com/thegrossbros' target='_blank'>X Network</a>
+          <a class='card' href='https://discord.gg/fcZYk7UcB' target='_blank'>Discord</a>
         </div>
       </section>
     </main>
@@ -562,25 +563,28 @@ async function fetchCollectionNfts(issuer, taxon = 1) {
         };
         if (marker) params.marker = marker;
 
-        const result = await fetchJsonRpc("account_tx", params, "Issuer collection crawl");
+        const result = await fetchJsonRpc("account_tx", params, "Issuer collection crawl (Page " + (page + 1) + ")");
         const txs = Array.isArray(result?.transactions) ? result.transactions : [];
+        
         for (const row of txs) {
           const tx = row?.tx || row?.transaction || {};
-          if (String(tx?.TransactionType || "") !== "NFTokenMint") continue;
-          if (String(tx?.Account || "") !== issuer) continue;
-          if (normalizeTaxon(tx?.NFTokenTaxon ?? tx?.nftoken_taxon ?? tx?.Taxon) !== targetTaxon) continue;
+          if (tx?.TransactionType !== "NFTokenMint") continue;
+          if (tx?.Account !== issuer) continue;
+          if (normalizeTaxon(tx?.NFTokenTaxon ?? tx?.nftoken_taxon) !== targetTaxon) continue;
+          
           const record = buildMintRecord(row, issuer, targetTaxon);
-          const id = record.NFTokenID || record.txHash;
+          const id = record.NFTokenID;
           if (!id || seen.has(id)) continue;
           seen.add(id);
           items.push(record);
         }
 
-        marker = result?.marker || null;
+        marker = result?.marker;
         if (!marker) break;
       }
 
       if (!items.length) {
+        console.log("No mints found in account_tx history, trying account_nfts fallback...");
         const fallback = await fetchJsonRpc("account_nfts", {
           account: issuer,
           ledger_index: "validated",
@@ -588,18 +592,18 @@ async function fetchCollectionNfts(issuer, taxon = 1) {
         }, "Issuer account_nfts fallback");
         const fallbackItems = Array.isArray(fallback?.account_nfts) ? fallback.account_nfts : [];
         for (const nft of fallbackItems) {
-          if (String(nft?.Issuer || nft?.issuer || "") !== issuer) continue;
-          if (normalizeTaxon(nft?.NFTokenTaxon ?? nft?.nftoken_taxon ?? nft?.taxon ?? nft?.Taxon) !== targetTaxon) continue;
-          const id = String(nft?.NFTokenID || nft?.nftoken_id || nft?.NFTID || nft?.nft_id || "").trim();
+          if ((nft?.Issuer || nft?.issuer) !== issuer) continue;
+          if (normalizeTaxon(nft?.NFTokenTaxon ?? nft?.nftoken_taxon ?? nft?.taxon) !== targetTaxon) continue;
+          const id = nft?.NFTokenID || nft?.nftoken_id;
           if (!id || seen.has(id)) continue;
           seen.add(id);
           items.push({
             Issuer: issuer,
             NFTokenID: id,
             NFTokenTaxon: targetTaxon,
-            URI: String(nft?.URI || nft?.uri || ""),
+            URI: nft?.URI || nft?.uri || "",
             txHash: "",
-            owner: String(nft?.Owner || nft?.owner || issuer),
+            owner: nft?.Owner || nft?.owner || issuer,
             _ledger: null
           });
         }
