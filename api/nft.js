@@ -33,6 +33,9 @@ async function crawlAllNfts(account) {
 
     const data = await response.json();
     
+    // DEBUG: Log the raw result keys
+    // console.log("XRPL keys:", Object.keys(data.result || {}));
+
     if (data.result && data.result.account_nfts) {
       allNfts = allNfts.concat(data.result.account_nfts);
       marker = data.result.marker;
@@ -55,20 +58,32 @@ export default async function handler(req) {
   
   const GGB_ISSUER = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
   
-  // Try Treasury B first (most active), then Treasury A
   const treasuries = [
-    "rNCY8dCi23nfyG74v8uE8V1G8Q8K265z6R", // Treasury B (Confirmed with NFTs)
-    "rsuHaTvJh1bDmDoxX9QcKP7HEBSBt4XsHx"  // Treasury A
+    "rNCY8dCi23nfyG74v8uE8V1G8Q8K265z6R",
+    "rsuHaTvJh1bDmDoxX9QcKP7HEBSBt4XsHx",
+    "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY"
   ];
 
   let nfts = [];
   let usedAccount = owner || "";
+  let rawResponseExample = null;
 
   try {
+    // Single debug fetch for raw response format check
+    const debugAccount = owner || treasuries[0];
+    const xrplRes = await fetch("https://xrplcluster.com", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        method: "account_nfts",
+        params: [{ account: debugAccount, ledger_index: "validated", limit: 1 }]
+      }),
+    });
+    rawResponseExample = await xrplRes.json();
+
     if (owner) {
       nfts = await crawlAllNfts(owner);
     } else {
-      // Loop through treasuries until we find NFTs
       for (const t of treasuries) {
         const found = await crawlAllNfts(t);
         if (found && found.length > 0) {
@@ -76,47 +91,43 @@ export default async function handler(req) {
           usedAccount = t;
           break;
         }
-        usedAccount = t; // Track which one we ended on if still empty
+        usedAccount = t;
       }
     }
     
     let filtered = nfts;
-    
-    // Filter by issuer if checking collection
     if (issuer || !owner) {
         filtered = nfts.filter(n => n.Issuer === GGB_ISSUER);
     }
-    
-    // Filter by taxon if provided
     if (taxonParam !== null) {
         const taxon = parseInt(taxonParam);
         filtered = filtered.filter(n => n.NFTokenTaxon === taxon);
     }
 
     return new Response(JSON.stringify({ 
-      v: "1.4",
+      v: "1.5",
+      debug: {
+        raw_keys: rawResponseExample ? Object.keys(rawResponseExample.result || {}) : [],
+        raw_full: rawResponseExample
+      },
       result: { 
         account_nfts: filtered,
         count: filtered.length,
         account: usedAccount,
-        total_found_in_wallet: nfts.length,
-        treasuries_attempted: owner ? [owner] : treasuries
+        total_found_in_wallet: nfts.length
       } 
     }), {
       status: 200,
       headers: { 
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'no-store, max-age=0'
+        'Cache-Control': 'no-store'
       },
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
