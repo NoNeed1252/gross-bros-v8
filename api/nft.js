@@ -4,7 +4,7 @@ export const config = {
 
 /**
  * fetchAllGalacticGrossBrosNFTs logic
- * This function crawls the XRPL account_nfts for the issuer.
+ * This function crawls the XRPL account_nfts for the treasury/issuer.
  */
 async function crawlAllNfts(account) {
   let allNfts = [];
@@ -48,17 +48,25 @@ export default async function handler(req) {
   const taxon = parseInt(searchParams.get('taxon') || '1');
 
   const GGB_ISSUER = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
-  const targetIssuer = issuer || GGB_ISSUER;
-  const targetAccount = owner || targetIssuer;
+  const GGB_TREASURY = "rNCY8dCi23nfyG74v8uE8V1G8Q8K265z6R";
+  
+  // Logic: 
+  // 1. If explicit 'owner' param provided, crawl that.
+  // 2. Otherwise, crawl the GGB_TREASURY where the actual NFTs live.
+  // 3. Fallback to GGB_ISSUER if both fail.
+  const targetAccount = owner || GGB_TREASURY || issuer || GGB_ISSUER;
 
   try {
-    // Perform full crawl to ensure we get every NFT in the collection
-    const nfts = await crawlAllNfts(targetAccount);
+    let nfts = await crawlAllNfts(targetAccount);
+    
+    // Fallback logic: If treasury is empty, try the issuer
+    if (nfts.length === 0 && targetAccount !== GGB_ISSUER) {
+      nfts = await crawlAllNfts(GGB_ISSUER);
+    }
     
     // Filter by taxon if applicable
     const filtered = nfts.filter(n => n.NFTokenTaxon === taxon);
 
-    // Return in the format expected by the frontend's loadBroOfDay: data.result.account_nfts
     return new Response(JSON.stringify({ 
       result: { 
         account_nfts: filtered 
