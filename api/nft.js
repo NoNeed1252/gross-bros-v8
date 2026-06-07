@@ -5,30 +5,24 @@ export const config = {
 export default async function handler(req) {
   const { searchParams } = new URL(req.url);
   const issuer = searchParams.get('issuer');
+  const owner = searchParams.get('owner');
+  const taxon = searchParams.get('taxon') || '1';
+  const list = searchParams.get('list') || 'nfts';
 
-  if (!issuer) {
-    return new Response(JSON.stringify({ error: 'Missing issuer' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+  // Build the Bithomp URL based on provided params
+  let bithompUrl = `https://bithomp.com/api/v2/nfts?taxon=${taxon}&list=${list}`;
+  if (issuer) bithompUrl += `&issuer=${issuer}`;
+  if (owner) bithompUrl += `&owner=${owner}`;
 
   try {
-    const response = await fetch('https://xrplcluster.com', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        method: 'account_nfts',
-        params: [{ account: issuer, ledger_index: 'validated' }],
-      }),
+    const response = await fetch(bithompUrl, {
+      method: 'GET',
+      headers: { 
+        'Content-Type': 'application/json',
+      },
     });
 
     const data = await response.json();
-    
-    // Filter to ensure only NFTs issued by this account are returned
-    if (data.result && data.result.account_nfts) {
-      data.result.account_nfts = data.result.account_nfts.filter(nft => nft.Issuer === issuer);
-    }
 
     return new Response(JSON.stringify(data), {
       status: 200,
