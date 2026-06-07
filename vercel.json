@@ -3,6 +3,7 @@
   "outputDirectory": "public",
   "rewrites": [
     { "source": "/api/nft", "destination": "/api/nft" },
-    { "source": "/api/chat", "destination": "/api/chat" }
+    { "source": "/api/chat", "destination": "/api/chat" },
+    { "source": "/api/(.*)", "destination": "/api/$1" }
   ]
 }
