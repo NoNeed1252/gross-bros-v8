@@ -238,9 +238,11 @@
 
     @media (max-width: 480px) {
       .chat-log { height: 260px; }
-      .held-nft-panel { margin-bottom: 12px; }
-      .held-nft-image-wrapper { max-width: 120px; margin: 0 auto; aspect-ratio: 3/4; border-radius: 12px; }
-      .held-nft-empty { padding: 40px 10px; }
+      .held-nft-panel { margin-bottom: 12px; border: none; background: transparent; box-shadow: none; }
+      .held-nft-image-wrapper { max-width: 220px; margin: 0 auto; aspect-ratio: 3/4; border-radius: 12px; border: 1px solid var(--line); box-shadow: 0 0 20px var(--line); }
+      .held-nft-empty { padding: 40px 10px; border: 1px solid var(--line); border-radius: 24px; background: rgba(0,0,0,0.7); }
+      .fuse-panel { gap: 8px; }
+      .fuse-head h2 { margin-bottom: 12px !important; }
     }
 
     /* Xaman QR Overlay */
@@ -554,6 +556,7 @@
         const filtered = nfts.filter(n => n.Issuer === CONFIG.ISSUER && n.NFTokenTaxon === 1);
         
         if (filtered.length > 0) {
+          // Parallelize metadata fetching to speed up post-connect load
           const nftData = await Promise.all(filtered.map(async (n) => {
             try {
               const metaUri = xrplUriToHttp(n.URI);
