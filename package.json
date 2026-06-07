@@ -1,7 +1,8 @@
 {
-  "name": "gross-bros-v7",
+  "name": "gross-bros-v8",
   "version": "1.0.1",
   "description": "Galactic Gross Bros - Galactic Operatives Hub",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -13,6 +14,5 @@
     "node-fetch": "^2.6.9",
     "xrpl": "^3.0.0",
     "@supabase/supabase-js": "^2.38.0"
-  },
-  "redeploy": "4"
+  }
 }
