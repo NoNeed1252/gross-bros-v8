@@ -1,6 +1,10 @@
 {
-  "cleanUrls": true,
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1.js" }
+    { "source": "/api/nft", "destination": "/api/nft.js" },
+    { "source": "/api/chat", "destination": "/api/chat.js" },
+    { "source": "/api/ticker", "destination": "/api/ticker.js" },
+    { "source": "/api/xaman", "destination": "/api/xaman.js" },
+    { "source": "/api/callback", "destination": "/api/callback.js" },
+    { "source": "/api/fusion-gate", "destination": "/api/fusion-gate.js" }
   ]
 }
