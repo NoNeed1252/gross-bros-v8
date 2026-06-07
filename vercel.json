@@ -4,6 +4,5 @@
   "rewrites": [
     { "source": "/api/nft", "destination": "/api/nft.js" },
     { "source": "/api/chat", "destination": "/api/chat.js" }
-  ],
-  "cleanUrls": true
+  ]
 }
