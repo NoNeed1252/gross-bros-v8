@@ -2,10 +2,6 @@ export const config = {
   runtime: 'edge',
 };
 
-/**
- * fetchAllGalacticGrossBrosNFTs logic
- * This function crawls the XRPL account_nfts for the issuer.
- */
 async function crawlAllNfts(account) {
   let allNfts = [];
   let marker = null;
@@ -52,13 +48,9 @@ export default async function handler(req) {
   const targetAccount = owner || targetIssuer;
 
   try {
-    // Perform full crawl to ensure we get every NFT in the collection
     const nfts = await crawlAllNfts(targetAccount);
-    
-    // Filter by taxon if applicable
     const filtered = nfts.filter(n => n.NFTokenTaxon === taxon);
 
-    // Return in the format expected by the frontend's loadBroOfDay: data.result.account_nfts
     return new Response(JSON.stringify({ 
       result: { 
         account_nfts: filtered 
