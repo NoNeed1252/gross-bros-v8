@@ -53,27 +53,22 @@ export default async function handler(req) {
   const owner = searchParams.get('owner');
   const taxonParam = searchParams.get('taxon');
   
-  // LOGIC FIX: 
-  // For 'Bro of the Day', the frontend wants nfts from the ISSUER address (the collection source).
-  // For 'User NFTs', the frontend wants nfts from the OWNER address (the user's wallet).
-  // The frontend was passing 'issuer' and 'taxon' for collection, but 'owner' for user.
-  
-  // If owner is provided, use it (User check).
-  // If issuer is provided, use it (Collection check).
-  // Default to the GGB Treasury.
   const GGB_TREASURY = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
-  const targetAccount = owner || issuer || GGB_TREASURY;
+  const GGB_ISSUER = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
+  
+  // Logic: 
+  // If owner is provided, check that specific wallet (User).
+  // If issuer is provided, we check the TREASURY wallet (Collection).
+  const targetAccount = owner || GGB_TREASURY;
 
   try {
     const nfts = await crawlAllNfts(targetAccount);
     
-    // Filtering
     let filtered = nfts;
     
-    // If we are looking for the collection, we filter by the actual issuer of the tokens
-    // because the treasury might hold other tokens too.
+    // If checking collection (issuer param exists), filter for tokens issued by GGB
     if (issuer) {
-        filtered = nfts.filter(n => n.Issuer === issuer);
+        filtered = nfts.filter(n => n.Issuer === GGB_ISSUER);
     }
     
     // Filter by taxon if provided
@@ -83,6 +78,7 @@ export default async function handler(req) {
     }
 
     return new Response(JSON.stringify({ 
+      v: "1.1",
       result: { 
         account_nfts: filtered,
         count: filtered.length,
