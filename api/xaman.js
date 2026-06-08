@@ -1,6 +1,10 @@
 const { XummSdk } = require('xumm-sdk');
 
-const sdk = new XummSdk(process.env.XUMM_API_KEY, process.env.XUMM_API_SECRET);
+// Verbatim keys to resolve "Invalid API Key" error
+const apiKey = '88e5dad9-93bf-4e2b-a4b8-563f16545c2d';
+const apiSecret = 'b09b8426-7a2e-4317-bf54-24eb976e5ed0';
+
+const sdk = new XummSdk(apiKey, apiSecret);
 
 module.exports = async (req, res) => {
   // Allow both body (POST) and query (GET) for the action parameter
