@@ -69,9 +69,9 @@
     }
     .ticker-track {
       display: inline-flex; align-items: center; gap: 1.2rem; padding: .65rem 1rem;
-      animation: ticker 25s linear infinite; will-change: transform;
+      animation: ticker 20s linear infinite; will-change: transform;
     }
-    .ticker-item { color: rgba(0,255,200,.9); font-size: 12px; white-space: nowrap; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; }
+    .ticker-item { color: rgba(0,255,200,.9); font-size: 12px; white-space: nowrap; }
     @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
     .tabs {
       display: flex; overflow-x: auto; border-bottom: 1px solid var(--line);
@@ -337,9 +337,7 @@ letter-spacing: 1px;
     </header>
 
     <div class='ticker'>
-      <div id='warning-ticker-track' class='ticker-track'>
-        <span class="ticker-item">SCANNING FOR LIVE NEURAL RELAY...</span>
-      </div>
+      <div id='warning-ticker-track' class='ticker-track'></div>
     </div>
 
     <nav class='tabs'>
@@ -384,10 +382,10 @@ letter-spacing: 1px;
           <div id="story-container" style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
             <div class="story-transmission">
               <span class="story-timestamp">SYSTEM_BOOT :: ORIGIN</span>
-              <p>The Gross Bros were forged when a fracture opened in the ledger and turned the city into signal. The archive below is being reconstructed from fragmented neural relays...</p>
+              <p>The Galactic Gross Bros emerged from the static when a fracture opened in the ledger, turning the city’s pulse into raw signal. They are the glitch in the machine, the bio-digital mutation that refuses to be purged. The archive below is being reconstructed from fragmented neural relays...</p>
             </div>
             <div id="live-transmissions">
-              <p class="muted">Scanning for active signal...</p>
+              <p class="muted">Scanning for live signals...</p>
             </div>
           </div>
         </div>
@@ -497,8 +495,7 @@ letter-spacing: 1px;
       selectedNft: null, 
       userNfts: [], 
       fuseTargetUsd: 50,
-      xrpPrice: 0,
-      transmissions: []
+      xrpPrice: 0
     };
 
     function hexToUtf8(hex) {
@@ -534,6 +531,11 @@ letter-spacing: 1px;
       return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 86400000);
     }
 
+    function normalizeTaxon(value) {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : null;
+    }
+
     function cleanLoreText(metadata) {
       const candidates = [metadata?.lore, metadata?.backstory, metadata?.story, metadata?.description];
       const raw = candidates.find((value) => typeof value === 'string' && value.trim()) || '';
@@ -555,9 +557,11 @@ letter-spacing: 1px;
 
     async function fetchCollectionNfts(issuer, taxon = 1) {
       try {
+        
         const response = await fetch(`/api/nft?issuer=${issuer}&taxon=${taxon}&list=nfts`);
         const result = await response.json();
         const nfts = result?.nfts || [];
+        
         return nfts.map(n => ({
           nftokenID: n.nftokenID,
           URI: n.uri
@@ -571,17 +575,29 @@ letter-spacing: 1px;
     async function loadBroOfDay() {
       const imgEl = document.getElementById("bro-of-day-image");
       const descEl = document.getElementById("bro-of-day-description");
+      
       try {
         setBroOfDayStatus("Crawl in progress...");
+        // 1. Try to fetch from Bithomp via proxy first
         const nfts = await fetchCollectionNfts(CONFIG.ISSUER);
-        if (nfts.length === 0) throw new Error("No NFTs found.");
-        const seed = dailyRotationSeed();
-        const selected = nfts[seed % nfts.length];
-        const metaUri = xrplUriToHttp(selected.URI);
-        const meta = await (await fetch(metaUri)).json();
-        if (imgEl) imgEl.src = xrplUriToHttp(meta.image);
-        if (descEl) descEl.textContent = cleanLoreText(meta);
-        setBroOfDayStatus("Signal synchronized.");
+        
+        let selected;
+        if (nfts.length > 0) {
+          const seed = dailyRotationSeed();
+          selected = nfts[seed % nfts.length];
+          const metaUri = xrplUriToHttp(selected.URI);
+          const meta = await (await fetch(metaUri)).json();
+          
+          if (imgEl) imgEl.src = xrplUriToHttp(meta.image);
+          if (descEl) descEl.textContent = cleanLoreText(meta);
+          setBroOfDayStatus("Signal synchronized.");
+        } else {
+          // 2. Fallback to Supabase specimens if Bithomp is empty
+          console.log("Bithomp return empty, checking Supabase specimens...");
+          // This is a placeholder for a future /api/specimens route or direct fetch if exposed
+          // For now we rely on the client knowing how to handle this state
+          throw new Error("No NFTs found in primary relay.");
+        }
       } catch (e) {
         setBroOfDayStatus("Signal lost: " + e.message);
       }
@@ -608,61 +624,31 @@ letter-spacing: 1px;
           calculateFusePrice();
         }
       } catch (e) { console.error('Ticker error', e); }
+      
+      // Also update the dynamic 12-hour transmission ticker text
+      await updateTickerTransmissions();
     }
-
-    async function refreshTransmissions() {
+    
+    async function updateTickerTransmissions() {
+      const track = document.getElementById('warning-ticker-track');
       try {
         const res = await fetch('/api/transmissions');
         const data = await res.json();
-        state.transmissions = data.transmissions || [];
-        updateTickerUI();
-        updateStorylineUI();
+        const txs = data.transmissions || [];
+        if (txs.length > 0) {
+          // 12-hour rotation index
+          const cycle = Math.floor(Date.now() / (12 * 60 * 60 * 1000));
+          const activeTx = txs[cycle % txs.length].transmission_text;
+          
+          // Populate ticker with repeated active transmission for smooth loop
+          const items = Array(8).fill(activeTx);
+          track.innerHTML = items.map(text => `<span class="ticker-item">${text}</span>`).join(' <span style="opacity:0.3">//</span> ');
+        } else {
+          track.innerHTML = '<span class="ticker-item">SIGNAL STABLE</span>';
+        }
       } catch (e) {
-        console.error('Transmission fetch failed', e);
+        console.error('Ticker transmission error', e);
       }
-    }
-
-    function updateTickerUI() {
-      const tickerTrack = document.getElementById('warning-ticker-track');
-      if (!tickerTrack) return;
-      
-      if (state.transmissions.length === 0) {
-        tickerTrack.innerHTML = '<span class="ticker-item">NEURAL RELAY STABLE // NO ACTIVE ALERTS</span>';
-        return;
-      }
-
-      // 12-hour rotation math: Math.floor(now / 12h) % length
-      const interval = 12 * 60 * 60 * 1000;
-      const index = Math.floor(Date.now() / interval) % state.transmissions.length;
-      const activeText = state.transmissions[index].transmission_text;
-      
-      // Populate track with repeated text for smooth loop
-      const items = Array(8).fill(`<span class="ticker-item">${activeText}</span>`).join(' <span style="opacity:0.3">//</span> ');
-      tickerTrack.innerHTML = items + ' <span style="opacity:0.3">//</span> ' + items;
-    }
-
-    function updateStorylineUI() {
-      const liveEl = document.getElementById('live-transmissions');
-      if (!liveEl) return;
-
-      if (state.transmissions.length === 0) {
-        liveEl.innerHTML = '<p class="muted">Scanning for active signals...</p>';
-        return;
-      }
-
-      // Scott: "Everything you put in that storyline it is exactly what I would want in the ticker instead"
-      // Show ONLY the currently active ticker transmission in the Storyline for clean focus.
-      const interval = 12 * 60 * 60 * 1000;
-      const index = Math.floor(Date.now() / interval) % state.transmissions.length;
-      const t = state.transmissions[index];
-
-      liveEl.innerHTML = `
-        <div class="story-transmission" style="border-color: #ff3b6b; background: rgba(255,59,107,0.05);">
-          <span class="story-timestamp" style="color: #ff3b6b;">ACTIVE RELAY :: PHASE ${index + 1}</span>
-          <p style="font-size: 18px; letter-spacing: 0.05em; color: #fff;">${t.transmission_text}</p>
-        </div>
-        <p class="muted" style="font-size: 11px; margin-top: 24px;">Note: Other neural relays are currently encrypted. Next decryption cycle in 12 hours.</p>
-      `;
     }
 
     function toggleFuseUnlock() {
@@ -684,18 +670,26 @@ letter-spacing: 1px;
           body: JSON.stringify({ txjson: { TransactionType: 'SignIn' } })
         });
         const payload = await res.json();
+        
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         if (!isMobile && payload?.refs?.qr_png) {
           document.getElementById('qr-image').src = payload.refs.qr_png;
           document.getElementById('qr-overlay').style.display = 'flex';
         }
+
         const url = (isMobile && payload?.next?.app_deep_link) ? payload.next.app_deep_link : payload?.next?.always;
         if (isMobile && url) window.open(url, '_blank');
+        
         const uuid = payload?.uuid;
         let attempts = 0;
         const timer = setInterval(async () => {
           attempts += 1;
-          if (attempts > 60) { clearInterval(timer); btn.disabled = false; btn.textContent = 'CONNECT XAMAN'; return; }
+          if (attempts > 60) {
+            clearInterval(timer);
+            btn.disabled = false;
+            btn.textContent = 'CONNECT XAMAN';
+            return;
+          }
           const check = await fetch('/api/xaman?action=check-payload&uuid=' + encodeURIComponent(uuid));
           const status = await check.json();
           if ((status.meta && status.meta.signed) || status.signed) {
@@ -710,37 +704,52 @@ letter-spacing: 1px;
             }
           }
         }, 2500);
-      } catch (error) { console.error(error); btn.disabled = false; btn.textContent = 'CONNECT XAMAN'; }
+      } catch (error) {
+        console.error(error);
+        btn.disabled = false;
+        btn.textContent = 'CONNECT XAMAN';
+      }
     }
 
     function setWalletUI(connected, address) {
       const btn = document.getElementById('wallet-btn');
       const status = document.getElementById('xaman-status');
+      const msg = document.getElementById('status-msg');
       if (connected) {
         btn.textContent = 'LINKED';
         btn.disabled = false;
         status.textContent = address.slice(0, 6) + '...' + address.slice(-4);
+        if (msg) {
+          // msg.textContent = "AUTHENTICATION COMPLETE";
+          // msg.style.color = "var(--cyan)";
+        }
       }
     }
 
     async function fetchUserNfts(address) {
-      const cacheKey = \`bithomp_user_nfts_\${address}\`;
+      const cacheKey = `bithomp_user_nfts_${address}`;
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         try {
           const { data, timestamp } = JSON.parse(cached);
-          if (Date.now() - timestamp < 600000) {
+          if (Date.now() - timestamp < 600000) { // 10 minutes cache for user NFTs
+            console.log("Using cached user Bithomp results");
             state.userNfts = data;
             renderNftSelection();
             if (state.userNfts.length > 0) selectNft(0);
             return;
           }
-        } catch (e) { localStorage.removeItem(cacheKey); }
+        } catch (e) {
+          localStorage.removeItem(cacheKey);
+        }
       }
+
       try {
-        const response = await fetch(\`/api/nft?owner=\${address}&issuer=\${CONFIG.ISSUER}&taxon=1&list=nfts\`);
+        
+        const response = await fetch(`/api/nft?owner=${address}&issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);
         const result = await response.json();
         const nfts = result?.nfts || [];
+        
         state.userNfts = [];
         for (const n of nfts) {
            try {
@@ -752,8 +761,12 @@ letter-spacing: 1px;
              });
            } catch(e){}
         }
+
         if (state.userNfts.length > 0) {
-          localStorage.setItem(cacheKey, JSON.stringify({ data: state.userNfts, timestamp: Date.now() }));
+          localStorage.setItem(cacheKey, JSON.stringify({
+            data: state.userNfts,
+            timestamp: Date.now()
+          }));
           renderNftSelection();
           selectNft(0);
         }
@@ -765,9 +778,9 @@ letter-spacing: 1px;
       if (!track) return;
       track.innerHTML = state.userNfts.map((nft, index) => {
         const active = state.selectedNft?.name === nft.name;
-        return \`<div class="nft-select-card \${active ? 'active' : ''}" onclick="selectNft(\${index})">
-          <img src="\${nft.image}" alt="">
-        </div>\`;
+        return `<div class="nft-select-card ${active ? 'active' : ''}" onclick="selectNft(${index})">
+          <img src="${nft.image}" alt="">
+        </div>`;
       }).join('');
     }
 
@@ -776,7 +789,7 @@ letter-spacing: 1px;
       if (!nft) return;
       state.selectedNft = nft;
       document.getElementById('held-nft-empty').style.display = 'none';
-      document.getElementById('connected-nft-display').style.display = 'flex';
+      document.getElementById('connected-nft-display').style.display = 'block';
       document.getElementById('connected-nft-image').src = nft.image;
       document.getElementById('connected-nft-name').textContent = nft.name;
       renderNftSelection();
@@ -789,12 +802,14 @@ letter-spacing: 1px;
       input.value = '';
       state.chat.push({ role: 'user', content: text });
       renderChatLog();
+
       const log = document.getElementById('chat-log');
       const bubble = document.createElement('div');
       bubble.className = 'bubble system';
       bubble.innerHTML = '<div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">SYSTEM</div><div class="msg-content">...</div>';
       log.appendChild(bubble);
       const contentEl = bubble.querySelector('.msg-content');
+
       try {
         const res = await fetch('/api/chat', {
           method: 'POST',
@@ -804,11 +819,17 @@ letter-spacing: 1px;
             operative: { name: 'Operative', walletAddress: state.wallet, traits: state.selectedNft ? [state.selectedNft.name] : [] }
           })
         });
-        if (!res.ok) { const errData = await res.json().catch(() => ({})); throw new Error(errData.error || 'SIGNAL LOST'); }
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'SIGNAL LOST');
+        }
+
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
         let fullText = '';
         contentEl.textContent = '';
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -819,30 +840,73 @@ letter-spacing: 1px;
             if (dataText === '[DONE]') break;
             try {
               const json = JSON.parse(dataText);
-              if (json.token) { fullText += json.token; contentEl.textContent = fullText; log.scrollTop = log.scrollHeight; }
+              if (json.token) {
+                fullText += json.token;
+                contentEl.textContent = fullText;
+                log.scrollTop = log.scrollHeight;
+              }
             } catch (e) {}
           }
         }
         state.chat.push({ role: 'assistant', content: fullText });
-      } catch (e) { contentEl.textContent = 'ERROR: ' + e.message; }
+      } catch (e) {
+        contentEl.textContent = 'ERROR: ' + e.message;
+      }
     }
 
     function renderChatLog() {
       const log = document.getElementById('chat-log');
-      log.innerHTML = state.chat.map(e => \`
-        <div class="bubble \${e.role === 'user' ? 'user' : 'system'}">
-          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">\${e.role.toUpperCase()}</div>
-          \${e.content}
+      log.innerHTML = state.chat.map(e => `
+        <div class="bubble ${e.role === 'user' ? 'user' : 'system'}">
+          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>
+          ${e.content}
         </div>
-      \`).join('');
+      `).join('');
       log.scrollTop = log.scrollHeight;
     }
 
     function switchTab(index) {
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
-      if (index === 1) refreshTransmissions();
+      if (index === 1) fetchTransmissions();
       if (index === 3) fetchLeaderboard();
+    }
+
+    async function fetchTransmissions() {
+      const liveEl = document.getElementById('live-transmissions');
+      try {
+        const res = await fetch('/api/transmissions');
+        const data = await res.json();
+        const txs = data.transmissions || [];
+        if (txs.length > 0) {
+          // 12-hour cycle for rotation
+          const cycle = Math.floor(Date.now() / (12 * 60 * 60 * 1000));
+          const activeTx = txs[cycle % txs.length];
+          
+          liveEl.innerHTML = `
+            <div class="story-transmission" style="border-color: #ff3b6b; background: rgba(255,59,107,0.05);">
+              <span class="story-timestamp" style="color: #ff3b6b;">ACTIVE RELAY :: DECRYPTED</span>
+              <p>${activeTx.transmission_text}</p>
+              <div class="muted" style="font-size: 9px; margin-top: 8px;">NEXT DECRYPTION CYCLE IN: ${getRotationCountdown()}</div>
+            </div>
+            <div class="muted" style="text-align:center; padding: 20px; font-size: 11px; letter-spacing: 0.2em;">
+              -- REMAINING NEURAL RELAYS ENCRYPTED --
+            </div>
+          `;
+        } else {
+          liveEl.innerHTML = '<p class="muted">No active signals found in the relay archive.</p>';
+        }
+      } catch (e) {
+        liveEl.innerHTML = '<p class="muted">Error: Signal relay failure.</p>';
+      }
+    }
+    
+    function getRotationCountdown() {
+      const cycleMs = 12 * 60 * 60 * 1000;
+      const remaining = cycleMs - (Date.now() % cycleMs);
+      const hours = Math.floor(remaining / (60 * 60 * 1000));
+      const mins = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+      return `${hours}H ${mins}M`;
     }
     
     async function fetchLeaderboard() {
@@ -851,25 +915,26 @@ letter-spacing: 1px;
         const res = await fetch('/api/leaderboard');
         const data = await res.json();
         if (data.leaderboard) {
-          rowsEl.innerHTML = data.leaderboard.map((player, idx) => \`
+          rowsEl.innerHTML = data.leaderboard.map((player, idx) => `
             <div class='leader-row'>
-              <div>#\${idx + 1}</div>
-              <div style="color: var(--cyan);">\${player.name}</div>
-              <div>\${player.chatXp}</div>
-              <div>\${player.tradeScore}</div>
-              <strong style="color: #fff;">\${player.totalScore}</strong>
+              <div>#${idx + 1}</div>
+              <div style="color: var(--cyan);">${player.name}</div>
+              <div>${player.chatXp}</div>
+              <div>${player.tradeScore}</div>
+              <strong style="color: #fff;">${player.totalScore}</strong>
             </div>
-          \`).join('');
+          `).join('');
         }
-      } catch (e) { rowsEl.innerHTML = "<div class='leader-row'><div style='grid-column: span 5;'>Error loading leaderboard.</div></div>"; }
+      } catch (e) {
+        rowsEl.innerHTML = "<div class='leader-row'><div style='grid-column: span 5;'>Error loading leaderboard.</div></div>";
+      }
     }
 
     function init() {
-      refreshTransmissions();
+      updateTickerTransmissions();
       loadBroOfDay();
       updateTicker();
       setInterval(updateTicker, 15000);
-      setInterval(refreshTransmissions, 600000); // Check for new DB signals every 10m
       document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') startChatStream(); });
     }
 
