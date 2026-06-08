@@ -381,7 +381,7 @@ letter-spacing: 1px;
               <div class='nft-art'>
                 <img id='bro-of-day-image' alt='Bro of the Day' src=''>
               </div>
-              <div class='nft-meta'>
+              <div class='nft-art-meta'>
                 <p id='bro-of-day-description' class='nft-subtitle'>Live NFT lore is loading...</p>
                 <div id='bro-of-day-status' class='muted' style='font-size:10px;'>Initializing...</div>
               </div>
@@ -531,7 +531,7 @@ letter-spacing: 1px;
     const MOCK_NFTS = [
       { name: "TEST SPECIMEN #001", image: "https://ipfs.io/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ" },
       { name: "TEST SPECIMEN #042", image: "https://ipfs.io/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" },
-      { name: "TEST SPECIMEN #088", image: "https://ipfs.io/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" }
+      { name: "TEST SPECIMEN #088", image: "https://ipfs.io/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" }
     ];
     
     async function safeFetch(url, options = {}) {
@@ -741,8 +741,9 @@ letter-spacing: 1px;
           document.getElementById('qr-overlay').style.display = 'flex';
         }
 
-        const url = (isMobile && payload?.next?.app_deep_link) ? payload.next.app_deep_link : payload?.next?.always;
-        if (isMobile && url) window.open(url, '_blank');
+        if (isMobile && payload?.next?.always) {
+          window.location.href = payload.next.always;
+        }
         
         const uuid = payload?.uuid;
         let attempts = 0;
