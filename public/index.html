@@ -21,7 +21,7 @@
       content: " ";
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03));
       background-size: 100% 2px, 3px 100%;
       pointer-events: none;
       z-index: 100;
@@ -29,7 +29,7 @@
     }
     .crt-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03));
       background-size: 100% 2px, 3px 100%;
       pointer-events: none;
       z-index: 101;
@@ -69,7 +69,7 @@
     }
     .ticker-track {
       display: inline-flex; align-items: center; gap: 1.2rem; padding: .65rem 1rem;
-      animation: ticker 50s linear infinite; will-change: transform;
+      animation: ticker 35s linear infinite; will-change: transform;
     }
     .ticker-item { color: rgba(0,255,200,.9); font-size: 12px; white-space: nowrap; }
     @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
@@ -327,6 +327,52 @@ letter-spacing: 1px;
   padding: 20px;
 }
 
+/* LEGAL FOOTER STYLES */
+.legal-footer {
+  padding: 24px 18px;
+  background: #0a0a0a;
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+.legal-links {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 12px;
+}
+.legal-link {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(0, 255, 200, 0.6);
+  text-decoration: none;
+}
+.legal-link:hover { color: var(--cyan); }
+.legal-copy {
+  font-size: 10px;
+  color: rgba(0, 255, 200, 0.3);
+  letter-spacing: 0.5px;
+}
+
+/* LEGAL MODALS */
+.legal-modal {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.95); z-index: 10000; display: none;
+  align-items: center; justify-content: center; padding: 20px;
+}
+.legal-modal-content {
+  background: var(--panel); border: 1px solid var(--line);
+  max-width: 600px; max-height: 80vh; width: 100%;
+  border-radius: 24px; padding: 24px; overflow-y: auto;
+  position: relative; box-shadow: 0 0 50px rgba(0,255,200,0.1);
+}
+.legal-modal-close {
+  position: absolute; top: 16px; right: 16px;
+  cursor: pointer; color: var(--cyan); font-size: 20px;
+}
+.legal-text { font-size: 13px; line-height: 1.6; color: #ddfff9; opacity: 0.9; }
+.legal-text h3 { font-family: Orbitron; font-size: 16px; color: var(--cyan); margin-top: 20px; }
+
 </style>
 </head>
 <body>
@@ -338,6 +384,45 @@ letter-spacing: 1px;
     </div>
     <p style="margin-top: 20px; font-family: Orbitron;">SCAN WITH XAMAN TO SYNC</p>
     <button class="btn" style="margin-top: 10px;">CANCEL</button>
+  </div>
+
+  <!-- Legal Modals -->
+  <div id="terms-modal" class="legal-modal">
+    <div class="legal-modal-content">
+      <span class="legal-modal-close" onclick="closeLegal()">&times;</span>
+      <div class="legal-text">
+        <h2 style="font-family: Orbitron; color: var(--cyan);">TERMS OF SERVICE</h2>
+        <p>Welcome to the Guardian Broadcast OS. By accessing this terminal, you agree to the following protocols:</p>
+        <h3>1. ACCESS PROTOCOLS</h3>
+        <p>Access is granted to authorized neural relays only. Users are responsible for maintaining the security of their connected Xaman wallets.</p>
+        <h3>2. FUSION LAB CONDUCT</h3>
+        <p>Directive transmissions in the Fusion Lab must remain within systemic parameters. Unauthorized decryption or malicious injections are prohibited.</p>
+        <h3>3. DIGITAL ASSETS</h3>
+        <p>The Galactic Gross Bros NFTs are digital artifacts residing on the XRP Ledger. All interactions are subject to the inherent rules of the XRPL.</p>
+        <div style="margin-top: 30px; border-top: 1px solid var(--line); padding-top: 10px; font-size: 10px; opacity: 0.5;">
+          END OF TRANSMISSION // VERSION 1.0.4
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="privacy-modal" class="legal-modal">
+    <div class="legal-modal-content">
+      <span class="legal-modal-close" onclick="closeLegal()">&times;</span>
+      <div class="legal-text">
+        <h2 style="font-family: Orbitron; color: var(--cyan);">PRIVACY POLICY</h2>
+        <p>Our neural encryption ensures your signal remains private.</p>
+        <h3>1. DATA HARVESTING</h3>
+        <p>We do not collect personal identifiers. Only public wallet addresses are processed for session synchronization and leaderboard indexing.</p>
+        <h3>2. NEURAL COOKIES</h3>
+        <p>Local terminal state is stored on your device to maintain session continuity between broadcast cycles.</p>
+        <h3>3. THIRD-PARTY RELAYS</h3>
+        <p>Metadata is served via IPFS and Bithomp relays. We do not control the encryption protocols of external secondary gateways.</p>
+        <div style="margin-top: 30px; border-top: 1px solid var(--line); padding-top: 10px; font-size: 10px; opacity: 0.5;">
+          BROADCAST SECURE // PRIVACY COMPLIANT
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class='shell'>
@@ -498,6 +583,14 @@ letter-spacing: 1px;
         </div>
       </section>
     </main>
+
+    <footer class="legal-footer">
+      <div class="legal-links">
+        <a href="javascript:void(0)" class="legal-link" onclick="openLegal('terms')">Terms</a>
+        <a href="javascript:void(0)" class="legal-link" onclick="openLegal('privacy')">Privacy</a>
+      </div>
+      <div class="legal-copy">&copy; 2026 Galactic Gross Bros // Broadcaster Unit 8.8</div>
+    </footer>
   </div>
 
   <script>
@@ -886,6 +979,13 @@ letter-spacing: 1px;
           `).join('');
         }
       } catch (e) { rowsEl.innerHTML = "<div class='leader-row'><div style='grid-column: span 5;'>Error loading leaderboard.</div></div>"; }
+    }
+
+    function openLegal(type) {
+      document.getElementById(type + '-modal').style.display = 'flex';
+    }
+    function closeLegal() {
+      document.querySelectorAll('.legal-modal').forEach(m => m.style.display = 'none');
     }
 
     function init() {
