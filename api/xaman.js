@@ -61,8 +61,8 @@ async function handleCreatePayload(req, res) {
 
     return res.status(200).json({
       uuid: result.uuid,
-      next: result.next.always,
-      refs: result.refs, // Include full refs for QR fallback
+      next: result.next, // Return full next object instead of result.next.always
+      refs: result.refs,
       qrUrl: result.refs.qr_png,
     });
   } catch (error) {
