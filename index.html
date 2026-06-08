@@ -510,7 +510,7 @@ letter-spacing: 1px;
     const MOCK_NFTS = [
       { name: "TEST SPECIMEN #001", image: "https://ipfs.io/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ" },
       { name: "TEST SPECIMEN #042", image: "https://ipfs.io/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" },
-      { name: "TEST SPECIMEN #088", image: "https://ipfs.io/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7" }
+      { name: "TEST SPECIMEN #088", image: "https://ipfs.io/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" }
     ];
     
     async function safeFetch(url, options = {}) {
@@ -599,6 +599,7 @@ letter-spacing: 1px;
       try {
         setBroOfDayStatus("Crawl in progress...");
         const res = await fetch(`/api/nft?issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);
+        if (!res.ok) throw new Error("API response error");
         const result = await res.json();
         const nfts = result?.nfts || [];
         if (nfts.length === 0) throw new Error("No NFTs found.");
@@ -624,7 +625,12 @@ letter-spacing: 1px;
         setBroOfDayStatus("Signal synchronized.");
       } catch (e) {
         console.error("loadBroOfDay error:", e);
-        setBroOfDayStatus("Signal lost.");
+        setBroOfDayStatus("Signal lost. Defaulting to standard protocols.");
+        if (descEl && (!descEl.textContent || descEl.textContent.includes("loading"))) {
+          descEl.textContent = "The archive is currently undergoing maintenance. Signal integrity will be restored shortly.";
+        }
+      } finally {
+        document.body.classList.remove('loading-state');
       }
     }
 
@@ -731,7 +737,7 @@ letter-spacing: 1px;
 
     async function fetchUserNfts(address) {
       try {
-        const response = await fetch(\`/api/nft?owner=\${address}&issuer=\${CONFIG.ISSUER}&taxon=1&list=nfts\`);
+        const response = await fetch(`/api/nft?owner=${address}&issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);
         const result = await response.json();
         const nfts = result?.nfts || [];
         
@@ -765,9 +771,9 @@ letter-spacing: 1px;
       if (!track) return;
       track.innerHTML = state.userNfts.map((nft, index) => {
         const active = state.selectedNft?.name === nft.name;
-        return \`<div class="nft-select-card \${active ? 'active' : ''}" onclick="selectNft(\${index})">
-          <img src="\${nft.image}" alt="">
-        </div>\`;
+        return `<div class="nft-select-card ${active ? 'active' : ''}" onclick="selectNft(${index})">
+          <img src="${nft.image}" alt="">
+        </div>`;
       }).join('');
     }
 
@@ -843,12 +849,12 @@ letter-spacing: 1px;
 
     function renderChatLog() {
       const log = document.getElementById('chat-log');
-      log.innerHTML = state.chat.map(e => \`
-        <div class="bubble \${e.role === 'user' ? 'user' : 'system'}">
-          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">\${e.role.toUpperCase()}</div>
-          \${e.content}
+      log.innerHTML = state.chat.map(e => `
+        <div class="bubble ${e.role === 'user' ? 'user' : 'system'}">
+          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>
+          ${e.content}
         </div>
-      \`).join('');
+      `).join('');
       log.scrollTop = log.scrollHeight;
     }
 
@@ -882,14 +888,35 @@ letter-spacing: 1px;
     function openModal(id) { document.getElementById(id).style.display = 'block'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    function init() {
+    async function init() {
       const ticker = document.getElementById('warning-ticker-track');
       const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
-      ticker.innerHTML = items.concat(items).map(i => \`<span class="ticker-item">\${i}</span>\`).join(' " ');
-      loadBroOfDay();
-      updateTicker();
-      setInterval(updateTicker, 15000);
-      document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') startChatStream(); });
+      if (ticker) {
+        ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' " ');
+      }
+      
+      document.body.classList.add('loading-state');
+
+      try {
+        await Promise.allSettled([
+          loadBroOfDay(),
+          updateTicker()
+        ]);
+      } catch (e) {
+        console.error("Critical error during initialization:", e);
+      } finally {
+        document.body.classList.remove('loading-state');
+        const statusEl = document.getElementById("bro-of-day-status");
+        if (statusEl && statusEl.textContent === "Initializing...") {
+          statusEl.textContent = "Signal standby.";
+        }
+      }
+
+      setInterval(updateTicker, 30000);
+      const chatInput = document.getElementById('chat-input');
+      if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') startChatStream(); });
+      }
     }
 
     window.onload = () => { init(); };
