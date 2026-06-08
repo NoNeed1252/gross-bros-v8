@@ -13,6 +13,7 @@
     html, body { 
       margin: 0; padding: 0; background: var(--bg); color: var(--cyan);
       font-family: 'Share Tech Mono', monospace; height: 100%; width: 100%;
+      overflow-x: hidden;
     }
     a { color: inherit; }
 
@@ -38,15 +39,13 @@
 
     .shell { 
       position: relative;
-      z-index: 10; /* Above backgrounds, below overlays */
+      z-index: 10;
       max-width: 1480px; min-height: calc(100vh - 24px); margin: 12px auto;
-      border: 24px solid #1f1f1f; border-radius: 24px; overflow: hidden;
+      border: 24px solid #1f1f1f; border-radius: 0; overflow: hidden;
       background: #050505; box-shadow: 0 30px 70px -20px rgba(0,0,0,.95), 0 0 100px -20px var(--cyan);
       display: flex; flex-direction: column;
     }
-    @media (max-width: 640px) {
-      .shell { margin: 8px auto; min-height: calc(100vh - 16px); border-width: 0; }
-    }
+    
     .topbar {
       background: #0a0a0a; border-bottom: 1px solid var(--line);
       display: flex; align-items: center; justify-content: space-between; gap: 14px;
@@ -75,7 +74,7 @@
     @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
     .tabs {
       display: flex; overflow-x: auto; border-bottom: 1px solid var(--line);
-      background: #0b0b0b;
+      background: #0b0b0b; -webkit-overflow-scrolling: touch;
     }
     .tab {
       flex: 1 0 120px; padding: 16px 12px; text-align: center; cursor: pointer;
@@ -221,6 +220,7 @@
       background: rgba(0,0,0,.5); color: #f1fffd; font: inherit; outline: none;
     }
     .fuse-panel { display: grid; gap: 14px; background: linear-gradient(180deg, rgba(7,18,17,.98), rgba(2,8,8,.98)); }
+    .fuse-panel { display: grid; gap: 14px; background: linear-gradient(180deg, rgba(7,18,17,.98), rgba(2,8,8,.98)); }
     .fuse-head { display: flex; align-items: center; justify-content: space-between; }
     .fuse-badge { padding: 8px 12px; border-radius: 999px; border: 1px solid var(--cyan); font-size: 10px; }
     .fuse-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
@@ -248,31 +248,31 @@
     }
     .qr-container img { max-width: 300px; display: block; }
   
-.social-links { display: grid; gap: 16px; }
-.social-card { 
-display: flex; 
-align-items: center; 
-justify-content: space-between; 
-padding: 20px; 
-border: 1px solid rgba(0,255,200,0.2); 
-border-radius: 20px; 
-background: rgba(0,255,200,0.04); 
-text-decoration: none; 
-transition: all 0.2s ease;
-}
-.social-card:hover {
-background: rgba(0,255,200,0.08);
-border-color: var(--cyan);
-box-shadow: 0 0 15px rgba(0,255,200,0.1);
-}
-.social-card .label { 
-font-family: 'Orbitron', sans-serif; 
-font-size: 14px; 
-color: var(--cyan); 
-margin-bottom: 6px; 
-letter-spacing: 1px;
-}
-.social-card .desc { font-size: 12px; color: rgba(0,255,200,0.7); }
+    .social-links { display: grid; gap: 16px; }
+    .social-card { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      padding: 20px; 
+      border: 1px solid rgba(0,255,200,0.2); 
+      border-radius: 20px; 
+      background: rgba(0,255,200,0.04); 
+      text-decoration: none; 
+      transition: all 0.2s ease;
+    }
+    .social-card:hover {
+      background: rgba(0,255,200,0.08);
+      border-color: var(--cyan);
+      box-shadow: 0 0 15px rgba(0,255,200,0.1);
+    }
+    .social-card .label { 
+      font-family: 'Orbitron', sans-serif; 
+      font-size: 14px; 
+      color: var(--cyan); 
+      margin-bottom: 6px; 
+      letter-spacing: 1px;
+    }
+    .social-card .desc { font-size: 12px; color: rgba(0,255,200,0.7); }
 
     /* Privacy and Terms Modals */
     .modal {
@@ -313,9 +313,756 @@ letter-spacing: 1px;
     .transmission-item { padding: 12px 0; border-bottom: 1px solid var(--line); }
     .transmission-date { font-size: 10px; opacity: 0.5; }
     .transmission-text { font-size: 13px; line-height: 1.5; color: #ddfff9; margin-top: 6px; }
-</style>
+
+    /* Mobile Responsive Overrides for iPhone SE (320px viewport compatibility) */
+    @media (max-width: 640px) {
+      .shell { 
+        margin: 4px; 
+        min-height: calc(100vh - 8px); 
+        border: 4px solid #1f1f1f; 
+        border-radius: 0;
+        box-shadow: none;
+      }
+      .topbar { 
+        padding: 10px; 
+        gap: 10px; 
+        justify-content: center;
+        text-align: center;
+      }
+      .brand {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+      }
+      .title {
+        font-size: 13px;
+        letter-spacing: 0.1em;
+        text-align: center;
+      }
+      .subtitle {
+        font-size: 9px;
+        text-align: center;
+      }
+      .wallet-btn {
+        width: 100%;
+        padding: 10px;
+        font-size: 12px;
+        border-radius: 12px;
+      }
+      .status {
+        width: 100%;
+        text-align: center;
+        font-size: 10px;
+      }
+      .tabs {
+        justify-content: flex-start;
+      }
+      .tab {
+        flex: 1 0 90px;
+        padding: 12px 6px;
+        font-size: 11px;
+      }
+      .content {
+        padding: 10px;
+      }
+      .panel {
+        padding: 12px;
+        border-radius: 12px;
+      }
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+      .nft-art {
+        width: 100%;
+        border-radius: 12px;
+      }
+      .nft-art::after {
+        font-size: 9px;
+        letter-spacing: 0.15em;
+        padding: 6px 8px;
+      }
+      .chat-terminal-actions {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      input, select {
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-size: 13px;
+      }
+      .fuse-button-box {
+        justify-content: space-between;
+        padding: 8px 10px;
+        border-radius: 12px;
+      }
+      .leader-row {
+        grid-template-columns: 45px 1fr 60px 70px 70px;
+        padding: 10px 6px;
+        font-size: 11px;
+      }
+      .modal-content {
+        padding: 24px;
+        margin: 5vh auto;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class=\"crt-overlay\"></div>
+  <div class="crt-overlay"></div>
   
-  <div id=\"qr-overlay\" onclick=\"this.style.display='none'\">\n    <div class=\"qr-container\">\n      <img id=\"qr-image\" src=\"\" alt=\"Scan with Xaman\">\n    </div>\n    <p style=\"margin-top: 20px; font-family: Orbitron;\">SCAN WITH XAMAN TO SYNC</p>\n    <button class=\"btn\" style=\"margin-top: 10px;\">CANCEL</button>\n  </div>\n\n  <div class='shell'>\n    <header class='topbar'>\n      <div class='brand'>\n        <div class='dot'></div>\n        <div>\n          <div class='title'>GUARDIAN BROADCAST OS v8.9.5 STABLE</div>\n          <div class='subtitle'>Neural CRT relay // terminal interface</div>\n        </div>\n      </div>\n      <button id='wallet-btn' class='wallet-btn' onclick=\"connectXaman()\">CONNECT XAMAN</button>\n      <div id='xaman-status' class='status'>Wallet disconnected.</div>\n    </header>\n\n    <div class='ticker'>\n      <div id='warning-ticker-track' class='ticker-track'></div>\n    </div>\n\n    <nav class='tabs'>\n      <div class='tab active' onclick=\"switchTab(0)\">CONSOLE</div>\n      <div class='tab' onclick=\"switchTab(1)\">STORYLINE</div>\n      <div class='tab' onclick=\"switchTab(2)\">FUSION LAB</div>\n      <div class='tab' onclick=\"switchTab(3)\">LEADERBOARD</div>\n      <div class='tab' onclick=\"switchTab(4)\">SOCIALS</div>\n    </nav>\n\n    <main class='content'>\n      <section id='section-0' class='section active'>\n        <div class='grid grid-2'>\n          <div class='panel'>\n            <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>BRO OF THE DAY</div>\n            <h1 id=\"status-msg\" style='font-family:Orbitron,sans-serif;font-size:clamp(28px,5vw,62px);margin:10px 0 0;'>BRO OF THE DAY</h1>\n            <p style='line-height:1.8;color:#ddfff9;opacity:.86;max-width:58ch'>Daily rotation pulled from the full issuer collection, with one NFT selected every 24 hours.</p>\n            <div class='row'>\n              <button class='btn' onclick=\"switchTab(1)\">READ TRANSMISSIONS</button>\n              <button class='btn' onclick=\"window.open('https://xrp.cafe/collection/galactic-gross-bros', '_blank')\">BUY A BRO</button>\n            </div>\n          </div>\n          <div class='panel nft-panel'>\n            <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Daily signal</div>\n            <div class='nft-display' style='margin-top:14px;'>\n              <div class='nft-art'>\n                <img id='bro-of-day-image' alt='Bro of the Day' src=''>\n              </div>\n              <div class='nft-meta'>\n                <p id='bro-of-day-description' class='nft-subtitle'>Live NFT lore is loading...</p>\n                <div id='bro-of-day-status' class='muted' style='font-size:10px;'>Initializing...</div>\n              </div>\n            </div>\n          </div>\n        </div>\n      </section>\n\n      <section id='section-1' class='section'>\n        <div class='panel'>\n          <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>\n          <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>\n          <div id=\"static-origin-story\" style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>\n            <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger.</p>\n            <p>When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>\n            <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>\n          </div>\n          <div class='muted' style=\"margin-top: 30px; border-top: 1px solid var(--line); padding-top: 12px;\">LIVE TRANSMISSIONS</div>\n          <div id=\"transmissions-container\" style=\"margin-top: 12px;\"></div>\n        </div>\n      </section>\n\n      <section id='section-2' class='section'>\n        <div class='panel fuse-panel'>\n          <div class='fuse-head'>\n            <div>\n              <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Fusion Lab</div>\n              <div class='muted' style='text-align:center; letter-spacing:0.5em; font-size:10px; margin-bottom:8px; opacity: 0.7;'>IN-WORLD COMMS TERMINAL</div><h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:0 0 24px; text-align:center; text-shadow: 0 0 10px rgba(0,255,200,0.3);'>CHAT TERMINAL</h2>\n            </div>\n            <div id='fuse-lock-badge' class='fuse-badge' style='border-color: var(--cyan); color: var(--cyan);'>ACTIVE</div>\n          </div>\n          \n          <div id='held-nft-display' class='held-nft-panel'>\n            <div id=\"connected-nft-display\" style=\"display:none; align-items:center; gap:16px; width:100%;\">\n               <div class=\"held-nft-image-wrapper\"><img id=\"connected-nft-image\" src=\"\" alt=\"\"></div>\n               <div class=\"held-nft-info\"><span class=\"held-nft-name\" id=\"connected-nft-name\">--</span></div>\n            </div>\n            <div id=\"held-nft-empty\" class=\"held-nft-empty\" style=\"opacity:0.8; font-size:12px; letter-spacing:0.2em;\">GUEST ACCESS</div>\n          </div>\n\n          <div id='chat-terminal' class='chat-terminal'>\n            <div id='chat-log' class='chat-log'></div>\n            <div class='chat-terminal-actions'>\n              <input id='chat-input' placeholder='Send a directive...'>\n              <button id='chat-send-btn' class='btn' onclick=\"startChatStream()\">Send</button>\n              <div class='fuse-button-box'>\n                <button id='fuse-button' class='btn' onclick=\"toggleFuseUnlock()\">Fuse</button>\n                <div class='fuse-price'>\n                  <span>Live $50 USD</span>\n                  <strong id='fuse-token-amount'>--</strong>\n                </div>\n              </div>\n            </div>\n          </div>\n          <div class='fuse-grid'>\n            <div class='fuse-readout'><span>Token</span><select id='fuse-token-select' onchange='state.fuseToken = this.value; calculateFusePrice();'><option value='XRP'>XRP</option><option value='RLUSD'>RLUSD</option></select></div>\n            <div class='fuse-readout'><span>Rate</span><strong id='fuse-token-rate'>--</strong></div>\n            <div class='fuse-readout'><span>Status</span><strong id='fuse-payment-status'>Awaiting</strong></div>\n          </div>\n          <div class='nft-selection-section'>\n            <div class='muted'>Available NFTs</div>\n            <div id='nft-selection-track' class='nft-selection-track'></div>\n          </div>\n        </div>\n      </section>\n\n      \n      <section id='section-3' class='section'>\n        <div class='panel'>\n          <h2 style='font-family:Orbitron,sans-serif;'>LEADERBOARD</h2>\n          <div class='leaderboard' id='leaderboard-container'>\n            <div class='leader-row muted' style='border-bottom: 1px solid var(--cyan); padding-bottom: 10px; font-weight: bold;'>\n              <div>RANK</div>\n              <div>HANDLE</div>\n              <div>CHAT XP</div>\n              <div>TRADE SCORE</div>\n              <div>TOTAL</div>\n            </div>\n            <div id='leaderboard-rows'>\n              <div class='leader-row'><div>--</div><div>Loading data...</div><div>--</div><div>--</div><div>--</div></div>\n            </div>\n          </div>\n        </div>\n      </section>\n\n      <section id='section-4' class='section'>\n        <div class='panel'>\n          <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Communications Hub</div>\n          <h2 style='font-family:Orbitron,sans-serif;margin:10px 0 24px;'>NEURAL TRANSMISSION CHANNELS</h2>\n          <div class='social-links'>\n            <a href='https://x.com/thegrossbros?s=21' target='_blank' class='social-card'>\n              <div>\n                <div class='label'>X-SECURE TRANSMITTER</div>\n                <div class='desc'>DIRECT FREQUENCY // @THEGROSSBROS</div>\n              </div>\n              <div class='btn'>OPEN</div>\n            </a>\n            <a href='https://discord.gg/fcZYk7UcB' target='_blank' class='social-card'>\n              <div>\n                <div class='label'>THE DEN DECRYPTED</div>\n                <div class='desc'>PRIVATE COMMS ENCRYPTED // DISCORD</div>\n              </div>\n              <div class='btn'>JOIN</div>\n            </a>\n          </div>\n        </div>\n      </section>\n    </main>\n\n    <footer style=\"padding: 20px; text-align: center; font-size: 10px; opacity: 0.6; border-top: 1px solid var(--line); letter-spacing: 2px;\">\n      <span style=\"cursor: pointer;\" onclick=\"openModal('privacy-modal')\">PRIVACY PROTOCOL</span> | \n      <span style=\"cursor: pointer;\" onclick=\"openModal('terms-modal')\">TERMS OF SERVICE</span>\n    </footer>\n  </div>\n\n  <div id=\"privacy-modal\" class=\"modal\">\n    <div class=\"modal-content\">\n      <span class=\"modal-close\" onclick=\"closeModal('privacy-modal')\">&times;</span>\n      <h2 style=\"font-family:Orbitron, sans-serif; letter-spacing: 4px; color: var(--cyan);\">PRIVACY PROTOCOL</h2>\n      <p>By accessing the Galactic Gross Bros (GGB) neural relay, you acknowledge that your interaction data, including XRPL wallet addresses (connected via Xaman), token balances (DROP, BERT, DBY, RLUSD), and terminal chat transmissions, are processed solely for the purpose of maintaining signal integrity and the terminal entertainment experience. We explicitly disclaim all liability for any data breaches, neural link interruptions, or technical failures on the XRP Ledger. Your digital markers, private keys, and wallet metadata remain your own responsibility; we do not store private keys. Signal integrity is our priority, but absolute security in the XRP-7 zone is not guaranteed. NO WARRANTIES PROVIDED.</p>\n    </div>\n  </div>\n\n  <div id=\"terms-modal\" class=\"modal\">\n    <div class=\"modal-content\">\n      <span class=\"modal-close\" onclick=\"closeModal('terms-modal')\">&times;</span>\n      <h2 style=\"font-family:Orbitron, sans-serif; letter-spacing: 4px; color: var(--cyan);\">TERMS OF NEURAL SERVICE</h2>\n      <p>\n        1. <strong>ENTERTAINMENT ONLY:</strong> Galactic Gross Bros (GGB) is a platform for entertainment purposes ONLY. We provide no financial or legal advice. All AI interactions and \"Fusion Lab\" outcomes are for narrative and entertainment purposes only.<br><br>\n        2. <strong>NO FINANCIAL ADVICE:</strong> Nothing transmitted through this relay constitutes financial, investment, or legal advice. GGB creators are not financial advisors. The mention of tokens like DROP, BERT, DBY, or RLUSD is purely within the context of the GGB ecosystem mechanics.<br><br>\n        3. <strong>ASSET RISK:</strong> XRPL tokens and GGB NFTs are volatile digital assets. They are provided \"AS-IS\" with zero warranties of value, liquidity, or future utility. You assume 100% risk for all ledger transactions.<br><br>\n        4. <strong>FULL LIABILITY WAIVER:</strong> The GGB team, developers, and operatives explicitly disclaim all financial and legal liability for any losses, glitches, smart contract events, or ledger-side failures. All \"Fusions\" and neural transmissions are final, permanent, and non-refundable.<br><br>\n        5. <strong>PROTOCOL ACCEPTANCE:</strong> By proceeding, you accept the hazardous and volatile nature of the XRP-7 energy sector. Use at your own risk, Operative.\n      </p>\n    </div>\n  </div>\n\n  <script>\n    const CONFIG = {\n      ISSUER: \"rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY\",\n      RPC: \"https://xrplcluster.com\",\n      GATEWAY: \"https://ipfs.io/ipfs/\"\n    };\n    \n    const MOCK_NFTS = [\n      { name: \"TEST SPECIMEN #001\", image: \"https://ipfs.io/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ\" },\n      { name: \"TEST SPECIMEN #042\", image: \"https://ipfs.io/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ\" },\n      { name: \"TEST SPECIMEN #088\", image: \"https://ipfs.io/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ\" }\n    ];\n    \n    async function safeFetch(url, options = {}) {\n      const controller = new AbortController();\n      const timeoutId = setTimeout(() => controller.abort(), 2500);\n      try {\n        const res = await fetch(url, { ...options, signal: controller.signal });\n        clearTimeout(timeoutId);\n        if (!res.ok) return null;\n        const text = await res.text();\n        try {\n          return JSON.parse(text);\n        } catch (e) {\n          console.warn('safeFetch: Failed to parse JSON, returning null', url);\n          return null;\n        }\n      } catch (e) {\n        clearTimeout(timeoutId);\n        console.error('SafeFetch Error:', e);\n        return null;\n      }\n   }\n    const state = { \n      connected: false, \n      wallet: \"\", \n      chat: [], \n      fuseUnlocked: true, \n      fuseToken: \"XRP\", \n      selectedNft: null, \n      userNfts: [], \n      fuseTargetUsd: 50,\n      xrpPrice: 0\n    };\n\n    function hexToUtf8(hex) {\n      if (!hex || typeof hex !== 'string') return '';\n      try {\n        const bytes = new Uint8Array(hex.length / 2);\n        for (let i = 0; i < hex.length; i += 2) {\n          bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);\n        }\n        return new TextDecoder().decode(bytes);\n      } catch (e) {\n        return '';\n      }\n    }\n\n    function xrplUriToHttp(uri) {\n      const value = String(uri || '').trim();\n      if (!value) return '';\n      if (/^[0-9a-fA-F]+$/.test(value)) {\n        return xrplUriToHttp(hexToUtf8(value));\n      }\n      if (value.startsWith('ipfs://')) {\n        return CONFIG.GATEWAY + value.slice('ipfs://'.length).replace(/^\\/+/ , '');\n      }\n      if (value.startsWith('ar://')) {\n        return 'https://arweave.net/' + value.slice('ar://'.length).replace(/^\\/+/ , '');\n      }\n      return value;\n    }\n\n    function dailyRotationSeed() {\n      const now = new Date();\n      return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 86400000);\n    }\n\n    function cleanLoreText(metadata) {\n      const candidates = [metadata?.lore, metadata?.backstory, metadata?.story, metadata?.description];\n      const raw = candidates.find((value) => typeof value === 'string' && value.trim()) || '';\n      const lines = String(raw)\n        .replace(/\\r\\n/g, '\\n')\n        .split(/\\n+/)\n        .map((line) => line.trim())\n        .filter(Boolean)\n        .filter((line) => !/^(traits?|attributes?|serial(?: number)?|background(?: type)?|token(?: id)?|issuer|taxon|edition|rarity|owner|contract)\\b[:\\-]*/i.test(line))\n        .filter((line) => !/^#\\s*\\d+/.test(line));\n      const text = lines.join(' ').replace(/\\s{2,}/g, ' ').trim();\n      return text || 'Live NFT lore is loading from the full BRO collection.';\n    }\n\n    function setBroOfDayStatus(message) {\n      const el = document.getElementById(\"bro-of-day-status\");\n      if (el) el.textContent = message;\n    }\n\n    async function loadBroOfDay() {\n      const imgEl = document.getElementById(\"bro-of-day-image\");\n      const descEl = document.getElementById(\"bro-of-day-description\");\n      try {\n        setBroOfDayStatus(\"Crawl in progress...\");\n        const res = await fetch(`/api/nft?issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);\n        if (!res.ok) throw new Error(\"API response error\");\n        const result = await res.json();\n        const nfts = result?.nfts || [];\n        if (nfts.length === 0) throw new Error(\"No NFTs found.\");\n        \n        const seed = dailyRotationSeed();\n        let meta = null;\n        let attempts = 0;\n        \n        while (!meta && attempts < Math.min(nfts.length, 10)) {\n          const selected = nfts[(seed + attempts) % nfts.length];\n          const uri = selected.uri;\n          if (uri) {\n            const metaUri = xrplUriToHttp(uri);\n            meta = await safeFetch(metaUri);\n          }\n          attempts++;\n        }\n        \n        if (!meta) throw new Error(\"Metadata unreachable.\");\n        \n        if (imgEl) imgEl.src = xrplUriToHttp(meta.image || meta.image_url);\n        if (descEl) descEl.textContent = cleanLoreText(meta);\n        setBroOfDayStatus(\"Signal synchronized.\");\n      } catch (e) {\n        console.error(\"loadBroOfDay error:\", e);\n        setBroOfDayStatus(\"Signal lost. Defaulting to standard protocols.\");\n        if (descEl && (!descEl.textContent || descEl.textContent.includes(\"loading\"))) {\n          descEl.textContent = \"The archive is currently undergoing maintenance. Signal integrity will be restored shortly.\";\n        }\n      } finally {\n        document.body.classList.remove('loading-state');\n      }\n    }\n\n    function calculateFusePrice() {\n      const amountEl = document.getElementById(\"fuse-token-amount\");\n      if (state.fuseToken === 'RLUSD') {\n        amountEl.textContent = state.fuseTargetUsd + ' RLUSD';\n      } else if (state.xrpPrice > 0) {\n        amountEl.textContent = (state.fuseTargetUsd / state.xrpPrice).toFixed(2) + ' XRP';\n      } else {\n        amountEl.textContent = '--';\n      }\n    }\n\n    async function updateTicker() {\n      try {\n        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd');\n        const data = await res.json();\n        if (data?.ripple?.usd) {\n          state.xrpPrice = data.ripple.usd;\n          document.getElementById('fuse-token-rate').textContent = state.xrpPrice.toFixed(4) + ' USD';\n          calculateFusePrice();\n        }\n      } catch (e) { \n        console.error('Ticker error', e); \n        const res = await safeFetch('/api/ticker');\n        if (res?.xrp_price) {\n          state.xrpPrice = res.xrp_price;\n          document.getElementById('fuse-token-rate').textContent = state.xrpPrice.toFixed(4) + ' USD';\n          calculateFusePrice();\n        }\n      }\n    }\n\n    function toggleFuseUnlock() {\n      state.fuseUnlocked = !state.fuseUnlocked;\n      const badge = document.getElementById('fuse-lock-badge');\n      badge.textContent = state.fuseUnlocked ? 'ACTIVE' : 'ENCRYPTED';\n      badge.style.borderColor = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';\n      badge.style.color = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';\n    }\n\n    async function connectXaman() {\n      const btn = document.getElementById('wallet-btn');\n      btn.disabled = true;\n      btn.textContent = 'CONNECTING...';\n      try {\n        const payload = await safeFetch('/api/xaman?action=create-payload', {\n          method: 'POST',\n          headers: { 'Content-Type': 'application/json' },\n          body: JSON.stringify({ \n            txjson: { TransactionType: 'SignIn' },\n            options: { return_url: window.location.href }\n          })\n        });\n        if (!payload) throw new Error(\"Payload creation failed\");\n        \n        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);\n        \n        // Deep linking for mobile\n        if (isMobile && payload?.next?.always) {\n            window.location.href = payload.next.always;\n            return;\n        }\n\n        if (payload?.refs?.qr_png) {\n          document.getElementById('qr-image').src = payload.refs.qr_png;\n          document.getElementById('qr-overlay').style.display = 'flex';\n          \n          const uuid = payload?.uuid;\n          let attempts = 0;\n          const timer = setInterval(async () => {\n            attempts += 1;\n            if (attempts > 60) {\n              clearInterval(timer);\n              btn.disabled = false;\n              btn.textContent = 'CONNECT XAMAN';\n              return;\n            }\n            const status = await safeFetch('/api/xaman?action=check-payload&uuid=' + encodeURIComponent(uuid));\n            if (!status) return;\n            if ((status.meta && status.meta.signed) || status.signed) {\n              clearInterval(timer);\n              document.getElementById('qr-overlay').style.display = 'none';\n              const address = status?.response?.account || status?.account || status?.resolved?.account || '';\n              if (address) {\n                state.connected = true;\n                state.wallet = address;\n                setWalletUI(true, address);\n                fetchUserNfts(address);\n              }\n            }\n          }, 2500);\n        }\n      } catch (error) {\n        console.error(error);\n        btn.disabled = false;\n        btn.textContent = 'CONNECT XAMAN';\n      }\n    }\n\n    function setWalletUI(connected, address) {\n      const btn = document.getElementById('wallet-btn');\n      const status = document.getElementById('xaman-status');\n      if (connected) {\n        btn.textContent = 'LINKED';\n        btn.disabled = false;\n        status.textContent = address.slice(0, 6) + '...' + address.slice(-4);\n      }\n    }\n\n    async function fetchUserNfts(address) {\n      try {\n        const response = await fetch(`/api/nft?owner=${address}&issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);\n        const result = await response.json();\n        const nfts = result?.nfts || [];\n        \n        state.userNfts = [];\n        for (const n of nfts) {\n           try {\n             const metaUri = xrplUriToHttp(n.uri);\n             const meta = await (await fetch(metaUri)).json();\n             state.userNfts.push({\n               name: meta.name || 'BRO #' + n.nftokenID.slice(-4),\n               image: xrplUriToHttp(meta.image)\n             });\n           } catch(e){}\n        }\n\n        if (state.userNfts.length === 0) {\n          state.userNfts = MOCK_NFTS;\n        }\n        renderNftSelection();\n        selectNft(0);\n      } catch (e) { \n        console.error(\"User NFT fetch error\", e); \n        state.userNfts = MOCK_NFTS;\n        renderNftSelection();\n        selectNft(0);\n      }\n    }\n\n    function renderNftSelection() {\n      const track = document.getElementById('nft-selection-track');\n      if (!track) return;\n      track.innerHTML = state.userNfts.map((nft, index) => {\n        const active = state.selectedNft?.name === nft.name;\n        return `<div class=\"nft-select-card ${active ? 'active' : ''}\" onclick=\"selectNft(${index})\">\n          <img src=\"${nft.image}\" alt=\"\">\n        </div>`;\n      }).join('');\n    }\n\n    function selectNft(index) {\n      const nft = state.userNfts[index];\n      if (!nft) return;\n      state.selectedNft = nft;\n      document.getElementById('held-nft-empty').style.display = 'none';\n      document.getElementById('connected-nft-display').style.display = 'flex';\n      document.getElementById('connected-nft-image').src = nft.image;\n      document.getElementById('connected-nft-name').textContent = nft.name;\n      renderNftSelection();\n    }\n\n    async function startChatStream() {\n      const input = document.getElementById('chat-input');\n      const text = input.value.trim();\n      if (!text) return;\n      input.value = '';\n      state.chat.push({ role: 'user', content: text });\n      renderChatLog();\n\n      const log = document.getElementById('chat-log');\n      const bubble = document.createElement('div');\n      bubble.className = 'bubble system';\n      bubble.innerHTML = '<div style=\"font-size: 9px; opacity: 0.6; margin-bottom: 4px;\">SYSTEM</div><div class=\"msg-content\">...</div>';\n      log.appendChild(bubble);\n      const contentEl = bubble.querySelector('.msg-content');\n\n      try {\n        const res = await fetch('/api/chat', {\n          method: 'POST',\n          headers: { 'Content-Type': 'application/json' },\n          body: JSON.stringify({ \n            messages: state.chat,\n            operative: { name: 'Operative', walletAddress: state.wallet, traits: state.selectedNft ? [state.selectedNft.name] : [] }\n          })\n        });\n\n        if (!res.ok) {\n          const errData = await res.json().catch(() => ({}));\n          throw new Error(errData.error || 'SIGNAL LOST');\n        }\n\n        const reader = res.body.getReader();\n        const decoder = new TextDecoder();\n        let fullText = '';\n        contentEl.textContent = '';\n\n        while (true) {\n          const { done, value } = await reader.read();\n          if (done) break;\n          const lines = decoder.decode(value).split('\\n');\n          for (const line of lines) {\n            if (!line.startsWith('data: ')) continue;\n            const dataText = line.slice(6);\n            if (dataText === '[DONE]') break;\n            try {\n              const json = JSON.parse(dataText);\n              if (json.token) {\n                fullText += json.token;\n                contentEl.textContent = fullText;\n                log.scrollTop = log.scrollHeight;\n              }\n            } catch (e) {}\n          }\n        }\n        state.chat.push({ role: 'assistant', content: fullText });\n      } catch (e) {\n        contentEl.textContent = 'ERROR: ' + e.message;\n      }\n    }\n\n    function renderChatLog() {\n      const log = document.getElementById('chat-log');\n      log.innerHTML = state.chat.map(e => `\n        <div class=\"bubble ${e.role === 'user' ? 'user' : 'system'}\">\n          <div style=\"font-size: 9px; opacity: 0.6; margin-bottom: 4px;\">${e.role.toUpperCase()}</div>\n          ${e.content}\n        </div>\n      `).join('');\n      log.scrollTop = log.scrollHeight;\n    }\n\n    function switchTab(index) {\n      document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));\n      document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));\n      if (index === 1) loadLore();\n      if (index === 3) fetchLeaderboard();\n    }\n\n    async function loadLore() {\n      const container = document.getElementById('transmissions-container');\n      try {\n        const res = await fetch('/api/transmissions');\n        const data = await res.json();\n        if (data.transmissions?.length) {\n          const filtered = data.transmissions.filter(t => {\n            const txt = t.transmission_text.toLowerCase();\n            const blacklist = [\n              'warning', 'alert', 'failed mining', \n              'cosmic wreckage', 'mutated strain', 'now they roam', \n              'interplanetary mining', 'ledger\\'s digital essence'\n            ];\n            return !blacklist.some(term => txt.includes(term.toLowerCase()));\n          });\n          \n          container.innerHTML = filtered.map(t => `\n            <div class=\"transmission-item\">\n              <div class=\"transmission-date\">${new Date(t.date_added).toLocaleString()}</div>\n              <div class=\"transmission-text\">${t.transmission_text}</div>\n            </div>\n          `).join('');\n        } else {\n          container.innerHTML = '<p class=\"muted\">No recent transmissions.</p>';\n        }\n      } catch (e) { container.innerHTML = '<p class=\"muted\">Signal interference detected.</p>'; }\n    }\n\n    async function fetchLeaderboard() {\n      const rowsEl = document.getElementById('leaderboard-rows');\n      const controller = new AbortController();\n      const timeoutId = setTimeout(() => controller.abort(), 5000);\n      try {\n        const res = await fetch('/api/leaderboard', { signal: controller.signal });\n        clearTimeout(timeoutId);\n        const data = await res.json();\n        if (data && data.leaderboard && data.leaderboard.length > 0) {\n          rowsEl.innerHTML = data.leaderboard.map((player, idx) => `\n            <div class='leader-row'>\n              <div>#${idx + 1}</div>\n              <div style=\"color: var(--cyan);\">${player.name}</div>\n              <div>${player.chatXp}</div>\n              <div>${player.tradeScore}</div>\n              <strong style=\"color: #fff;\">${player.totalScore}</strong>\n            </div>\n          `).join('');\n        } else {\n          rowsEl.innerHTML = \"<div class='leader-row'><div style='grid-column: span 5;'>No data found on the network.</div></div>\";\n        }\n      } catch (e) {\n        clearTimeout(timeoutId);\n        rowsEl.innerHTML = \"<div class='leader-row'><div style='grid-column: span 5;'>Connection timed out or error.</div></div>\";\n      }\n    }\n\n    function openModal(id) { document.getElementById(id).style.display = 'block'; }\n    function closeModal(id) { document.getElementById(id).style.display = 'none'; }\n\n    async function init() {\n      const ticker = document.getElementById('warning-ticker-track');\n      const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];\n      if (ticker) {\n        ticker.innerHTML = items.concat(items).map(i => `<span class=\"ticker-item\">${i}</span>`).join(' \" ');\n      }\n      \n      document.body.classList.add('loading-state');\n\n      setTimeout(() => {\n        document.body.classList.remove('loading-state');\n        const statusEl = document.getElementById(\"bro-of-day-status\");\n        if (statusEl && statusEl.textContent === \"Initializing...\") {\n          statusEl.textContent = \"Signal standby.\";\n        }\n      }, 3000);\n\n      loadBroOfDay();\n      updateTicker();\n\n      setInterval(updateTicker, 30000);\n      const chatInput = document.getElementById('chat-input');\n      if (chatInput) {\n        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') startChatStream(); });\n      }\n    }\n\n    document.addEventListener('DOMContentLoaded', () => { init(); });\n  </script>\n</body>\n</html>\n
+  <div id="qr-overlay" onclick="this.style.display='none'">
+    <div class="qr-container">
+      <img id="qr-image" src="" alt="Scan with Xaman">
+    </div>
+    <p style="margin-top: 20px; font-family: Orbitron;">SCAN WITH XAMAN TO SYNC</p>
+    <button class="btn" style="margin-top: 10px;">CANCEL</button>
+  </div>
+
+  <div class='shell'>
+    <header class='topbar'>
+      <div class='brand'>
+        <div class='dot'></div>
+        <div>
+          <div class='title'>GUARDIAN BROADCAST OS v8.9.5 STABLE</div>
+          <div class='subtitle'>Neural CRT relay // terminal interface</div>
+        </div>
+      </div>
+      <button id='wallet-btn' class='wallet-btn' onclick="connectXaman()">CONNECT XAMAN</button>
+      <div id='xaman-status' class='status'>Wallet disconnected.</div>
+    </header>
+
+    <div class='ticker'>
+      <div id='warning-ticker-track' class='ticker-track'></div>
+    </div>
+
+    <nav class='tabs'>
+      <div class='tab active' onclick="switchTab(0)">CONSOLE</div>
+      <div class='tab' onclick="switchTab(1)">STORYLINE</div>
+      <div class='tab' onclick="switchTab(2)">FUSION LAB</div>
+      <div class='tab' onclick="switchTab(3)">LEADERBOARD</div>
+      <div class='tab' onclick="switchTab(4)">SOCIALS</div>
+    </nav>
+
+    <main class='content'>
+      <section id='section-0' class='section active'>
+        <div class='grid grid-2'>
+          <div class='panel'>
+            <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>BRO OF THE DAY</div>
+            <h1 id="status-msg" style='font-family:Orbitron,sans-serif;font-size:clamp(28px,5vw,62px);margin:10px 0 0;'>BRO OF THE DAY</h1>
+            <p style='line-height:1.8;color:#ddfff9;opacity:.86;max-width:58ch'>Daily rotation pulled from the full issuer collection, with one NFT selected every 24 hours.</p>
+            <div class='row'>
+              <button class='btn' onclick="switchTab(1)">READ TRANSMISSIONS</button>
+              <button class='btn' onclick="window.open('https://xrp.cafe/collection/galactic-gross-bros', '_blank')">BUY A BRO</button>
+            </div>
+          </div>
+          <div class='panel nft-panel'>
+            <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Daily signal</div>
+            <div class='nft-display' style='margin-top:14px;'>
+              <div class='nft-art'>
+                <img id='bro-of-day-image' alt='Bro of the Day' src=''>
+              </div>
+              <div class='nft-meta'>
+                <p id='bro-of-day-description' class='nft-subtitle'>Live NFT lore is loading...</p>
+                <div id='bro-of-day-status' class='muted' style='font-size:10px;'>Initializing...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id='section-1' class='section'>
+        <div class='panel'>
+          <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
+          <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
+          <div id="static-origin-story" style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
+            <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger.</p>
+            <p>When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
+            <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
+          </div>
+          <div class='muted' style="margin-top: 30px; border-top: 1px solid var(--line); padding-top: 12px;">LIVE TRANSMISSIONS</div>
+          <div id="transmissions-container" style="margin-top: 12px;"></div>
+        </div>
+      </section>
+
+      <section id='section-2' class='section'>
+        <div class='panel fuse-panel'>
+          <div class='fuse-head'>
+            <div>
+              <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Fusion Lab</div>
+              <div class='muted' style='text-align:center; letter-spacing:0.5em; font-size:10px; margin-bottom:8px; opacity: 0.7;'>IN-WORLD COMMS TERMINAL</div><h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:0 0 24px; text-align:center; text-shadow: 0 0 10px rgba(0,255,200,0.3);'>CHAT TERMINAL</h2>
+            </div>
+            <div id='fuse-lock-badge' class='fuse-badge' style='border-color: var(--cyan); color: var(--cyan);'>ACTIVE</div>
+          </div>
+          
+          <div id='held-nft-display' class='held-nft-panel'>
+            <div id="connected-nft-display" style="display:none; align-items:center; gap:16px; width:100%;">
+               <div class="held-nft-image-wrapper"><img id="connected-nft-image" src="" alt=""></div>
+               <div class="held-nft-info"><span class="held-nft-name" id="connected-nft-name">--</span></div>
+            </div>
+            <div id="held-nft-empty" class="held-nft-empty" style="opacity:0.8; font-size:12px; letter-spacing:0.2em;">GUEST ACCESS</div>
+          </div>
+
+          <div id='chat-terminal' class='chat-terminal'>
+            <div id='chat-log' class='chat-log'></div>
+            <div class='chat-terminal-actions'>
+              <input id='chat-input' placeholder='Send a directive...'>
+              <button id='chat-send-btn' class='btn' onclick="startChatStream()">Send</button>
+              <div class='fuse-button-box'>
+                <button id='fuse-button' class='btn' onclick="toggleFuseUnlock()">Fuse</button>
+                <div class='fuse-price'>
+                  <span>Live $50 USD</span>
+                  <strong id='fuse-token-amount'>--</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class='fuse-grid'>
+            <div class='fuse-readout'><span>Token</span><select id='fuse-token-select' onchange='state.fuseToken = this.value; calculateFusePrice();'><option value='XRP'>XRP</option><option value='RLUSD'>RLUSD</option></select></div>
+            <div class='fuse-readout'><span>Rate</span><strong id='fuse-token-rate'>--</strong></div>
+            <div class='fuse-readout'><span>Status</span><strong id='fuse-payment-status'>Awaiting</strong></div>
+          </div>
+          <div class='nft-selection-section'>
+            <div class='muted'>Available NFTs</div>
+            <div id='nft-selection-track' class='nft-selection-track'></div>
+          </div>
+        </div>
+      </section>
+
+      
+      <section id='section-3' class='section'>
+        <div class='panel'>
+          <h2 style='font-family:Orbitron,sans-serif;'>LEADERBOARD</h2>
+          <div class='leaderboard' id='leaderboard-container'>
+            <div class='leader-row muted' style='border-bottom: 1px solid var(--cyan); padding-bottom: 10px; font-weight: bold;'>
+              <div>RANK</div>
+              <div>HANDLE</div>
+              <div>CHAT XP</div>
+              <div>TRADE SCORE</div>
+              <div>TOTAL</div>
+            </div>
+            <div id='leaderboard-rows'>
+              <div class='leader-row'><div>--</div><div>Loading data...</div><div>--</div><div>--</div><div>--</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id='section-4' class='section'>
+        <div class='panel'>
+          <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Communications Hub</div>
+          <h2 style='font-family:Orbitron,sans-serif;margin:10px 0 24px;'>NEURAL TRANSMISSION CHANNELS</h2>
+          <div class='social-links'>
+            <a href='https://x.com/thegrossbros?s=21' target='_blank' class='social-card'>
+              <div>
+                <div class='label'>X-SECURE TRANSMITTER</div>
+                <div class='desc'>DIRECT FREQUENCY // @THEGROSSBROS</div>
+              </div>
+              <div class='btn'>OPEN</div>
+            </a>
+            <a href='https://discord.gg/fcZYk7UcB' target='_blank' class='social-card'>
+              <div>
+                <div class='label'>THE DEN DECRYPTED</div>
+                <div class='desc'>PRIVATE COMMS ENCRYPTED // DISCORD</div>
+              </div>
+              <div class='btn'>JOIN</div>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer style="padding: 20px; text-align: center; font-size: 10px; opacity: 0.6; border-top: 1px solid var(--line); letter-spacing: 2px;">
+      <span style="cursor: pointer;" onclick="openModal('privacy-modal')">PRIVACY PROTOCOL</span> | 
+      <span style="cursor: pointer;" onclick="openModal('terms-modal')">TERMS OF SERVICE</span>
+    </footer>
+  </div>
+
+  <div id="privacy-modal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeModal('privacy-modal')">&times;</span>
+      <h2 style="font-family:Orbitron, sans-serif; letter-spacing: 4px; color: var(--cyan);">PRIVACY PROTOCOL</h2>
+      <p>By accessing the Galactic Gross Bros (GGB) neural relay, you acknowledge that your interaction data, including XRPL wallet addresses (connected via Xaman), token balances (DROP, BERT, DBY, RLUSD), and terminal chat transmissions, are processed solely for the purpose of maintaining signal integrity and the terminal entertainment experience. We explicitly disclaim all liability for any data breaches, neural link interruptions, or technical failures on the XRP Ledger. Your digital markers, private keys, and wallet metadata remain your own responsibility; we do not store private keys. Signal integrity is our priority, but absolute security in the XRP-7 zone is not guaranteed. NO WARRANTIES PROVIDED.</p>
+    </div>
+  </div>
+
+  <div id="terms-modal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeModal('terms-modal')">&times;</span>
+      <h2 style="font-family:Orbitron, sans-serif; letter-spacing: 4px; color: var(--cyan);">TERMS OF NEURAL SERVICE</h2>
+      <p>
+        1. <strong>ENTERTAINMENT ONLY:</strong> Galactic Gross Bros (GGB) is a platform for entertainment purposes ONLY. We provide no financial or legal advice. All AI interactions and "Fusion Lab" outcomes are for narrative and entertainment purposes only.<br><br>
+        2. <strong>NO FINANCIAL ADVICE:</strong> Nothing transmitted through this relay constitutes financial, investment, or legal advice. GGB creators are not financial advisors. The mention of tokens like DROP, BERT, DBY, or RLUSD is purely within the context of the GGB ecosystem mechanics.<br><br>
+        3. <strong>ASSET RISK:</strong> XRPL tokens and GGB NFTs are volatile digital assets. They are provided "AS-IS" with zero warranties of value, liquidity, or future utility. You assume 100% risk for all ledger transactions.<br><br>
+        4. <strong>FULL LIABILITY WAIVER:</strong> The GGB team, developers, and operatives explicitly disclaim all financial and legal liability for any losses, glitches, smart contract events, or ledger-side failures. All "Fusions" and neural transmissions are final, permanent, and non-refundable.<br><br>
+        5. <strong>PROTOCOL ACCEPTANCE:</strong> By proceeding, you accept the hazardous and volatile nature of the XRP-7 energy sector. Use at your own risk, Operative.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const CONFIG = {
+      ISSUER: "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY",
+      RPC: "https://xrplcluster.com",
+      GATEWAY: "https://ipfs.io/ipfs/"
+    };
+    
+    const MOCK_NFTS = [
+      { name: "TEST SPECIMEN #001", image: "https://ipfs.io/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ" },
+      { name: "TEST SPECIMEN #042", image: "https://ipfs.io/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" },
+      { name: "TEST SPECIMEN #088", image: "https://ipfs.io/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" }
+    ];
+    
+    // Global fallback for any cached references
+    function CRT_Effect_Init() {
+      console.log("CRT neural scanlines initialized successfully.");
+    }
+    
+    async function safeFetch(url, options = {}) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
+      try {
+        const res = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (!res.ok) return null;
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          console.warn('safeFetch: Failed to parse JSON, returning null', url);
+          return null;
+        }
+      } catch (e) {
+        clearTimeout(timeoutId);
+        console.error('SafeFetch Error:', e);
+        return null;
+      }
+    }
+    
+    const state = { 
+      connected: false, 
+      wallet: "", 
+      chat: [], 
+      fuseUnlocked: true, 
+      fuseToken: "XRP", 
+      selectedNft: null, 
+      userNfts: [], 
+      fuseTargetUsd: 50,
+      xrpPrice: 0
+    };
+
+    function hexToUtf8(hex) {
+      if (!hex || typeof hex !== 'string') return '';
+      try {
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < hex.length; i += 2) {
+          bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+        }
+        return new TextDecoder().decode(bytes);
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function xrplUriToHttp(uri) {
+      const value = String(uri || '').trim();
+      if (!value) return '';
+      if (/^[0-9a-fA-F]+$/.test(value)) {
+        return xrplUriToHttp(hexToUtf8(value));
+      }
+      if (value.startsWith('ipfs://')) {
+        return CONFIG.GATEWAY + value.slice('ipfs://'.length).replace(/^\/+/ , '');
+      }
+      if (value.startsWith('ar://')) {
+        return 'https://arweave.net/' + value.slice('ar://'.length).replace(/^\/+/ , '');
+      }
+      return value;
+    }
+
+    function dailyRotationSeed() {
+      const now = new Date();
+      return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 86400000);
+    }
+
+    function cleanLoreText(metadata) {
+      const candidates = [metadata?.lore, metadata?.backstory, metadata?.story, metadata?.description];
+      const raw = candidates.find((value) => typeof value === 'string' && value.trim()) || '';
+      const lines = String(raw)
+        .replace(/\r\n/g, '\n')
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .filter((line) => !/^(traits?|attributes?|serial(?: number)?|background(?: type)?|token(?: id)?|issuer|taxon|edition|rarity|owner|contract)\b[:\-]*/i.test(line))
+        .filter((line) => !/^#\s*\d+/.test(line));
+      const text = lines.join(' ').replace(/\s{2,}/g, ' ').trim();
+      return text || 'Live NFT lore is loading from the full BRO collection.';
+    }
+
+    function setBroOfDayStatus(message) {
+      const el = document.getElementById("bro-of-day-status");
+      if (el) el.textContent = message;
+    }
+
+    async function loadBroOfDay() {
+      const imgEl = document.getElementById("bro-of-day-image");
+      const descEl = document.getElementById("bro-of-day-description");
+      try {
+        setBroOfDayStatus("Crawl in progress...");
+        const res = await fetch(`/api/nft?issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);
+        if (!res.ok) throw new Error("API response error");
+        const result = await res.json();
+        const nfts = result?.nfts || [];
+        if (nfts.length === 0) throw new Error("No NFTs found.");
+        
+        const seed = dailyRotationSeed();
+        let meta = null;
+        let attempts = 0;
+        
+        while (!meta && attempts < Math.min(nfts.length, 10)) {
+          const selected = nfts[(seed + attempts) % nfts.length];
+          const uri = selected.uri;
+          if (uri) {
+            const metaUri = xrplUriToHttp(uri);
+            meta = await safeFetch(metaUri);
+          }
+          attempts++;
+        }
+        
+        if (!meta) throw new Error("Metadata unreachable.");
+        
+        if (imgEl) imgEl.src = xrplUriToHttp(meta.image || meta.image_url);
+        if (descEl) descEl.textContent = cleanLoreText(meta);
+        setBroOfDayStatus("Signal synchronized.");
+      } catch (e) {
+        console.error("loadBroOfDay error:", e);
+        setBroOfDayStatus("Signal lost. Defaulting to standard protocols.");
+        if (descEl && (!descEl.textContent || descEl.textContent.includes("loading"))) {
+          descEl.textContent = "The archive is currently undergoing maintenance. Signal integrity will be restored shortly.";
+        }
+      } finally {
+        document.body.classList.remove('loading-state');
+      }
+    }
+
+    function calculateFusePrice() {
+      const amountEl = document.getElementById("fuse-token-amount");
+      if (state.fuseToken === 'RLUSD') {
+        amountEl.textContent = state.fuseTargetUsd + ' RLUSD';
+      } else if (state.xrpPrice > 0) {
+        amountEl.textContent = (state.fuseTargetUsd / state.xrpPrice).toFixed(2) + ' XRP';
+      } else {
+        amountEl.textContent = '--';
+      }
+    }
+
+    async function updateTicker() {
+      try {
+        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd');
+        const data = await res.json();
+        if (data?.ripple?.usd) {
+          state.xrpPrice = data.ripple.usd;
+          document.getElementById('fuse-token-rate').textContent = state.xrpPrice.toFixed(4) + ' USD';
+          calculateFusePrice();
+        }
+      } catch (e) { 
+        console.error('Ticker error', e); 
+        const res = await safeFetch('/api/ticker');
+        if (res?.xrp_price) {
+          state.xrpPrice = res.xrp_price;
+          document.getElementById('fuse-token-rate').textContent = state.xrpPrice.toFixed(4) + ' USD';
+          calculateFusePrice();
+        }
+      }
+    }
+
+    function toggleFuseUnlock() {
+      state.fuseUnlocked = !state.fuseUnlocked;
+      const badge = document.getElementById('fuse-lock-badge');
+      badge.textContent = state.fuseUnlocked ? 'ACTIVE' : 'ENCRYPTED';
+      badge.style.borderColor = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
+      badge.style.color = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
+    }
+
+    async function connectXaman() {
+      const btn = document.getElementById('wallet-btn');
+      btn.disabled = true;
+      btn.textContent = 'CONNECTING...';
+      try {
+        const payload = await safeFetch('/api/xaman?action=create-payload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            txjson: { TransactionType: 'SignIn' },
+            options: { return_url: window.location.href }
+          })
+        });
+        if (!payload) throw new Error("Payload creation failed");
+        
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        // Deep linking for mobile - prioritize deep link for Xaman native integration
+        if (isMobile) {
+            const deepLink = payload?.next?.app_deep_link || payload?.next?.always;
+            if (deepLink) {
+              window.location.href = deepLink;
+              return;
+            }
+        }
+
+        if (payload?.refs?.qr_png) {
+          document.getElementById('qr-image').src = payload.refs.qr_png;
+          document.getElementById('qr-overlay').style.display = 'flex';
+          
+          const uuid = payload?.uuid;
+          let attempts = 0;
+          const timer = setInterval(async () => {
+            attempts += 1;
+            if (attempts > 60) {
+              clearInterval(timer);
+              btn.disabled = false;
+              btn.textContent = 'CONNECT XAMAN';
+              return;
+            }
+            const status = await safeFetch('/api/xaman?action=check-payload&uuid=' + encodeURIComponent(uuid));
+            if (!status) return;
+            if ((status.meta && status.meta.signed) || status.signed) {
+              clearInterval(timer);
+              document.getElementById('qr-overlay').style.display = 'none';
+              const address = status?.response?.account || status?.account || status?.resolved?.account || '';
+              if (address) {
+                state.connected = true;
+                state.wallet = address;
+                setWalletUI(true, address);
+                fetchUserNfts(address);
+              }
+            }
+          }, 2500);
+        }
+      } catch (error) {
+        console.error(error);
+        btn.disabled = false;
+        btn.textContent = 'CONNECT XAMAN';
+      }
+    }
+
+    function setWalletUI(connected, address) {
+      const btn = document.getElementById('wallet-btn');
+      const status = document.getElementById('xaman-status');
+      if (connected) {
+        btn.textContent = 'LINKED';
+        btn.disabled = false;
+        status.textContent = address.slice(0, 6) + '...' + address.slice(-4);
+      }
+    }
+
+    async function fetchUserNfts(address) {
+      try {
+        const response = await fetch(`/api/nft?owner=${address}&issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);
+        const result = await response.json();
+        const nfts = result?.nfts || [];
+        
+        state.userNfts = [];
+        for (const n of nfts) {
+           try {
+             const metaUri = xrplUriToHttp(n.uri);
+             const meta = await (await fetch(metaUri)).json();
+             state.userNfts.push({
+               name: meta.name || 'BRO #' + n.nftokenID.slice(-4),
+               image: xrplUriToHttp(meta.image)
+             });
+           } catch(e){}
+        }
+
+        if (state.userNfts.length === 0) {
+          state.userNfts = MOCK_NFTS;
+        }
+        renderNftSelection();
+        selectNft(0);
+      } catch (e) { 
+        console.error("User NFT fetch error", e); 
+        state.userNfts = MOCK_NFTS;
+        renderNftSelection();
+        selectNft(0);
+      }
+    }
+
+    function renderNftSelection() {
+      const track = document.getElementById('nft-selection-track');
+      if (!track) return;
+      track.innerHTML = state.userNfts.map((nft, index) => {
+        const active = state.selectedNft?.name === nft.name;
+        return `<div class="nft-select-card ${active ? 'active' : ''}" onclick="selectNft(${index})">
+          <img src="${nft.image}" alt="">
+        </div>`;
+      }).join('');
+    }
+
+    function selectNft(index) {
+      const nft = state.userNfts[index];
+      if (!nft) return;
+      state.selectedNft = nft;
+      document.getElementById('held-nft-empty').style.display = 'none';
+      document.getElementById('connected-nft-display').style.display = 'flex';
+      document.getElementById('connected-nft-image').src = nft.image;
+      document.getElementById('connected-nft-name').textContent = nft.name;
+      renderNftSelection();
+    }
+
+    async function startChatStream() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      state.chat.push({ role: 'user', content: text });
+      renderChatLog();
+
+      const log = document.getElementById('chat-log');
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble system';
+      bubble.innerHTML = '<div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">SYSTEM</div><div class="msg-content">...</div>';
+      log.appendChild(bubble);
+      const contentEl = bubble.querySelector('.msg-content');
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            messages: state.chat,
+            operative: { name: 'Operative', walletAddress: state.wallet, traits: state.selectedNft ? [state.selectedNft.name] : [] }
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'SIGNAL LOST');
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+        contentEl.textContent = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const lines = decoder.decode(value).split('\n');
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const dataText = line.slice(6);
+            if (dataText === '[DONE]') break;
+            try {
+              const json = JSON.parse(dataText);
+              if (json.token) {
+                fullText += json.token;
+                contentEl.textContent = fullText;
+                log.scrollTop = log.scrollHeight;
+              }
+            } catch (e) {}
+          }
+        }
+        state.chat.push({ role: 'assistant', content: fullText });
+      } catch (e) {
+        contentEl.textContent = 'ERROR: ' + e.message;
+      }
+    }
+
+    function renderChatLog() {
+      const log = document.getElementById('chat-log');
+      log.innerHTML = state.chat.map(e => `
+        <div class="bubble ${e.role === 'user' ? 'user' : 'system'}">
+          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>
+          ${e.content}
+        </div>
+      `).join('');
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function switchTab(index) {
+      document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
+      document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
+      if (index === 1) loadLore();
+      if (index === 3) fetchLeaderboard();
+    }
+
+    async function loadLore() {
+      const container = document.getElementById('transmissions-container');
+      try {
+        const res = await fetch('/api/transmissions');
+        const data = await res.json();
+        if (data.transmissions?.length) {
+          container.innerHTML = data.transmissions.map(t => `
+            <div class="transmission-item">
+              <div class="transmission-date">${new Date(t.date_added).toLocaleString()}</div>
+              <div class="transmission-text">${t.transmission_text || t.content || ''}</div>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<p class="muted">No recent transmissions.</p>';
+        }
+      } catch (e) { container.innerHTML = '<p class="muted">Signal interference detected.</p>'; }
+    }
+    
+    // Explicit alias to avoid any missing handler issues
+    const loadTransmissions = loadLore;
+
+    async function fetchLeaderboard() {
+      const rowsEl = document.getElementById('leaderboard-rows');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      try {
+        const res = await fetch('/api/leaderboard', { signal: controller.signal });
+        clearTimeout(timeoutId);
+        const data = await res.json();
+        if (data && data.leaderboard && data.leaderboard.length > 0) {
+          rowsEl.innerHTML = data.leaderboard.map((player, idx) => `
+            <div class='leader-row'>
+              <div>#${idx + 1}</div>
+              <div style="color: var(--cyan);">${player.name}</div>
+              <div>${player.chatXp}</div>
+              <div>${player.tradeScore}</div>
+              <strong style="color: #fff;">${player.totalScore}</strong>
+            </div>
+          `).join('');
+        } else {
+          rowsEl.innerHTML = "<div class='leader-row'><div style='grid-column: span 5;'>No data found on the network.</div></div>";
+        }
+      } catch (e) {
+        clearTimeout(timeoutId);
+        rowsEl.innerHTML = "<div class='leader-row'><div style='grid-column: span 5;'>Connection timed out or error.</div></div>";
+      }
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'block'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    async function init() {
+      const ticker = document.getElementById('warning-ticker-track');
+      const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
+      if (ticker) {
+        ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' " ');
+      }
+      
+      document.body.classList.add('loading-state');
+
+      setTimeout(() => {
+        document.body.classList.remove('loading-state');
+        const statusEl = document.getElementById("bro-of-day-status");
+        if (statusEl && statusEl.textContent === "Initializing...") {
+          statusEl.textContent = "Signal standby.";
+        }
+      }, 3000);
+
+      loadBroOfDay();
+      updateTicker();
+
+      setInterval(updateTicker, 30000);
+      const chatInput = document.getElementById('chat-input');
+      if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') startChatStream(); });
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => { init(); });
+  </script>
+</body>
+</html>
