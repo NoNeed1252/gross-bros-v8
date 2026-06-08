@@ -248,31 +248,31 @@
     }
     .qr-container img { max-width: 300px; display: block; }
   
-.social-links { display: grid; gap: 16px; }
-.social-card { 
-display: flex; 
-align-items: center; 
-justify-content: space-between; 
-padding: 20px; 
-border: 1px solid rgba(0,255,200,0.2); 
-border-radius: 20px; 
-background: rgba(0,255,200,0.04); 
-text-decoration: none; 
-transition: all 0.2s ease;
-}
-.social-card:hover {
-background: rgba(0,255,200,0.08);
-border-color: var(--cyan);
-box-shadow: 0 0 15px rgba(0,255,200,0.1);
-}
-.social-card .label { 
-font-family: 'Orbitron', sans-serif; 
-font-size: 14px; 
-color: var(--cyan); 
-margin-bottom: 6px; 
-letter-spacing: 1px;
-}
-.social-card .desc { font-size: 12px; color: rgba(0,255,200,0.7); }
+    .social-links { display: grid; gap: 16px; }
+    .social-card { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      padding: 20px; 
+      border: 1px solid rgba(0,255,200,0.2); 
+      border-radius: 20px; 
+      background: rgba(0,255,200,0.04); 
+      text-decoration: none; 
+      transition: all 0.2s ease;
+    }
+    .social-card:hover {
+      background: rgba(0,255,200,0.08);
+      border-color: var(--cyan);
+      box-shadow: 0 0 15px rgba(0,255,200,0.1);
+    }
+    .social-card .label { 
+      font-family: 'Orbitron', sans-serif; 
+      font-size: 14px; 
+      color: var(--cyan); 
+      margin-bottom: 6px; 
+      letter-spacing: 1px;
+    }
+    .social-card .desc { font-size: 12px; color: rgba(0,255,200,0.7); }
 
     /* Privacy and Terms Modals */
     .modal {
@@ -324,6 +324,19 @@ letter-spacing: 1px;
     .transmission-content {
       font-size: 14px;
       line-height: 1.6;
+    }
+
+    /* Mobile responsiveness updates */
+    @media (max-width: 480px) {
+      .title { font-size: 11px; letter-spacing: 0.15em; }
+      .topbar { padding: 10px; gap: 8px; }
+      .wallet-btn { padding: 8px 12px; font-size: 12px; }
+      .status { font-size: 11px; }
+      .panel { padding: 12px; border-radius: 16px; }
+      .content { padding: 10px; }
+      .held-nft-name { font-size: 18px; letter-spacing: 0.1em; }
+      .held-nft-empty { padding: 40px 10px; }
+      .modal-content { padding: 24px; margin: 5vh auto; width: 95%; }
     }
 </style>
 </head>
@@ -393,11 +406,11 @@ letter-spacing: 1px;
       <section id='section-1' class='section'>
         <div class='panel'>
           <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:0;'>LORE</h2>
-            <div style="display: flex; gap: 8px;">
-              <input type="date" id="lore-date-filter" onchange="loadTransmissions(this.value)">
-              <button class="btn" onclick="document.getElementById('lore-date-filter').value=''; loadTransmissions()">CLEAR</button>
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+            <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(20px,4vw,48px);margin:0;'>LORE</h2>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <input type="date" id="lore-date-filter" onchange="loadTransmissions(this.value)" style="padding: 10px; border-radius: 12px; font-size: 12px; max-width: 130px; background: #000; color: #00ffc8; border: 1px solid rgba(0,255,200,.25);">
+              <button class="btn" onclick="document.getElementById('lore-date-filter').value=''; loadTransmissions()" style="padding: 10px 14px; border-radius: 12px; font-size: 12px;">CLEAR</button>
             </div>
           </div>
           <div id="transmissions-container" style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
@@ -450,7 +463,6 @@ letter-spacing: 1px;
         </div>
       </section>
 
-      
       <section id='section-3' class='section'>
         <div class='panel'>
           <h2 style='font-family:Orbitron,sans-serif;'>LEADERBOARD</h2>
