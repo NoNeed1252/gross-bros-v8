@@ -717,7 +717,7 @@ letter-spacing: 1px;
       if (!nft) return;
       state.selectedNft = nft;
       document.getElementById('held-nft-empty').style.display = 'none';
-      document.getElementById('connected-nft-display').style.display = 'block';
+      document.getElementById('connected-nft-display').style.display = 'flex';
       document.getElementById('connected-nft-image').src = nft.image;
       document.getElementById('connected-nft-name').textContent = nft.name;
       renderNftSelection();
