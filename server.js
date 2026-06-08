@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 // Import as a normal module, but we will wrap it since it looks like an export default handler
-const xamanHandler = require('./api/xaman').default;
+const xamanHandler = require('./api/xaman');
 
 const app = express();
 const PORT = process.env.PORT || 8080;

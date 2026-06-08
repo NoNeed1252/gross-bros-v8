@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const fetch = require('node-fetch');
 
 // Environment variables
 const apiKey = process.env.NEXT_PUBLIC_XAMAN_API_KEY;
