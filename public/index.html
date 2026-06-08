@@ -2,7 +2,7 @@
 <html lang='en'>
 <head>
   <meta charset='UTF-8'>
-  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
   <title>GUARDIAN BROADCAST OS v8.9.5 STABLE</title>
   <link rel='preconnect' href='https://fonts.googleapis.com'>
   <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
@@ -309,10 +309,6 @@ letter-spacing: 1px;
       font-weight: bold;
       cursor: pointer;
     }
-
-    .transmission-item { padding: 12px 0; border-bottom: 1px solid var(--line); }
-    .transmission-date { font-size: 10px; opacity: 0.5; }
-    .transmission-text { font-size: 13px; line-height: 1.5; color: #ddfff9; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -382,13 +378,10 @@ letter-spacing: 1px;
         <div class='panel'>
           <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
           <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
-          <div id="static-origin-story" style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
-            <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger.</p>
-            <p>When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
-            <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
+          <div style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
+            <p>The Gross Bros were forged when a fracture opened in the ledger and turned the city into signal.</p>
+            <p>The archive below preserves the origin story only.</p>
           </div>
-          <div class='muted' style="margin-top: 30px; border-top: 1px solid var(--line); padding-top: 12px;">LIVE TRANSMISSIONS</div>
-          <div id="transmissions-container" style="margin-top: 12px;"></div>
         </div>
       </section>
 
@@ -692,50 +685,43 @@ letter-spacing: 1px;
         const payload = await safeFetch('/api/xaman?action=create-payload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            txjson: { TransactionType: 'SignIn' },
-            options: { return_url: window.location.href }
-          })
+          body: JSON.stringify({ txjson: { TransactionType: 'SignIn' } })
         });
         if (!payload) throw new Error("Payload creation failed");
         
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        
-        // Deep linking for mobile
-        if (isMobile && payload?.next?.always) {
-            window.location.href = payload.next.always;
-            return;
-        }
-
-        if (payload?.refs?.qr_png) {
+        if (!isMobile && payload?.refs?.qr_png) {
           document.getElementById('qr-image').src = payload.refs.qr_png;
           document.getElementById('qr-overlay').style.display = 'flex';
-          
-          const uuid = payload?.uuid;
-          let attempts = 0;
-          const timer = setInterval(async () => {
-            attempts += 1;
-            if (attempts > 60) {
-              clearInterval(timer);
-              btn.disabled = false;
-              btn.textContent = 'CONNECT XAMAN';
-              return;
-            }
-            const status = await safeFetch('/api/xaman?action=check-payload&uuid=' + encodeURIComponent(uuid));
-            if (!status) return;
-            if ((status.meta && status.meta.signed) || status.signed) {
-              clearInterval(timer);
-              document.getElementById('qr-overlay').style.display = 'none';
-              const address = status?.response?.account || status?.account || status?.resolved?.account || '';
-              if (address) {
-                state.connected = true;
-                state.wallet = address;
-                setWalletUI(true, address);
-                fetchUserNfts(address);
-              }
-            }
-          }, 2500);
         }
+
+        const url = (isMobile && payload?.next?.app_deep_link) ? payload.next.app_deep_link : payload?.next?.always;
+        if (isMobile && url) window.open(url, '_blank');
+        
+        const uuid = payload?.uuid;
+        let attempts = 0;
+        const timer = setInterval(async () => {
+          attempts += 1;
+          if (attempts > 60) {
+            clearInterval(timer);
+            btn.disabled = false;
+            btn.textContent = 'CONNECT XAMAN';
+            return;
+          }
+          const status = await safeFetch('/api/xaman?action=check-payload&uuid=' + encodeURIComponent(uuid));
+          if (!status) return;
+          if ((status.meta && status.meta.signed) || status.signed) {
+            clearInterval(timer);
+            document.getElementById('qr-overlay').style.display = 'none';
+            const address = status?.response?.account || status?.account || status?.resolved?.account || '';
+            if (address) {
+              state.connected = true;
+              state.wallet = address;
+              setWalletUI(true, address);
+              fetchUserNfts(address);
+            }
+          }
+        }, 2500);
       } catch (error) {
         console.error(error);
         btn.disabled = false;
@@ -879,36 +865,7 @@ letter-spacing: 1px;
     function switchTab(index) {
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
-      if (index === 1) loadLore();
       if (index === 3) fetchLeaderboard();
-    }
-
-    async function loadLore() {
-      const container = document.getElementById('transmissions-container');
-      try {
-        const res = await fetch('/api/transmissions');
-        const data = await res.json();
-        if (data.transmissions?.length) {
-          const filtered = data.transmissions.filter(t => {
-            const txt = t.transmission_text.toLowerCase();
-            const blacklist = [
-              'warning', 'alert', 'failed mining', 
-              'cosmic wreckage', 'mutated strain', 'now they roam', 
-              'interplanetary mining', 'ledger\'s digital essence'
-            ];
-            return !blacklist.some(term => txt.includes(term.toLowerCase()));
-          });
-          
-          container.innerHTML = filtered.map(t => `
-            <div class="transmission-item">
-              <div class="transmission-date">${new Date(t.date_added).toLocaleString()}</div>
-              <div class="transmission-text">${t.transmission_text}</div>
-            </div>
-          `).join('');
-        } else {
-          container.innerHTML = '<p class="muted">No recent transmissions.</p>';
-        }
-      } catch (e) { container.innerHTML = '<p class="muted">Signal interference detected.</p>'; }
     }
 
     async function fetchLeaderboard() {
@@ -950,6 +907,7 @@ letter-spacing: 1px;
       
       document.body.classList.add('loading-state');
 
+      // Safety timeout to clear loading state within 3 seconds
       setTimeout(() => {
         document.body.classList.remove('loading-state');
         const statusEl = document.getElementById("bro-of-day-status");
@@ -958,6 +916,7 @@ letter-spacing: 1px;
         }
       }, 3000);
 
+      // Decouple initialization tasks so they do not block each other
       loadBroOfDay();
       updateTicker();
 
