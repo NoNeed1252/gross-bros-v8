@@ -274,21 +274,7 @@ letter-spacing: 1px;
 }
 .social-card .desc { font-size: 12px; color: rgba(0,255,200,0.7); }
 
-    .modal {
-      display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.9); backdrop-filter: blur(4px);
-    }
-    .modal-content {
-      background-color: #000000; margin: 10% auto; padding: 24px;
-      border: 1px solid var(--cyan); border-radius: 12px; width: 90%; max-width: 500px;
-      box-shadow: 0 0 30px rgba(0,255,200,0.2); position: relative;
-      max-height: 80vh; overflow-y: auto; color: var(--cyan); font-family: 'Share Tech Mono', monospace;
-    }
-    .modal-close {
-      position: absolute; right: 16px; top: 16px; color: var(--cyan);
-      font-size: 24px; cursor: pointer;
-    }
-    .modal-content h2 { font-family: 'Orbitron', sans-serif; margin-top: 0; color: var(--cyan); text-shadow: 0 0 10px var(--cyan); }
+    @media (max-width: 320px) { .held-nft-panel { margin-bottom: 8px; } .held-nft-image-wrapper { aspect-ratio: 16/9; } .chat-log { height: 180px; } .fuse-panel { gap: 8px; padding: 12px; } .chat-terminal-actions { margin-top: 12px; } }
     </style>
 </head>
 <body>
@@ -354,17 +340,9 @@ letter-spacing: 1px;
         </div>
       </section>
 
-      <section id='section-1' class='section'>
-        <div class='panel'>
+      <section id='section-1' class='section'><div class='panel'>
           <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
-          <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
-          <div style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
-            <p>The Gross Bros were forged when a fracture opened in the ledger and turned the city into signal.</p>
-            <p>The archive below preserves the origin story only.</p>
-            <p class="muted" style="margin-top: 20px;">More transmissions coming soon...</p>
-          </div>
-        </div>
-      </section>
+          <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2><div style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'><p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger. When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence. Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p><p style='margin-top: 20px; font-family:Orbitron,sans-serif; letter-spacing:0.2em; color:var(--cyan);'>CHAPTER 1: THE NEURAL AWAKENING</p><p class="muted" style="margin-top: 10px; font-size: 12px; opacity: 0.5;">Transmissions refresh every week. More transmissions coming soon...</p></div></div></section>
 
       <section id='section-2' class='section'>
         <div class='panel fuse-panel'>
@@ -875,7 +853,7 @@ letter-spacing: 1px;
 
     function init() {
       const ticker = document.getElementById('warning-ticker-track');
-      const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED'];
+      const items = ['XRP-7 VOLATILE ENERGY: ACTIVE', 'MUTATED STRAIN DETECTED', 'NEURAL LINK ESTABLISHED', 'BERT ENGINE CRITICAL', 'DROP FLOW SECURED', 'FUSION ENGINE CHARGED', 'XRPL ROOT SEQUENCE STABLE'];
       ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' " ');
       loadBroOfDay();
       updateTicker();
@@ -888,15 +866,13 @@ letter-spacing: 1px;
   <div id="privacy-modal" class="modal">
     <div class="modal-content">
       <span class="modal-close" onclick="closeModal('privacy-modal')">&times;</span>
-      <h2>PRIVACY POLICY</h2>
-      <p>Data transmission is encrypted via neural link. No personal biological markers or wallet metadata are stored beyond the session requirement. Signal integrity is our priority.</p>
+      <h2>PRIVACY POLICY</h2><p>By accessing the Galactic Gross Bros (GGB) neural relay, you acknowledge that your interaction data, including wallet addresses and chat transmissions, are processed solely for the purpose of maintaining signal integrity and the entertainment experience. We explicitly disclaim all liability for any data breaches or technical failures. Your biological and digital markers are your own responsibility. Use the XRPL and AI tools at your own risk. NO WARRANTIES provided.</p>
     </div>
   </div>
   <div id="terms-modal" class="modal">
     <div class="modal-content">
       <span class="modal-close" onclick="closeModal('terms-modal')">&times;</span>
-      <h2>TERMS OF SERVICE</h2>
-      <p>By entering the Broadcast Den, you agree to follow the signal protocols. All transmissions are final. Fusions are permanent ledger events. Proceed with caution, Operative.</p>
+      <h2>TERMS OF SERVICE</h2><p>1. DISCLAIMER: Galactic Gross Bros (GGB) is a platform for entertainment purposes ONLY. We provide no financial or legal advice. 2. RISK: XRPL tokens, NFTs, and AI-driven interactions carry extremely high risk. Assets are provided 'AS-IS' with no warranties of value or utility. 3. LIABILITY: GGB and its creators explicitly disclaim all financial and legal liability for any losses, glitches, or ledger events. All fusions and transmissions are final and permanent. 4. CRT PROTOCOL: By proceeding, you accept the volatile nature of XRP-7 energy sources.</p>
     </div>
   </div></body>
 </html>
