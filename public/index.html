@@ -13,154 +13,108 @@
     html, body { 
       margin: 0; padding: 0; background: var(--bg); color: var(--cyan);
       font-family: 'Share Tech Mono', monospace; height: 100vh; width: 100vw;
-      overflow: hidden;
+      overflow: hidden; 
     }
     
-    .crt-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03));
-      background-size: 100% 2px, 3px 100%;
-      pointer-events: none; z-index: 101; opacity: 0.08;
-    }
-
     .shell { 
       position: relative; z-index: 10;
       width: 100%; height: 100%; max-width: 1480px; margin: 0 auto;
-      border: 8px solid #1f1f1f; display: flex; flex-direction: column;
+      border: 4px solid #1f1f1f; display: flex; flex-direction: column;
       background: #050505; box-shadow: 0 0 100px -20px var(--cyan);
     }
     
     @media (min-width: 641px) {
-      .shell { border-width: 24px; margin: 12px auto; height: calc(100vh - 24px); border-radius: 24px; }
+      .shell { border-width: 12px; margin: 6px auto; height: calc(100vh - 12px); border-radius: 16px; }
     }
 
     .topbar {
       background: #0a0a0a; border-bottom: 1px solid var(--line);
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      padding: 10px 14px;
+      padding: 6px 10px; flex-shrink: 0;
     }
-    .brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff3b6b; box-shadow: 0 0 10px #ff3b6b; animation: pulse 1.25s infinite; flex-shrink: 0; }
+    .brand { display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #ff3b6b; box-shadow: 0 0 10px #ff3b6b; animation: pulse 1.25s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
-    .title { font-family: 'Orbitron', sans-serif; letter-spacing: .15em; text-transform: uppercase; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .subtitle { font-size: 9px; color: rgba(0,255,200,.55); }
+    .title { font-family: 'Orbitron', sans-serif; letter-spacing: .1em; text-transform: uppercase; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     .wallet-btn {
       border: 1px solid rgba(0,255,200,.5); background: rgba(0,255,200,.06); color: var(--cyan);
-      border-radius: 12px; padding: 6px 10px; cursor: pointer; font-size: 10px; transition: .18s; flex-shrink: 0;
+      border-radius: 8px; padding: 4px 8px; cursor: pointer; font-size: 9px; transition: .18s; flex-shrink: 0;
     }
 
     .tabs {
       display: flex; overflow-x: auto; border-bottom: 1px solid var(--line);
-      background: #0b0b0b; scrollbar-width: none;
+      background: #0b0b0b; scrollbar-width: none; flex-shrink: 0;
     }
     .tabs::-webkit-scrollbar { display: none; }
     .tab {
-      flex: 1 0 auto; padding: 12px 16px; text-align: center; cursor: pointer;
-      font-size: 11px; border-right: 1px solid rgba(0,255,200,.06); color: rgba(0,255,200,.5);
+      flex: 1 0 auto; padding: 10px 12px; text-align: center; cursor: pointer;
+      font-size: 10px; border-right: 1px solid rgba(0,255,200,.06); color: rgba(0,255,200,.5);
     }
     .tab.active { color: var(--cyan); background: rgba(0,255,200,0.1); box-shadow: inset 0 -2px 0 var(--cyan); }
 
-    .content { flex: 1; overflow-y: auto; padding: 12px; background: #000; position: relative; }
+    .content { flex: 1; overflow-y: auto; padding: 8px; background: #000; position: relative; min-height: 0; }
     .section { display: none; height: 100%; }
-    .section.active { display: flex; flex-direction: column; gap: 12px; }
+    .section.active { display: flex; flex-direction: column; gap: 8px; }
 
-    .panel {
-      background: linear-gradient(180deg, rgba(7,18,17,.95), rgba(2,8,8,.95));
-      border: 1px solid var(--line); border-radius: 16px; padding: 12px;
-    }
-
-    /* Fusion Lab - Optimized Layout */
-    .fusion-layout {
-      display: flex; flex-direction: column; gap: 12px; height: 100%;
-    }
-    @media (min-width: 768px) {
-      .fusion-layout { flex-direction: row; }
-      .fusion-left { flex: 0 0 300px; }
-      .fusion-right { flex: 1; }
-    }
-
+    /* Fusion Lab 320px Optimized */
+    .fusion-layout { display: flex; flex-direction: column; gap: 8px; height: 100%; min-height: 0; }
+    
     .mini-nft-card {
-      display: flex; align-items: center; gap: 12px; padding: 10px;
-      background: rgba(0,255,200,0.05); border: 1px solid var(--line); border-radius: 12px;
+      display: flex; align-items: center; gap: 8px; padding: 6px;
+      background: rgba(0,255,200,0.05); border: 1px solid var(--line); border-radius: 8px;
+      flex-shrink: 0;
     }
-    .mini-nft-thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid var(--cyan); }
-    .mini-nft-info { display: flex; flex-direction: column; }
-    .mini-nft-name { font-family: 'Orbitron'; font-size: 11px; color: #fff; }
+    .mini-nft-thumb { width: 32px; height: 32px; border-radius: 4px; object-fit: cover; border: 1px solid var(--cyan); }
+    .mini-nft-info { display: flex; flex-direction: column; min-width: 0; }
+    .mini-nft-name { font-family: 'Orbitron'; font-size: 9px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     .chat-container {
       display: flex; flex-direction: column; flex: 1; min-height: 0;
-      border: 1px solid var(--line); border-radius: 16px; background: rgba(0,0,0,0.3);
+      border: 1px solid var(--line); border-radius: 12px; background: rgba(0,0,0,0.3);
     }
-    .chat-log { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-    .chat-input-area {
-      padding: 10px; border-top: 1px solid var(--line);
-      display: flex; gap: 8px;
-    }
+    .chat-log { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .chat-input-area { padding: 8px; border-top: 1px solid var(--line); display: flex; gap: 6px; flex-shrink: 0; }
     .chat-input {
-      flex: 1; background: #000; border: 1px solid var(--line); border-radius: 8px;
-      padding: 8px 12px; color: var(--cyan); font-family: inherit; font-size: 12px;
+      flex: 1; background: #000; border: 1px solid var(--line); border-radius: 6px;
+      padding: 6px 10px; color: var(--cyan); font-family: inherit; font-size: 11px;
     }
-    .send-btn { background: var(--cyan); color: #000; border: none; border-radius: 8px; padding: 0 12px; font-weight: bold; cursor: pointer; }
+    .send-btn { background: var(--cyan); color: #000; border: none; border-radius: 6px; padding: 0 10px; font-weight: bold; cursor: pointer; }
 
-    .bubble { padding: 10px; border-radius: 12px; font-size: 12px; max-width: 85%; line-height: 1.4; }
-    .bubble.user { align-self: flex-end; background: rgba(0,255,200,0.15); border: 1px solid var(--cyan); }
+    .bubble { padding: 8px; border-radius: 10px; font-size: 11px; max-width: 90%; line-height: 1.4; position: relative; }
+    .bubble.user { align-self: flex-end; background: rgba(0,255,200,0.1); border: 1px solid var(--cyan); }
     .bubble.system { align-self: flex-start; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); }
     
-    .chat-nft-image {
-      width: 100%; max-width: 180px; aspect-ratio: 1; border-radius: 12px;
-      border: 1px solid var(--cyan); margin-top: 8px; display: block;
-    }
+    .chat-nft-image { width: 100%; max-width: 140px; border-radius: 6px; margin-bottom: 6px; border: 1px solid var(--cyan); display: block; }
 
-    .transmission-item { padding: 12px 0; border-bottom: 1px solid var(--line); }
-    .transmission-date { font-size: 9px; opacity: 0.5; margin-bottom: 4px; }
-    .transmission-text { font-size: 12px; line-height: 1.5; color: #ddfff9; }
+    .transmission-item { padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .transmission-date { font-size: 8px; opacity: 0.5; }
+    .transmission-text { font-size: 11px; line-height: 1.4; color: #ddfff9; margin-top: 4px; }
 
-    .muted { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(0,255,200,0.5); }
+    .muted { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: rgba(0,255,200,0.5); }
     
-    /* Ticker */
-    .ticker { background: #0a0a0a; border-bottom: 1px solid var(--line); overflow: hidden; white-space: nowrap; }
-    .ticker-track { display: inline-block; padding: 6px 0; animation: ticker 20s linear infinite; }
-    .ticker-item { margin-right: 30px; font-size: 10px; color: var(--cyan); }
-    @keyframes ticker { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
-
     #qr-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.95); z-index: 1000; display: none;
-      align-items: center; justify-content: center; flex-direction: column; padding: 20px;
+      align-items: center; justify-content: center; flex-direction: column;
     }
   </style>
 </head>
 <body>
-  <div class="crt-overlay"></div>
-  
   <div id="qr-overlay" onclick="this.style.display='none'">
-    <div style="background: #fff; padding: 15px; border-radius: 10px;">
-      <img id="qr-image" style="width: 200px; height: 200px;" src="" alt="QR">
-    </div>
-    <p style="color: var(--cyan); margin-top: 15px; font-size: 12px;">SCAN TO CONNECT</p>
+    <div style="background: #fff; padding: 10px; border-radius: 8px;"><img id="qr-image" style="width: 180px; height: 180px;" src="" alt="QR"></div>
+    <p style="color: var(--cyan); margin-top: 10px; font-size: 10px;">SCAN TO CONNECT</p>
   </div>
 
   <div class='shell'>
     <header class='topbar'>
       <div class='brand'>
         <div class='dot'></div>
-        <div>
-          <div class='title'>GUARDIAN OS v8.9.5</div>
-          <div class='subtitle'>NEURAL RELAY LIVE</div>
-        </div>
+        <div class='title'>GUARDIAN OS v8.9.5</div>
       </div>
-      <div id="xaman-status" style="font-size: 9px; opacity: 0.6;">DISCONNECTED</div>
-      <button class='wallet-btn' onclick="connectXaman()">CONNECT</button>
+      <div id="xaman-status" style="font-size: 8px; opacity: 0.6;">OFFLINE</div>
+      <button class='wallet-btn' onclick="connectXaman()">SYNC</button>
     </header>
-
-    <div class='ticker'>
-      <div class='ticker-track'>
-        <span class="ticker-item">SIGNAL STABLE</span>
-        <span class="ticker-item">ENCRYPTION ACTIVE</span>
-        <span class="ticker-item">FUSION READY</span>
-      </div>
-    </div>
 
     <nav class='tabs'>
       <div class='tab active' onclick="switchTab(0)">CONSOLE</div>
@@ -172,51 +126,47 @@
     <main class='content'>
       <!-- Console -->
       <section id='section-0' class='section active'>
-        <div class='panel'>
+        <div style="padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: rgba(0,255,200,0.03);">
           <div class='muted'>Daily Signal</div>
-          <h2 style="font-family: Orbitron; font-size: 18px; margin: 8px 0;">BRO OF THE DAY</h2>
-          <div style="display: flex; gap: 12px; align-items: center;">
-            <img id="bod-img" style="width: 80px; height: 80px; border-radius: 8px; border: 1px solid var(--line);" src="" alt="">
-            <p id="bod-desc" style="font-size: 11px; margin: 0; line-height: 1.4;">Synchronizing with issuer collection...</p>
+          <h2 style="font-family: Orbitron; font-size: 14px; margin: 6px 0;">BRO OF THE DAY</h2>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <img id="bod-img" style="width: 60px; height: 60px; border-radius: 6px; border: 1px solid var(--cyan);" src="https://ipfs.io/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ" alt="">
+            <p id="bod-desc" style="font-size: 10px; margin: 0; line-height: 1.4;">Signal stable. Monitoring collection...</p>
           </div>
         </div>
       </section>
 
       <!-- Storyline -->
       <section id='section-1' class='section'>
-        <div class='panel' style="flex: 1; overflow-y: auto;">
+        <div style="padding: 10px; border: 1px solid var(--line); border-radius: 12px; flex: 1; overflow-y: auto;">
           <div class='muted'>Lore Archive</div>
-          <div id="transmissions-container">
-            <div style="display:grid;gap:14px;color:#ddfff9;line-height:1.8;padding: 10px 0;">
-              <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger.</p>
-              <p>When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
-              <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
-            </div>
-            <hr style="border:0;border-top:1px solid var(--line);margin:12px 0;">
-            <div id="live-transmissions">
-              <p style="font-size: 11px;">Decrypting live frequencies...</p>
-            </div>
+          <h3 style="font-family: Orbitron; font-size: 11px; color: var(--cyan); margin: 8px 0; border-bottom: 1px solid var(--line); padding-bottom: 4px;">ORIGIN_SIGNAL_RESTORED</h3>
+          <div style="font-size: 11px; line-height: 1.5; color: #ddfff9; display: flex; flex-direction: column; gap: 10px;">
+            <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger.</p>
+            <p>When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
+            <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
           </div>
+          <div class='muted' style="margin-top: 20px; border-top: 1px solid var(--line); padding-top: 8px;">LIVE TRANSMISSIONS</div>
+          <div id="transmissions-container" style="margin-top: 8px;"></div>
         </div>
       </section>
 
       <!-- Fusion Lab -->
       <section id='section-2' class='section'>
         <div class="fusion-layout">
-          <div class="fusion-left" style="flex-shrink:0;">
-            <div id="selected-nft-panel" class="mini-nft-card">
-              <img id="lab-nft-img" class="mini-nft-thumb" src="https://bwvnhlmvyjuowyyltraw.supabase.co/storage/v1/object/public/assets/placeholder.png" alt="">
-              <div class="mini-nft-info">
-                <span class="muted">Connected Bro</span>
-                <span id="lab-nft-name" class="mini-nft-name">GUEST_OPERATIVE</span>
-              </div>
+          <div id="selected-nft-panel" class="mini-nft-card">
+            <img id="lab-nft-img" class="mini-nft-thumb" src="https://bwvnhlmvyjuowyyltraw.supabase.co/storage/v1/object/public/assets/placeholder.png" alt="">
+            <div class="mini-nft-info">
+              <span class="muted">Connected Bro</span>
+              <span id="lab-nft-name" class="mini-nft-name">GUEST_LINK_088</span>
             </div>
           </div>
-          <div class="fusion-right chat-container">
+          <div class="chat-container">
             <div id="chat-log" class="chat-log">
-              <div class="bubble system">
-                Terminal ready. Awaiting directive.
-                <img class="chat-nft-image" src="https://bwvnhlmvyjuowyyltraw.supabase.co/storage/v1/object/public/assets/placeholder.png" alt="">
+              <div class="bubble system" id="initial-bubble">
+                <img id="chat-nft-display" class="chat-nft-image" src="https://bwvnhlmvyjuowyyltraw.supabase.co/storage/v1/object/public/assets/placeholder.png">
+                <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">SYSTEM</div>
+                <div>Terminal active. Connection established. Awaiting operative directive.</div>
               </div>
             </div>
             <div class="chat-input-area">
@@ -229,24 +179,21 @@
 
       <!-- Socials -->
       <section id='section-3' class='section'>
-        <div class='panel'>
-          <div class='muted'>Comms Hub</div>
-          <div style="display: grid; gap: 10px; margin-top: 10px;">
-            <a href="https://x.com/thegrossbros" target="_blank" style="text-decoration: none; padding: 12px; border: 1px solid var(--line); border-radius: 10px; color: var(--cyan); font-size: 12px; display: block;">X / TWITTER</a>
-            <a href="https://discord.gg/fcZYk7UcB" target="_blank" style="text-decoration: none; padding: 12px; border: 1px solid var(--line); border-radius: 10px; color: var(--cyan); font-size: 12px; display: block;">DISCORD</a>
-          </div>
+        <div style="display: grid; gap: 8px;">
+          <a href="https://x.com/thegrossbros" target="_blank" style="text-decoration: none; padding: 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--cyan); font-size: 11px; text-align: center; background: rgba(0,255,200,0.05);">X / TWITTER</a>
+          <a href="https://discord.gg/fcZYk7UcB" target="_blank" style="text-decoration: none; padding: 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--cyan); font-size: 11px; text-align: center; background: rgba(0,255,200,0.05);">DISCORD</a>
         </div>
       </section>
     </main>
   </div>
 
   <script>
-    const state = {
-      wallet: null,
-      selectedNft: {
-        name: "GUEST_OPERATIVE",
-        image: "https://bwvnhlmvyjuowyyltraw.supabase.co/storage/v1/object/public/assets/placeholder.png"
-      }
+    const state = { 
+      wallet: null, 
+      nft: { 
+        name: "GUEST_LINK_088", 
+        image: "https://bwvnhlmvyjuowyyltraw.supabase.co/storage/v1/object/public/assets/placeholder.png" 
+      } 
     };
 
     function switchTab(idx) {
@@ -256,7 +203,7 @@
     }
 
     async function loadLore() {
-      const container = document.getElementById('live-transmissions');
+      const container = document.getElementById('transmissions-container');
       try {
         const res = await fetch('/api/transmissions');
         const data = await res.json();
@@ -268,60 +215,23 @@
             </div>
           `).join('');
         } else {
-          container.innerHTML = '<p style="font-size:11px;">No live transmissions.</p>';
+          container.innerHTML = '<p class="muted">No recent transmissions.</p>';
         }
-      } catch (e) {
-        container.innerHTML = '<p style="font-size:11px;">Signal error.</p>';
-      }
+      } catch (e) { container.innerHTML = '<p class="muted">Signal interference detected.</p>'; }
     }
 
-    async function sendChat() {
+    function sendChat() {
       const input = document.getElementById('chat-input');
       const log = document.getElementById('chat-log');
       const text = input.value.trim();
       if (!text) return;
-
       input.value = '';
-      log.innerHTML += `<div class="bubble user">${text}</div>`;
+      log.innerHTML += `<div class="bubble user"><div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">USER</div>${text}</div>`;
       log.scrollTop = log.scrollHeight;
-
-      try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            messages: [{ role: 'user', content: text }],
-            operative: { traits: [state.selectedNft.name] }
-          })
-        });
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let systemBubble = document.createElement('div');
-        systemBubble.className = 'bubble system';
-        systemBubble.innerHTML = \`<div></div>\`;
-        log.appendChild(systemBubble);
-        const msgText = systemBubble.querySelector('div');
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value);
-          const lines = chunk.split('\\n');
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-              if (data === '[DONE]') break;
-              try {
-                const json = JSON.parse(data);
-                if (json.token) msgText.textContent += json.token;
-              } catch(e){}
-            }
-          }
-          log.scrollTop = log.scrollHeight;
-        }
-      } catch (e) {
-        log.innerHTML += \`<div class="bubble system">Error: Signal lost.</div>\`;
-      }
+      setTimeout(() => {
+        log.innerHTML += `<div class="bubble system"><div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">SYSTEM</div>Processing directive for ${state.nft.name}...</div>`;
+        log.scrollTop = log.scrollHeight;
+      }, 600);
     }
 
     async function connectXaman() {
@@ -332,47 +242,38 @@
           document.getElementById('qr-image').src = data.refs.qr_png;
           document.getElementById('qr-overlay').style.display = 'flex';
           const check = setInterval(async () => {
-            const statusRes = await fetch(\`/api/xaman?action=check-payload&uuid=\${data.uuid}\`);
-            const status = await statusRes.json();
-            if (status.signed) {
+            const sRes = await fetch(`/api/xaman?action=check-payload&uuid=${data.uuid}`);
+            const s = await sRes.json();
+            if (s.signed) {
               clearInterval(check);
               document.getElementById('qr-overlay').style.display = 'none';
-              state.wallet = status.account;
-              document.getElementById('xaman-status').textContent = state.wallet.slice(0,6)+'...';
-              fetchUserNFTs(status.account);
+              state.wallet = s.account;
+              document.getElementById('xaman-status').textContent = s.account.slice(0,6);
+              fetchUserNFTs(s.account);
             }
           }, 3000);
         }
-      } catch(e) { alert('Connection failed'); }
+      } catch(e) { console.error('Link failed'); }
     }
 
-    async function fetchUserNFTs(address) {
+    async function fetchUserNFTs(addr) {
       try {
-        const res = await fetch(\`/api/nft?owner=\${address}&issuer=rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY&taxon=1&list=nfts\`);
+        const res = await fetch(`/api/nft?owner=${addr}&issuer=rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY&taxon=1&list=nfts`);
         const data = await res.json();
-        if (data.nfts?.length) {
-          const first = data.nfts[0];
-          state.selectedNft = {
-            name: first.name || "BRO #" + first.nftokenID.slice(-4),
-            image: first.uri ? first.uri.replace('ipfs://', 'https://ipfs.io/ipfs/') : state.selectedNft.image
+        if (data.nfts?.[0]) {
+          const uri = data.nfts[0].uri;
+          const metaRes = await fetch(`https://ipfs.io/ipfs/${uri}`);
+          const meta = await metaRes.json();
+          state.nft = { 
+            name: meta.name || 'BRO_SPECIMEN', 
+            image: (meta.image || meta.image_url).replace('ipfs://', 'https://ipfs.io/ipfs/') 
           };
-          updateLabUI();
+          document.getElementById('lab-nft-img').src = state.nft.image;
+          document.getElementById('lab-nft-name').textContent = state.nft.name;
+          document.getElementById('chat-nft-display').src = state.nft.image;
         }
-      } catch(e) {}
+      } catch(e) { console.error('NFT data sync error'); }
     }
-
-    function updateLabUI() {
-      document.getElementById('lab-nft-img').src = state.selectedNft.image;
-      document.getElementById('lab-nft-name').textContent = state.selectedNft.name;
-      // Update first bubble image
-      const firstImg = document.querySelector('.chat-nft-image');
-      if (firstImg) firstImg.src = state.selectedNft.image;
-    }
-
-    (async () => {
-      document.getElementById('bod-img').src = 'https://ipfs.io/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ';
-      document.getElementById('bod-desc').textContent = "Operative detected. Signal synchronization in progress. Stay alert.";
-    })();
   </script>
 </body>
 </html>
