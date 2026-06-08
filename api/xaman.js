@@ -1,93 +1,123 @@
-export default async function handler(req, res) {
-  const apiKey = String(process.env.XAMAN_API_KEY || '').trim();
-  const apiSecret = String(process.env.XAMAN_API_SECRET || '').trim();
-  const baseUrl = 'https://xumm.app/api/v1/platform';
+const express = require('express');
+const router = express.Router();
+const fetch = require('node-fetch');
 
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Cache-Control', 'no-store');
+// Environment variables
+const apiKey = process.env.NEXT_PUBLIC_XAMAN_API_KEY;
+const apiSecret = process.env.XAMAN_API_SECRET;
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+const XAMAN_API_BASE = 'https://xumm.app/api/v1/platform';
+
+/**
+ * Helper to make authenticated requests to Xaman API
+ */
+async function xamanFetch(endpoint, options = {}) {
+  const url = `${XAMAN_API_BASE}${endpoint}`;
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': apiKey,
+      'X-API-Secret': apiSecret,
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error?.message || 'Xaman API error');
   }
 
-  if (!apiKey || !apiSecret) {
-    return res.status(500).json({
-      ok: false,
-      error: 'Missing Xaman environment variables.',
-      missingEnvKeys: [!apiKey ? 'XAMAN_API_KEY' : null, !apiSecret ? 'XAMAN_API_SECRET' : null].filter(Boolean),
-    });
-  }
+  return response.json();
+}
 
-  const body = typeof req.body === 'string'
-    ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })()
-    : (req.body && typeof req.body === 'object' ? req.body : {});
-
-  const action = String(body.action || req.query?.action || '').trim();
-  const uuid = String(body.uuid || req.query?.uuid || '').trim();
-  const destinationAddress = String(body.destinationAddress || req.query?.destinationAddress || '').trim();
-
+/**
+ * Handle payload creation logic
+ * Refactored to be generic: uses txjson and options from the request body
+ */
+async function handleCreatePayload(req, res) {
   try {
-    if (action === 'create-payload') {
-      const payloadBody = body.txjson || {
-        TransactionType: 'SignIn'
-      };
+    const { txjson, options } = req.body;
 
-      const upstream = await fetch(`${baseUrl}/payload`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': apiKey,
-          'X-API-Secret': apiSecret,
-        },
-        body: JSON.stringify({
-          txjson: payloadBody,
-          options: {
-            submit: false,
-            expire: 5,
-            return_url: {
-              app: 'https://gross-bros-v8.vercel.app',
-              web: 'https://gross-bros-v8.vercel.app'
-            },
-            ...(body.options && typeof body.options === 'object' ? body.options : {}),
-          },
-          ...(destinationAddress ? {
-            custom_meta: {
-              ...(body.custom_meta && typeof body.custom_meta === 'object' ? body.custom_meta : {}),
-              destinationAddress,
-            }
-          } : {}),
-        }),
-      });
+    // Use provided txjson or fallback to a basic SignIn
+    const payloadBody = {
+      txjson: txjson || {
+        TransactionType: 'SignIn',
+      },
+      options: options || {}
+    };
 
-      const data = await upstream.json().catch(() => ({}));
-      return res.status(upstream.status).json(data);
-    }
-
-    if (action === 'check-payload') {
-      if (!uuid) {
-        return res.status(400).json({ ok: false, error: 'uuid is required for check-payload.' });
-      }
-
-      const upstream = await fetch(`${baseUrl}/payload/${encodeURIComponent(uuid)}`, {
-        method: 'GET',
-        headers: {
-          'X-API-Key': apiKey,
-          'X-API-Secret': apiSecret,
-        },
-      });
-
-      const data = await upstream.json().catch(() => ({}));
-      return res.status(upstream.status).json(data);
-    }
-
-    return res.status(400).json({ ok: false, error: 'Invalid action. Use create-payload or check-payload.' });
-  } catch (error) {
-    console.error('Xaman proxy error:', error);
-    return res.status(500).json({
-      ok: false,
-      error: error instanceof Error ? error.message : 'Proxy error',
+    const result = await xamanFetch('/payload', {
+      method: 'POST',
+      body: JSON.stringify(payloadBody),
     });
+
+    return res.status(200).json({
+      uuid: result.uuid,
+      next: result.next.always, // The link to open Xaman/show QR
+      qrUrl: result.refs.qr_png,
+    });
+  } catch (error) {
+    console.error('Error creating Xaman payload:', error);
+    return res.status(500).json({ error: error.message });
   }
 }
+
+/**
+ * Handle payload status check logic
+ */
+async function handleCheckPayload(req, res, uuid) {
+  if (!uuid) {
+    return res.status(400).json({ error: 'Missing uuid' });
+  }
+
+  try {
+    const result = await xamanFetch(`/payload/${uuid}`);
+
+    // Check if signed and resolve address
+    const isSigned = result.meta.resolved && result.meta.signed;
+    const address = result.response.account || null;
+
+    return res.status(200).json({
+      signed: isSigned,
+      address: address,
+      status: result.meta.status,
+      response: result.response // Include full response for metadata verification
+    });
+  } catch (error) {
+    console.error('Error checking Xaman payload:', error);
+    return res.status(500).json({ error: error.message });
+  }
+}
+
+router.post('/', async (req, res) => {
+  const action = req.body.action || req.query.action;
+  const uuid = req.body.uuid || req.query.uuid;
+
+  if (action === 'create-payload') {
+    return handleCreatePayload(req, res);
+  }
+
+  if (action === 'check-payload') {
+    return handleCheckPayload(req, res, uuid);
+  }
+
+  return res.status(400).json({ error: 'Invalid action use create-payload or check-payload' });
+});
+
+router.get('/', async (req, res) => {
+  const action = req.query.action || req.body?.action;
+  const uuid = req.query.uuid || req.body?.uuid;
+
+  if (action === 'create-payload') {
+    return handleCreatePayload(req, res);
+  }
+
+  if (action === 'check-payload') {
+    return handleCheckPayload(req, res, uuid);
+  }
+
+  return res.status(400).json({ error: 'Invalid action use create-payload or check-payload' });
+});
+
+module.exports = router;
