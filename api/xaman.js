@@ -46,6 +46,10 @@ export default async function handler(req, res) {
           options: {
             submit: false,
             expire: 5,
+            return_url: {
+              app: 'https://gross-bros-v8.vercel.app',
+              web: 'https://gross-bros-v8.vercel.app'
+            },
             ...(body.options && typeof body.options === 'object' ? body.options : {}),
           },
           ...(destinationAddress ? {

@@ -57,6 +57,14 @@
     .section { display: none; height: 100%; }
     .section.active { display: flex; flex-direction: column; gap: 8px; }
 
+    /* CRT SCANLINES FIX: pointer-events: none */
+    .crt-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 绿, 0.01), rgba(0, 255, 0, 0.03));
+      background-size: 100% 2px, 3px 100%;
+      pointer-events: none; z-index: 1000; opacity: 0.08;
+    }
+
     /* Fusion Lab 320px Optimized */
     .fusion-layout { display: flex; flex-direction: column; gap: 8px; height: 100%; min-height: 0; }
     
@@ -95,12 +103,14 @@
     
     #qr-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.95); z-index: 1000; display: none;
+      background: rgba(0,0,0,0.95); z-index: 2000; display: none;
       align-items: center; justify-content: center; flex-direction: column;
     }
   </style>
 </head>
 <body>
+  <div class="crt-overlay"></div>
+  
   <div id="qr-overlay" onclick="this.style.display='none'">
     <div style="background: #fff; padding: 10px; border-radius: 8px;"><img id="qr-image" style="width: 180px; height: 180px;" src="" alt="QR"></div>
     <p style="color: var(--cyan); margin-top: 10px; font-size: 10px;">SCAN TO CONNECT</p>
@@ -141,7 +151,7 @@
         <div style="padding: 10px; border: 1px solid var(--line); border-radius: 12px; flex: 1; overflow-y: auto;">
           <div class='muted'>Lore Archive</div>
           <h3 style="font-family: Orbitron; font-size: 11px; color: var(--cyan); margin: 8px 0; border-bottom: 1px solid var(--line); padding-bottom: 4px;">ORIGIN_SIGNAL_RESTORED</h3>
-          <div style="font-size: 11px; line-height: 1.5; color: #ddfff9; display: flex; flex-direction: column; gap: 10px;">
+          <div id="static-origin-story" style="font-size: 11px; line-height: 1.5; color: #ddfff9; display: flex; flex-direction: column; gap: 10px;">
             <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger.</p>
             <p>When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
             <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
@@ -208,7 +218,13 @@
         const res = await fetch('/api/transmissions');
         const data = await res.json();
         if (data.transmissions?.length) {
-          container.innerHTML = data.transmissions.map(t => `
+          // FILTER: Remove warnings/alerts from narrative feed
+          const filtered = data.transmissions.filter(t => {
+            const txt = t.transmission_text.toLowerCase();
+            return !txt.includes('warning') && !txt.includes('alert') && !txt.includes('failed mining');
+          });
+          
+          container.innerHTML = filtered.map(t => `
             <div class="transmission-item">
               <div class="transmission-date">${new Date(t.date_added).toLocaleString()}</div>
               <div class="transmission-text">${t.transmission_text}</div>
@@ -235,9 +251,17 @@
     }
 
     async function connectXaman() {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       try {
         const res = await fetch('/api/xaman?action=create-payload', { method: 'POST' });
         const data = await res.json();
+        
+        // Mobile Deep Link logic
+        if (isMobile && data.next?.always) {
+            window.location.href = data.next.always;
+            return;
+        }
+
         if (data.refs?.qr_png) {
           document.getElementById('qr-image').src = data.refs.qr_png;
           document.getElementById('qr-overlay').style.display = 'flex';
