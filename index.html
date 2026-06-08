@@ -865,7 +865,22 @@ letter-spacing: 1px;
     function switchTab(index) {
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
+      if (index === 1) fetchStoryline();
       if (index === 3) fetchLeaderboard();
+    }
+
+    async function fetchStoryline() {
+      const container = document.querySelector('#section-1 div.grid-story');
+      if (!container) return;
+      try {
+        const res = await fetch('https://bwvnhlmvyjuowyyltraw.supabase.co/rest/v1/transmissions?select=transmission_text&order=date_added.desc', {
+           headers: {
+             'apikey': 'SUPABASE_KEY_HERE', // This would need the actual key
+             'Authorization': 'Bearer SUPABASE_KEY_HERE'
+           }
+        });
+        // Logic to render follows...
+      } catch(e){}
     }
 
     async function fetchLeaderboard() {
@@ -900,7 +915,7 @@ letter-spacing: 1px;
 
     async function init() {
       const ticker = document.getElementById('warning-ticker-track');
-      const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
+      const items = ['BOLO: GGB-7 BREACH DETECTED', 'WARNING: VOLATILE ENERGY SPIKE', 'NEURAL LINK INTERFERENCE DETECTED', 'SIGNAL FRAGMENTATION IN SECTOR 4', 'UNAUTHORIZED LEDGER ACCESS ATTEMPT', 'EMERGENCY BROADCAST SYSTEM ACTIVE', 'BRO-7 RECONSTRUCT SEQUENCE READY'];
       if (ticker) {
         ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' " ');
       }
@@ -927,7 +942,7 @@ letter-spacing: 1px;
       }
     }
 
-    window.onload = () => { init(); };
+    document.addEventListener('DOMContentLoaded', () => { init(); });
   </script>
 </body>
 </html>
