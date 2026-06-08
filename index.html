@@ -360,7 +360,7 @@
     <div class="modal-content">
       <span class="modal-close" onclick="closeModal('privacy-modal')">&times;</span>
       <h2 style="font-family:Orbitron, sans-serif; letter-spacing: 4px; color: var(--cyan);">PRIVACY PROTOCOL</h2>
-      <p>By accessing the Galactic Gross Bros (GGB) neural relay, you acknowledge that your interaction data, including XRPL wallet addresses (connected via Xaman), token balances (DROP, BERT, DBY, RLUSD), and terminal chat transmissions, are processed solely for the purpose of maintaining signal integrity and the entertainment experience. We explicitly disclaim all liability for any data breaches, neural link interruptions, or technical failures on the XRP Ledger. Your digital markers, private keys, and wallet metadata remain your own responsibility; we do not store private keys. Signal integrity is our priority, but absolute security in the XRP-7 zone is not guaranteed. NO WARRANTIES PROVIDED.</p>
+      <p>By accessing the Galactic Gross Bros (GGB) neural relay, you acknowledge that your interaction data, including XRPL wallet addresses (connected via Xaman), token balances (DROP, BERT, DBY, RLUSD), and terminal chat transmissions, are processed solely for the purpose of maintaining signal integrity and the terminal entertainment experience. We explicitly disclaim all liability for any data breaches, neural link interruptions, or technical failures on the XRP Ledger. Your digital markers, private keys, and wallet metadata remain your own responsibility; we do not store private keys. Signal integrity is our priority, but absolute security in the XRP-7 zone is not guaranteed. NO WARRANTIES PROVIDED.</p>
     </div>
   </div>
 
@@ -419,8 +419,8 @@
       let value = String(uri || '').trim();
       if (!value) return '';
       if (/^[0-9a-fA-F]+$/.test(value)) value = hexToUtf8(value);
-      if (value.startsWith('ipfs://')) return CONFIG.GATEWAY + value.slice(7).replace(/^\\/+/, '');
-      if (value.startsWith('ar://')) return 'https://arweave.net/' + value.slice(5).replace(/^\\/+/, '');
+      if (value.startsWith('ipfs://')) return CONFIG.GATEWAY + value.slice(7).replace(/^\/+/, '');
+      if (value.startsWith('ar://')) return 'https://arweave.net/' + value.slice(5).replace(/^\/+/, '');
       return value;
     }
 
@@ -428,7 +428,7 @@
       const imgEl = document.getElementById("bro-of-day-image");
       const descEl = document.getElementById("bro-of-day-description");
       try {
-        const res = await fetch(\`/api/nft?issuer=\${CONFIG.ISSUER}&taxon=1&list=nfts\`);
+        const res = await fetch(`/api/nft?issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);
         const data = await res.json();
         const nfts = data?.nfts || [];
         if (nfts.length > 0) {
@@ -469,7 +469,7 @@
 
     async function fetchUserNfts(address) {
       try {
-        const res = await fetch(\`/api/nft?owner=\${address}&issuer=\${CONFIG.ISSUER}&taxon=1&list=nfts\`);
+        const res = await fetch(`/api/nft?owner=${address}&issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);
         const data = await res.json();
         const nfts = data?.nfts || [];
         state.userNfts = [];
@@ -494,11 +494,11 @@
 
     function renderNftSelection() {
       const track = document.getElementById('nft-selection-track');
-      track.innerHTML = state.userNfts.map((n, i) => \`
-        <div class="nft-select-card \${state.selectedNft === n ? 'active' : ''}" onclick="selectNft(\${i})">
-          <img src="\${n.image}" alt="">
+      track.innerHTML = state.userNfts.map((n, i) => `
+        <div class="nft-select-card ${state.selectedNft === n ? 'active' : ''}" onclick="selectNft(${i})">
+          <img src="${n.image}" alt="">
         </div>
-      \`).join('');
+      `).join('');
     }
 
     function selectNft(i) {
@@ -534,7 +534,7 @@
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          const lines = decoder.decode(value).split('\\n');
+          const lines = decoder.decode(value).split('\n');
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               const data = line.slice(6);
@@ -556,46 +556,67 @@
 
     function renderChatLog() {
       const log = document.getElementById('chat-log');
-      log.innerHTML = state.chat.map(c => \`
-        <div class="bubble \${c.role === 'user' ? 'user' : 'system'}">\${c.content}</div>
-      \`).join('');
+      log.innerHTML = state.chat.map(c => `
+        <div class="bubble ${c.role === 'user' ? 'user' : 'system'}">${c.content}</div>
+      `).join('');
       log.scrollTop = log.scrollHeight;
     }
 
     function switchTab(i) {
-      document.querySelectorAll('.tab').forEach((t, idx) => t.classList.toggle('active', idx === i));
-      document.querySelectorAll('.section').forEach((s, idx) => s.classList.toggle('active', idx === i));
-      if (i === 3) fetchLeaderboard();
+      console.log('Switching to tab:', i);
+      const tabs = document.querySelectorAll('.tab');
+      const sections = document.querySelectorAll('.section');
+      if (tabs.length === 0 || sections.length === 0) return;
+      tabs.forEach((t, idx) => t.classList.toggle('active', idx === i));
+      sections.forEach((s, idx) => s.classList.toggle('active', idx === i));
+      if (i === 3) fetchLeaderboard().catch(e => console.error('Leaderboard error:', e));
     }
 
     async function fetchLeaderboard() {
       try {
         const res = await fetch('/api/leaderboard');
         const data = await res.json();
-        document.getElementById('leaderboard-rows').innerHTML = (data.leaderboard || []).map((p, i) => \`
+        document.getElementById('leaderboard-rows').innerHTML = (data.leaderboard || []).map((p, i) => `
           <div class='leader-row'>
-            <div>#\${i+1}</div>
-            <div style="color:var(--cyan)">\${p.name}</div>
-            <div>\${p.chatXp}</div>
-            <div>\${p.tradeScore}</div>
-            <strong>\${p.totalScore}</strong>
+            <div>#${i+1}</div>
+            <div style="color:var(--cyan)">${p.name}</div>
+            <div>${p.chatXp}</div>
+            <div>${p.tradeScore}</div>
+            <strong>${p.totalScore}</strong>
           </div>
-        \`).join('');
+        `).join('');
       } catch(e){}
     }
 
     async function updateTicker() {
-      const res = await (await fetch('/api/ticker')).json();
-      if (res?.xrp_price) {
-        state.xrpPrice = res.xrp_price;
-        document.getElementById('fuse-token-rate').textContent = state.xrpPrice.toFixed(4) + ' USD';
+      try {
+        console.log('Fetching price...');
+        const res = await (await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd')).json();
+        if (res?.ripple?.usd) {
+          state.xrpPrice = res.ripple.usd;
+          const rateEl = document.getElementById('fuse-token-rate');
+          if (rateEl) rateEl.textContent = state.xrpPrice.toFixed(4) + ' USD';
+          calculateFusePrice();
+        }
+      } catch (e) {
+        console.warn('Ticker fetch failed, using fallback.', e);
+        state.xrpPrice = 0.55;
+        const rateEl = document.getElementById('fuse-token-rate');
+        if (rateEl) rateEl.textContent = '0.5500 USD';
+        calculateFusePrice();
       }
     }
 
     function calculateFusePrice() {
-      const el = document.getElementById('fuse-token-amount');
-      if (state.fuseToken === 'RLUSD') el.textContent = '50 RLUSD';
-      else if (state.xrpPrice) el.textContent = (50 / state.xrpPrice).toFixed(2) + ' XRP';
+      const el = document.getElementById('fuse-payment-status');
+      if (!el) return;
+      if (state.fuseToken === 'RLUSD') {
+        el.textContent = '50.00 RLUSD';
+      } else if (state.xrpPrice) {
+        el.textContent = (50 / state.xrpPrice).toFixed(2) + ' XRP';
+      } else {
+        el.textContent = 'Awaiting';
+      }
     }
 
     function openModal(id) { document.getElementById(id).style.display = 'block'; }
@@ -604,10 +625,10 @@
     function init() {
       const track = document.getElementById('warning-ticker-track');
       const msgs = ['XRP-7 VOLATILE ENERGY: ACTIVE', 'MUTATED STRAIN DETECTED', 'NEURAL LINK ESTABLISHED', 'BERT ENGINE CRITICAL', 'DROP FLOW SECURED', 'FUSION ENGINE CHARGED', 'XRPL ROOT SEQUENCE STABLE'];
-      track.innerHTML = msgs.concat(msgs).map(m => \`<span class="ticker-item">\${m}</span>\`).join(' " ');
+      track.innerHTML = msgs.concat(msgs).map(m => `<span class="ticker-item">${m}</span>`).join(' " ');
       loadBroOfDay();
       updateTicker();
-      setInterval(updateTicker, 15000);
+      setInterval(updateTicker, 60000);
       document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') startChatStream(); });
     }
 
