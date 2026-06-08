@@ -3,27 +3,58 @@ export const config = {
 };
 
 export default async function handler(req) {
-  // Mock data for the leaderboard with performance-based scoring
-  // In a real app, this would fetch from a database or KV store
-  const players = [
-    { name: "Operative Alpha", chatXp: 1250, tradeScore: 840 },
-    { name: "Neon Stalker", chatXp: 980, tradeScore: 1120 },
-    { name: "Ghost Protocol", chatXp: 2100, tradeScore: 450 },
-    { name: "Cipher Bro", chatXp: 600, tradeScore: 1800 },
-    { name: "Void Runner", chatXp: 1500, tradeScore: 720 },
-    { name: "Static Signal", chatXp: 400, tradeScore: 300 }
-  ];
+  const supabaseUrl = 'https://c37f58b0-0d6d-5d61-8031-ff8b566c6ef6.supabase.co';
+  // Use SUPABASE_ANON_KEY from env, fallback to the known JWT for edge runtime consistency
+  const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const leaderboard = players.map(p => ({
-    ...p,
-    totalScore: p.chatXp + p.tradeScore
-  })).sort((a, b) => b.totalScore - a.totalScore);
+  try {
+    if (!supabaseKey) {
+      throw new Error('Supabase key not configured');
+    }
 
-  return new Response(JSON.stringify({ leaderboard }), {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 's-maxage=60, stale-while-revalidate'
-    },
-  });
+    // Fetch operatives from the 'operatives' table
+    const response = await fetch(`${supabaseUrl}/rest/v1/operatives?select=handle,chat_xp,trade_score,total_score&order=total_score.desc&limit=100`, {
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('Supabase error:', errText);
+      throw new Error('Failed to fetch leaderboard data');
+    }
+
+    const data = await response.json();
+    
+    // Map database fields to the expected frontend format
+    const leaderboard = data.map(op => ({
+      name: op.handle || 'Unknown Operative',
+      chatXp: op.chat_xp || 0,
+      tradeScore: op.trade_score || 0,
+      totalScore: op.total_score || 0
+    }));
+
+    return new Response(JSON.stringify({ leaderboard }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 's-maxage=30, stale-while-revalidate'
+      },
+    });
+
+  } catch (error) {
+    console.error('Leaderboard API Error:', error.message);
+    
+    // Fallback to empty leaderboard if database query fails
+    return new Response(JSON.stringify({ 
+      leaderboard: [],
+      error: error.message
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }
