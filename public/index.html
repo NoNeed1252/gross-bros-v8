@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=320, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <title>GUARDIAN BROADCAST OS v8.9</title>
+  <link rel='preconnect' href='https://fonts.googleapis.com'>
+  <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+  <link href='https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap' rel='stylesheet'>
+  <style>
+    :root { --cyan: #00ffc8; --bg: #000; --panel: #06110f; --line: rgba(0,255,200,.18); }
+    * { box-sizing: border-box; }
+    html, body { 
+      margin: 0; padding: 0; background: var(--bg); color: var(--cyan);
+      font-family: 'Share Tech Mono', monospace; height: 100vh; width: 320px;
+      overflow: hidden; position: fixed;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* CRT Overlays */
+    body::before {
+      content: " ";
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 2px, 3px 100%; pointer-events: none; z-index: 100; opacity: 0.12;
+    }
+    .crt-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 2px, 3px 100%; pointer-events: none; z-index: 101; opacity: 0.08;
+    }
+
+    .shell { 
+      position: relative; z-index: 10; width: 100%; height: 100%;
+      background: #050505; box-shadow: 0 0 100px -20px var(--cyan);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .topbar { background: #0a0a0a; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; }
+    .brand { display: flex; align-items: center; gap: 8px; }
+    .dot { width: 10px; height: 10px; border-radius: 999px; background: #ff3b6b; box-shadow: 0 0 12px rgba(255,59,107,.85); animation: pulse 1.25s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+    .title { font-family: 'Orbitron', sans-serif; letter-spacing: .1em; text-transform: uppercase; font-size: 11px; }
+    .subtitle { font-size: 9px; color: rgba(0,255,200,.55); }
+    .wallet-btn, .btn { border: 1px solid rgba(0,255,200,.5); background: rgba(0,255,200,.06); color: var(--cyan); border-radius: 12px; padding: 8px 12px; cursor: pointer; font: inherit; transition: .18s ease; font-size: 10px; }
+    .ticker { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); overflow: hidden; white-space: nowrap; background: linear-gradient(90deg, rgba(0,255,200,.08), rgba(0,255,200,.03)); }
+    .ticker-track { display: inline-flex; align-items: center; gap: 1rem; padding: .4rem .5rem; animation: ticker 25s linear infinite; will-change: transform; }
+    .ticker-item { color: rgba(0,255,200,.9); font-size: 10px; white-space: nowrap; font-weight: bold; text-transform: uppercase; }
+    @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .tabs { display: flex; overflow-x: auto; border-bottom: 1px solid var(--line); background: #0b0b0b; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab { flex: 1 0 80px; padding: 12px 8px; text-align: center; cursor: pointer; border-right: 1px solid rgba(0,255,200,.06); user-select: none; transition: .18s ease; font-size: 10px; }
+    .tab.active { color: var(--cyan); background: linear-gradient(180deg, rgba(0,255,200,.14), rgba(0,255,200,.03)); box-shadow: inset 0 -1px 0 rgba(0,255,200,.35); }
+    .content { flex: 1; overflow-y: auto; padding: 12px; background: #000; -webkit-overflow-scrolling: touch; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .panel { background: linear-gradient(180deg, rgba(7,18,17,.95), rgba(2,8,8,.95)); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
+    .nft-art { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 12px; border: 1px solid rgba(0,255,200,.22); background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .nft-art img { width: 100%; height: 100%; object-fit: cover; opacity: .95; }
+    .chat-log { height: 200px; overflow-y: auto; border: 1px solid rgba(0,255,200,.12); border-radius: 16px; background: rgba(0,0,0,.3); padding: 10px; display: flex; flex-direction: column; gap: 8px; font-size: 11px; }
+    .chat-terminal-actions { display: grid; gap: 8px; margin-top: 12px; }
+    input { width: 100%; padding: 10px; border-radius: 12px; border: 1px solid rgba(0,255,200,.22); background: rgba(0,0,0,.5); color: #fff; font-size: 11px; outline: none; }
+    .held-nft-panel { border: 1px solid rgba(0, 255, 200, 0.35); border-radius: 16px; overflow: hidden; margin-bottom: 12px; }
+    .held-nft-image-wrapper { width: 100px; height: 100px; margin: 0 auto; }
+    .held-nft-image-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+    .legal-footer { padding: 12px; border-top: 1px solid var(--line); background: #0a0a0a; display: flex; justify-content: center; gap: 16px; }
+    .legal-link { font-size: 9px; color: rgba(0,255,200,0.45); text-transform: uppercase; }
+    #qr-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; }
+    .qr-container { background: #fff; padding: 10px; border-radius: 8px; }
+    .qr-container img { max-width: 200px; }
+    .social-card { display: flex; align-items: center; justify-content: space-between; padding: 12px; border: 1px solid rgba(0,255,200,0.12); border-radius: 12px; background: rgba(0,0,0,0.35); margin-bottom: 8px; }
+    .social-card .label { font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--cyan); }
+  </style>
+</head>
+<body>
+  <div class="crt-overlay"></div>
+  <div id="qr-overlay" onclick="this.style.display='none'">
+    <div class="qr-container"><img id="qr-image" src="" alt="Scan"></div>
+    <p style="margin-top: 15px; font-family: Orbitron; font-size: 10px;">SCAN TO SYNC</p>
+  </div>
+  <div class='shell'>
+    <header class='topbar'>
+      <div class='brand'><div class='dot'></div><div><div class='title'>GUARDIAN OS v8.9</div></div></div>
+      <button id='wallet-btn' class='wallet-btn' onclick="connectXaman()">CONNECT</button>
+    </header>
+    <div class='ticker'><div id='warning-ticker-track' class='ticker-track'></div></div>
+    <nav class='tabs'>
+      <div class='tab active' onclick="switchTab(0)">CONSOLE</div>
+      <div class='tab' onclick="switchTab(1)">STORY</div>
+      <div class='tab' onclick="switchTab(2)">FUSION</div>
+      <div class='tab' onclick="switchTab(3)">STATS</div>
+      <div class='tab' onclick="switchTab(4)">SOCIAL</div>
+    </nav>
+    <main class='content'>
+      <section id='section-0' class='section active'>
+        <div class='panel'>
+          <div class='nft-art'><img id='bro-of-day-image' src=''></div>
+          <p id='bro-of-day-description' style='font-size:11px; line-height:1.4; margin-top:10px;'>Loading signal...</p>
+          <div id='bro-of-day-status' class='muted' style='font-size:9px;'>Initializing...</div>
+        </div>
+      </section>
+      <section id='section-1' class='section'><div class='panel' id='live-transmissions'></div></section>
+      <section id='section-2' class='section'>
+        <div class='panel'>
+          <div id='held-nft-display' class='held-nft-panel'>
+            <div id="connected-nft-display" style="display:none; text-align:center;">
+              <div class="held-nft-image-wrapper"><img id="connected-nft-image" src=""></div>
+              <div id="connected-nft-name" style="font-size:12px; margin-top:5px;"></div>
+            </div>
+            <div id="held-nft-empty" style="text-align:center; padding:20px; font-size:10px; opacity:0.5;">GUEST ACCESS</div>
+          </div>
+          <div id='chat-log' class='chat-log'></div>
+          <div class='chat-terminal-actions'>
+            <input id='chat-input' placeholder='Command...'>
+            <button class='btn' onclick="startChatStream()">SEND</button>
+          </div>
+        </div>
+      </section>
+      <section id='section-3' class='section'><div class='panel' id='leaderboard-rows'>Loading...</div></section>
+      <section id='section-4' class='section'>
+        <a href='https://x.com/thegrossbros' target='_blank' class='social-card'><div><div class='label'>X-SECURE</div></div><div class='btn'>OPEN</div></a>
+        <a href='https://discord.gg/fcZYk7UcB' target='_blank' class='social-card'><div><div class='label'>DISCORD</div></div><div class='btn'>JOIN</div></a>
+      </section>
+    </main>
+    <footer class="legal-footer">
+      <a href="/terms" class="legal-link">TERMS</a>
+      <a href="/privacy" class="legal-link">PRIVACY</a>
+    </footer>
+  </div>
+  <script>
+    const CONFIG = { ISSUER: "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY", GATEWAY: "https://ipfs.io/ipfs/" };
+    const state = { wallet: "", chat: [], xrpPrice: 0, transmissions: [] };
+    async function safeFetch(u, o={}) { try { const r=await fetch(u,o); if(!r.ok) return null; const ct=r.headers.get('content-type'); if(!ct||!ct.includes('json')) return null; return await r.json(); } catch(e){return null;} }
+    function xrplUriToHttp(uri) { 
+      let u = String(uri||'').trim();
+      if (/^[0-9a-fA-F]+$/.test(u)) { try { u = new TextDecoder().decode(new Uint8Array(u.match(/.{1,2}/g).map(byte => parseInt(byte, 16)))); } catch(e){} }
+      if (u.startsWith('ipfs://')) return CONFIG.GATEWAY + u.slice(7);
+      return u;
+    }
+    async function loadBroOfDay() {
+      const d=document.getElementById("bro-of-day-status"); if(d) d.textContent="Crawl...";
+      const r = await safeFetch("/api/nft?issuer="+CONFIG.ISSUER+"&taxon=1&list=nfts");
+      const n = r?.nfts || [];
+      if (n.length) {
+        const s = n[Math.floor(Date.now()/86400000) % n.length];
+        const m = await safeFetch(xrplUriToHttp(s.uri||s.URI));
+        if (m) {
+          const img=document.getElementById("bro-of-day-image"); if(img) img.src = xrplUriToHttp(m.image);
+          const desc=document.getElementById("bro-of-day-description"); if(desc) desc.textContent = m.description || m.lore || "";
+          if(d) d.textContent = "Active: " + (m.name||"BRO");
+        }
+      }
+    }
+    async function updateTicker() {
+      const d = await safeFetch('/api/ticker');
+      if (d?.xrp_price) state.xrpPrice = d.xrp_price;
+      const t = await safeFetch('/api/transmissions');
+      if (t?.transmissions && t.transmissions.length > 0) {
+        state.transmissions = t.transmissions;
+        const msg = t.transmissions[Math.floor(Date.now()/43200000)%t.transmissions.length].transmission_text;
+        const track=document.getElementById('warning-ticker-track'); if(track) track.innerHTML = Array(5).fill(\`<span class="ticker-item">\${msg}</span>\`).join(' // ');
+        const trans=document.getElementById('live-transmissions'); if(trans) trans.innerHTML = \`<p style="font-size:12px; color:#fff;">\${msg}</p>\`;
+      }
+    }
+    async function connectXaman() {
+      const b=document.getElementById('wallet-btn'); b.textContent="...";
+      const p = await safeFetch('/api/xaman?action=create-payload', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({txjson:{TransactionType:'SignIn'}})});
+      if (!p) return b.textContent="RETRY";
+      if (p.refs?.qr_png) { document.getElementById('qr-image').src=p.refs.qr_png; document.getElementById('qr-overlay').style.display='flex'; }
+      if (p.next?.app_deep_link && /iPhone|Android/i.test(navigator.userAgent)) window.open(p.next.app_deep_link, '_blank');
+      const iv = setInterval(async () => {
+        const s = await safeFetch('/api/xaman?action=check-payload&uuid='+p.uuid);
+        if (s?.signed) { clearInterval(iv); document.getElementById('qr-overlay').style.display='none'; state.wallet=s.account; b.textContent="LINKED"; fetchUserNfts(s.account); }
+      }, 3000);
+    }
+    async function fetchUserNfts(a) {
+      const r = await safeFetch("/api/nft?owner="+a+"&issuer="+CONFIG.ISSUER+"&taxon=1&list=nfts");
+      if (r?.nfts?.length) {
+        const m = await safeFetch(xrplUriToHttp(r.nfts[0].uri));
+        if (m) {
+          document.getElementById('held-nft-empty').style.display='none';
+          document.getElementById('connected-nft-display').style.display='block';
+          document.getElementById('connected-nft-image').src=xrplUriToHttp(m.image);
+          document.getElementById('connected-nft-name').textContent=m.name;
+        }
+      }
+    }
+    async function startChatStream() {
+      const i=document.getElementById('chat-input'), t=i.value.trim(); if(!t)return; i.value='';
+      const l=document.getElementById('chat-log'), b=document.createElement('div'); b.textContent="Operative: "+t; l.appendChild(b);
+      const s=document.createElement('div'); s.textContent="System: ..."; l.appendChild(s);
+      const r = await fetch('/api/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({messages:[{role:'user', content:t}]})});
+      if (!r.ok) return s.textContent="System: Error";
+      const rd=r.body.getReader(), dc=new TextDecoder(); let ft='';
+      while(true) {
+        const {done, value} = await rd.read(); if(done) break;
+        dc.decode(value).split('\\n').forEach(line => {
+          if (line.startsWith('data: ')) { try { const j=JSON.parse(line.slice(6)); if(j.token) { ft+=j.token; s.textContent="System: "+ft; l.scrollTop=l.scrollHeight; } } catch(e){} }
+        });
+      }
+    }
+    function switchTab(i) {
+      document.querySelectorAll('.tab').forEach((t, idx) => t.classList.toggle('active', i===idx));
+      document.querySelectorAll('.section').forEach((s, idx) => s.classList.toggle('active', i===idx));
+      if (i===3) fetchLeaderboard();
+    }
+    async function fetchLeaderboard() {
+      const d = await safeFetch('/api/leaderboard');
+      if (d?.leaderboard) document.getElementById('leaderboard-rows').innerHTML = d.leaderboard.map(p => \`<div style="font-size:10px; margin-bottom:5px;">\${p.name}: \${p.totalScore}</div>\`).join('');
+    }
+    window.onload = () => { loadBroOfDay(); updateTicker(); setInterval(updateTicker, 30000); };
+  </script>
+</body>
+</html>
