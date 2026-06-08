@@ -3,7 +3,7 @@
 <head>
   <meta charset='UTF-8'>
   <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-  <title>GUARDIAN BROADCAST OS v8.8 BETA</title>
+  <title>GUARDIAN BROADCAST OS v8.9 BETA</title>
   <link rel='preconnect' href='https://fonts.googleapis.com'>
   <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
   <link href='https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap' rel='stylesheet'>
@@ -69,7 +69,7 @@
     }
     .ticker-track {
       display: inline-flex; align-items: center; gap: 1.2rem; padding: .65rem 1rem;
-      animation: ticker 22s linear infinite; will-change: transform;
+      animation: ticker 20s linear infinite; will-change: transform;
     }
     .ticker-item { color: rgba(0,255,200,.9); font-size: 12px; white-space: nowrap; }
     @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
@@ -291,7 +291,7 @@ letter-spacing: 1px;
       <div class='brand'>
         <div class='dot'></div>
         <div>
-          <div class='title'>GUARDIAN BROADCAST OS v8.8 BETA</div>
+          <div class='title'>GUARDIAN BROADCAST OS v8.9 BETA</div>
           <div class='subtitle'>Neural CRT relay // terminal interface</div>
         </div>
       </div>
@@ -393,10 +393,22 @@ letter-spacing: 1px;
         </div>
       </section>
 
+      
       <section id='section-3' class='section'>
         <div class='panel'>
           <h2 style='font-family:Orbitron,sans-serif;'>LEADERBOARD</h2>
-          <div class='leaderboard'><div class='leader-row'><div>#1</div><div>Operative Alpha</div><div>1024</div></div></div>
+          <div class='leaderboard' id='leaderboard-container'>
+            <div class='leader-row muted' style='border-bottom: 1px solid var(--cyan); padding-bottom: 10px; font-weight: bold;'>
+              <div>RANK</div>
+              <div>HANDLE</div>
+              <div>CHAT XP</div>
+              <div>TRADE SCORE</div>
+              <div>TOTAL</div>
+            </div>
+            <div id='leaderboard-rows'>
+              <div class='leader-row'><div>--</div><div>Loading data...</div><div>--</div><div>--</div><div>--</div></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -432,6 +444,23 @@ letter-spacing: 1px;
       GATEWAY: "https://ipfs.io/ipfs/"
     };
     
+    
+    async function safeFetch(url, options = {}) {
+      try {
+        const res = await fetch(url, options);
+        if (!res.ok) return null;
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          console.warn('safeFetch: Failed to parse JSON, returning null', url);
+          return null;
+        }
+      } catch (e) {
+        console.error('SafeFetch Error:', e);
+        return null;
+      }
+   }
     const state = { 
       connected: false, 
       wallet: "", 
@@ -501,36 +530,24 @@ letter-spacing: 1px;
       if (el) el.textContent = message;
     }
 
-    
     async function fetchCollectionNfts(issuer, taxon = 1) {
       try {
+        
         const response = await fetch(`/api/nft?issuer=${issuer}&taxon=${taxon}&list=nfts`);
         const result = await response.json();
-        return result?.nfts || [];
+        const nfts = result?.nfts || [];
+        
+        return nfts.map(n => ({
+          nftokenID: n.nftokenID,
+          URI: n.uri
+        }));
       } catch (e) {
         console.error('Bithomp crawl error:', e);
         return [];
       }
     }
 
-    
-    async function safeFetch(url, options = {}) {
-      try {
-        const res = await fetch(url, options);
-        if (!res.ok) return null;
-        const text = await res.text();
-        try {
-          return JSON.parse(text);
-        } catch (e) {
-          console.warn('safeFetch: Failed to parse JSON, returning null', url);
-          return null;
-        }
-      } catch (e) {
-        console.error('SafeFetch Error:', e);
-        return null;
-      }
-    }
-   async function loadBroOfDay() {
+    async function loadBroOfDay() {
       const imgEl = document.getElementById("bro-of-day-image");
       const descEl = document.getElementById("bro-of-day-description");
       
@@ -562,8 +579,8 @@ letter-spacing: 1px;
         console.error("loadBroOfDay error:", e);
         setBroOfDayStatus("Signal lost: " + e.message);
       }
+    }
 
-   }
     function calculateFusePrice() {
       const amountEl = document.getElementById("fuse-token-amount");
       if (state.fuseToken === 'RLUSD') {
@@ -577,9 +594,8 @@ letter-spacing: 1px;
 
     async function updateTicker() {
       try {
-        const res = await fetch('/api/ticker');
-        const data = await res.json();
-        if (data.xrp_price) {
+        const data = await safeFetch('/api/ticker');
+        if (data && data.xrp_price) {
           state.xrpPrice = data.xrp_price;
           document.getElementById('fuse-token-rate').textContent = state.xrpPrice.toFixed(4) + ' USD';
           calculateFusePrice();
@@ -590,7 +606,7 @@ letter-spacing: 1px;
     function toggleFuseUnlock() {
       state.fuseUnlocked = !state.fuseUnlocked;
       const badge = document.getElementById('fuse-lock-badge');
-      badge.textContent = state.fuseUnlocked ? "ACTIVE" : "ENCRYPTED";
+      badge.textContent = state.fuseUnlocked ? 'ACTIVE' : 'ENCRYPTED';
       badge.style.borderColor = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
       badge.style.color = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
     }
@@ -600,12 +616,12 @@ letter-spacing: 1px;
       btn.disabled = true;
       btn.textContent = 'CONNECTING...';
       try {
-        const res = await fetch('/api/xaman?action=create-payload', {
+        const payload = await safeFetch('/api/xaman?action=create-payload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ txjson: { TransactionType: 'SignIn' } })
         });
-        const payload = await res.json();
+        if (!payload) throw new Error("Payload creation failed");
         
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         if (!isMobile && payload?.refs?.qr_png) {
@@ -626,8 +642,8 @@ letter-spacing: 1px;
             btn.textContent = 'CONNECT XAMAN';
             return;
           }
-          const check = await fetch('/api/xaman?action=check-payload&uuid=' + encodeURIComponent(uuid));
-          const status = await check.json();
+          const status = await safeFetch('/api/xaman?action=check-payload&uuid=' + encodeURIComponent(uuid));
+          if (!status) return;
           if ((status.meta && status.meta.signed) || status.signed) {
             clearInterval(timer);
             document.getElementById('qr-overlay').style.display = 'none';
@@ -757,10 +773,8 @@ letter-spacing: 1px;
         });
 
         if (!res.ok) {
-          const errData = await res.json();
-          contentEl.style.color = '#ff3b6b';
-          contentEl.textContent = 'ERROR: ' + (errData.details || errData.error || 'SIGNAL LOST');
-          return;
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'SIGNAL LOST');
         }
 
         const reader = res.body.getReader();
@@ -788,8 +802,7 @@ letter-spacing: 1px;
         }
         state.chat.push({ role: 'assistant', content: fullText });
       } catch (e) {
-        contentEl.style.color = '#ff3b6b';
-        contentEl.textContent = 'ERROR: SIGNAL LOST (' + e.message + ')';
+        contentEl.textContent = 'ERROR: ' + e.message;
       }
     }
 
@@ -807,11 +820,34 @@ letter-spacing: 1px;
     function switchTab(index) {
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
+      if (index === 3) fetchLeaderboard();
+    }
+
+    
+    async function fetchLeaderboard() {
+      const rowsEl = document.getElementById('leaderboard-rows');
+      try {
+        const res = await fetch('/api/leaderboard');
+        const data = await res.json();
+        if (data.leaderboard) {
+          rowsEl.innerHTML = data.leaderboard.map((player, idx) => `
+            <div class='leader-row'>
+              <div>#${idx + 1}</div>
+              <div style="color: var(--cyan);">${player.name}</div>
+              <div>${player.chatXp}</div>
+              <div>${player.tradeScore}</div>
+              <strong style="color: #fff;">${player.totalScore}</strong>
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        rowsEl.innerHTML = "<div class='leader-row'><div style='grid-column: span 5;'>Error loading leaderboard.</div></div>";
+      }
     }
 
     function init() {
       const ticker = document.getElementById('warning-ticker-track');
-      const items = ['SIGNAL STABLE', 'NEUROLINK OPERATIONAL SOON', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
+      const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
       ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' " ');
       loadBroOfDay();
       updateTicker();
