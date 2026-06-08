@@ -21,7 +21,7 @@
       content: " ";
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03));
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
       background-size: 100% 2px, 3px 100%;
       pointer-events: none;
       z-index: 100;
@@ -29,7 +29,7 @@
     }
     .crt-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03));
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
       background-size: 100% 2px, 3px 100%;
       pointer-events: none;
       z-index: 101;
@@ -69,7 +69,7 @@
     }
     .ticker-track {
       display: inline-flex; align-items: center; gap: 1.2rem; padding: .65rem 1rem;
-      animation: ticker 35s linear infinite; will-change: transform;
+      animation: ticker 22s linear infinite; will-change: transform;
     }
     .ticker-item { color: rgba(0,255,200,.9); font-size: 12px; white-space: nowrap; }
     @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
@@ -273,106 +273,6 @@ margin-bottom: 6px;
 letter-spacing: 1px;
 }
 .social-card .desc { font-size: 12px; color: rgba(0,255,200,0.7); }
-
-/* MOBILE OPTIMIZATIONS */
-@media (max-width: 480px) {
-  .held-nft-info { display: none !important; }
-  .held-nft-panel { margin-bottom: 12px; border-width: 1px; }
-  .chat-log { height: 260px; }
-  .fuse-panel { gap: 10px; padding: 12px; }
-  .shell { border: none; margin: 0; min-height: 100vh; }
-}
-
-/* IPHONE SE (320px) CONSTRAINTS */
-@media (max-width: 330px) {
-  .held-nft-image-wrapper { width: 120px; margin: 0 auto; }
-  .chat-log { height: 200px; }
-  .title { font-size: 11px; letter-spacing: 0.1em; }
-}
-
-/* STORY STYLES */
-.story-transmission {
-  border-left: 2px solid var(--cyan);
-  padding: 16px;
-  margin-bottom: 16px;
-  background: rgba(0, 255, 200, 0.03);
-  position: relative;
-  overflow: hidden;
-}
-.story-transmission::before {
-  content: "LIVE_DATA";
-  position: absolute;
-  top: 4px; right: 8px;
-  font-size: 8px; opacity: 0.3;
-}
-.story-timestamp {
-  font-size: 10px; opacity: 0.5; margin-bottom: 8px;
-  display: block;
-}
-
-.weekly-specimen-card {
-  border: 1px solid rgba(0, 255, 200, 0.2);
-  border-radius: 24px;
-  background: rgba(0, 0, 0, 0.4);
-  overflow: hidden;
-  margin-top: 20px;
-}
-.weekly-specimen-img {
-  width: 100%;
-  aspect-ratio: 1/1;
-  object-fit: cover;
-  border-bottom: 1px solid rgba(0, 255, 200, 0.15);
-}
-.weekly-specimen-info {
-  padding: 20px;
-}
-
-/* LEGAL FOOTER STYLES */
-.legal-footer {
-  padding: 24px 18px;
-  background: #0a0a0a;
-  border-top: 1px solid var(--line);
-  text-align: center;
-}
-.legal-links {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-bottom: 12px;
-}
-.legal-link {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: rgba(0, 255, 200, 0.6);
-  text-decoration: none;
-}
-.legal-link:hover { color: var(--cyan); }
-.legal-copy {
-  font-size: 10px;
-  color: rgba(0, 255, 200, 0.3);
-  letter-spacing: 0.5px;
-}
-
-/* LEGAL MODALS */
-.legal-modal {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.95); z-index: 10000; display: none;
-  align-items: center; justify-content: center; padding: 20px;
-}
-.legal-modal-content {
-  background: var(--panel); border: 1px solid var(--line);
-  max-width: 600px; max-height: 80vh; width: 100%;
-  border-radius: 24px; padding: 24px; overflow-y: auto;
-  position: relative; box-shadow: 0 0 50px rgba(0,255,200,0.1);
-}
-.legal-modal-close {
-  position: absolute; top: 16px; right: 16px;
-  cursor: pointer; color: var(--cyan); font-size: 20px;
-}
-.legal-text { font-size: 13px; line-height: 1.6; color: #ddfff9; opacity: 0.9; }
-.legal-text h3 { font-family: Orbitron; font-size: 16px; color: var(--cyan); margin-top: 20px; }
-
 </style>
 </head>
 <body>
@@ -384,45 +284,6 @@ letter-spacing: 1px;
     </div>
     <p style="margin-top: 20px; font-family: Orbitron;">SCAN WITH XAMAN TO SYNC</p>
     <button class="btn" style="margin-top: 10px;">CANCEL</button>
-  </div>
-
-  <!-- Legal Modals -->
-  <div id="terms-modal" class="legal-modal">
-    <div class="legal-modal-content">
-      <span class="legal-modal-close" onclick="closeLegal()">&times;</span>
-      <div class="legal-text">
-        <h2 style="font-family: Orbitron; color: var(--cyan);">TERMS OF SERVICE</h2>
-        <p>Welcome to the Guardian Broadcast OS. By accessing this terminal, you agree to the following protocols:</p>
-        <h3>1. ACCESS PROTOCOLS</h3>
-        <p>Access is granted to authorized neural relays only. Users are responsible for maintaining the security of their connected Xaman wallets.</p>
-        <h3>2. FUSION LAB CONDUCT</h3>
-        <p>Directive transmissions in the Fusion Lab must remain within systemic parameters. Unauthorized decryption or malicious injections are prohibited.</p>
-        <h3>3. DIGITAL ASSETS</h3>
-        <p>The Galactic Gross Bros NFTs are digital artifacts residing on the XRP Ledger. All interactions are subject to the inherent rules of the XRPL.</p>
-        <div style="margin-top: 30px; border-top: 1px solid var(--line); padding-top: 10px; font-size: 10px; opacity: 0.5;">
-          END OF TRANSMISSION // VERSION 1.0.4
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="privacy-modal" class="legal-modal">
-    <div class="legal-modal-content">
-      <span class="legal-modal-close" onclick="closeLegal()">&times;</span>
-      <div class="legal-text">
-        <h2 style="font-family: Orbitron; color: var(--cyan);">PRIVACY POLICY</h2>
-        <p>Our neural encryption ensures your signal remains private.</p>
-        <h3>1. DATA HARVESTING</h3>
-        <p>We do not collect personal identifiers. Only public wallet addresses are processed for session synchronization and leaderboard indexing.</p>
-        <h3>2. NEURAL COOKIES</h3>
-        <p>Local terminal state is stored on your device to maintain session continuity between broadcast cycles.</p>
-        <h3>3. THIRD-PARTY RELAYS</h3>
-        <p>Metadata is served via IPFS and Bithomp relays. We do not control the encryption protocols of external secondary gateways.</p>
-        <div style="margin-top: 30px; border-top: 1px solid var(--line); padding-top: 10px; font-size: 10px; opacity: 0.5;">
-          BROADCAST SECURE // PRIVACY COMPLIANT
-        </div>
-      </div>
-    </div>
   </div>
 
   <div class='shell'>
@@ -479,20 +340,11 @@ letter-spacing: 1px;
 
       <section id='section-1' class='section'>
         <div class='panel'>
-          <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>NEURAL RELAY ARCHIVE</div>
-          <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE TRANSMISSIONS</h2>
-          <div id="story-container" style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
-            <div class="story-transmission">
-              <span class="story-timestamp">SYSTEM_BOOT :: ORIGIN</span>
-              <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger. When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence. Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers. The archive below is being reconstructed from fragmented neural relays...</p>
-            </div>
-            
-            <!-- Weekly Specimen Area -->
-            <div id="weekly-specimen-area"></div>
-
-            <div id="live-transmissions">
-              <p class="muted">Scanning for live signals...</p>
-            </div>
+          <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
+          <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
+          <div style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
+            <p>The Gross Bros were forged when a fracture opened in the ledger and turned the city into signal.</p>
+            <p>The archive below preserves the origin story only.</p>
           </div>
         </div>
       </section>
@@ -541,22 +393,10 @@ letter-spacing: 1px;
         </div>
       </section>
 
-      
       <section id='section-3' class='section'>
         <div class='panel'>
           <h2 style='font-family:Orbitron,sans-serif;'>LEADERBOARD</h2>
-          <div class='leaderboard' id='leaderboard-container'>
-            <div class='leader-row muted' style='border-bottom: 1px solid var(--cyan); padding-bottom: 10px; font-weight: bold;'>
-              <div>RANK</div>
-              <div>HANDLE</div>
-              <div>CHAT XP</div>
-              <div>TRADE SCORE</div>
-              <div>TOTAL</div>
-            </div>
-            <div id='leaderboard-rows'>
-              <div class='leader-row'><div>--</div><div>Loading data...</div><div>--</div><div>--</div><div>--</div></div>
-            </div>
-          </div>
+          <div class='leaderboard'><div class='leader-row'><div>#1</div><div>Operative Alpha</div><div>1024</div></div></div>
         </div>
       </section>
 
@@ -583,14 +423,6 @@ letter-spacing: 1px;
         </div>
       </section>
     </main>
-
-    <footer class="legal-footer">
-      <div class="legal-links">
-        <a href="javascript:void(0)" class="legal-link" onclick="openLegal('terms')">Terms</a>
-        <a href="javascript:void(0)" class="legal-link" onclick="openLegal('privacy')">Privacy</a>
-      </div>
-      <div class="legal-copy">&copy; 2026 Galactic Gross Bros // Broadcaster Unit 8.8</div>
-    </footer>
   </div>
 
   <script>
@@ -645,6 +477,11 @@ letter-spacing: 1px;
       return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 86400000);
     }
 
+    function normalizeTaxon(value) {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : null;
+    }
+
     function cleanLoreText(metadata) {
       const candidates = [metadata?.lore, metadata?.backstory, metadata?.story, metadata?.description];
       const raw = candidates.find((value) => typeof value === 'string' && value.trim()) || '';
@@ -666,7 +503,7 @@ letter-spacing: 1px;
 
     async function fetchCollectionNfts(issuer, taxon = 1) {
       try {
-        const response = await fetch(`/api/nft?issuer=${issuer}&taxon=${taxon}&list=nfts`);
+        const response = await fetch(\`/api/nft?issuer=\${issuer}&taxon=\${taxon}&list=nfts\`);
         const result = await response.json();
         return result?.nfts || [];
       } catch (e) {
@@ -679,22 +516,28 @@ letter-spacing: 1px;
       const imgEl = document.getElementById("bro-of-day-image");
       const descEl = document.getElementById("bro-of-day-description");
       try {
-        setBroOfDayStatus("Crawl in progress...");
+        setBroOfDayStatus("Scanning terminal signals...");
         const nfts = await fetchCollectionNfts(CONFIG.ISSUER);
         if (nfts.length > 0) {
           const seed = dailyRotationSeed();
           const selected = nfts[seed % nfts.length];
-          const metaUri = xrplUriToHttp(selected.uri);
+          const uri = selected.uri || selected.URI;
+          if (!uri) throw new Error("Metadata URI missing");
+          
+          const metaUri = xrplUriToHttp(uri);
           const metaRes = await fetch(metaUri);
           const meta = await metaRes.json();
-          if (imgEl) imgEl.src = xrplUriToHttp(meta.image);
+          
+          const imageUrl = xrplUriToHttp(meta.image || meta.image_url || meta.video);
+          if (imgEl) imgEl.src = imageUrl;
           if (descEl) descEl.textContent = cleanLoreText(meta);
-          setBroOfDayStatus("Signal synchronized.");
+          setBroOfDayStatus("Signal synchronized: " + (meta.name || "BRO"));
         } else {
-          setBroOfDayStatus("Signal lost: No NFTs found.");
+          setBroOfDayStatus("Signal lost: No data found in sector.");
         }
       } catch (e) {
-        setBroOfDayStatus("Signal lost: " + e.message);
+        console.error("Lore fetch error:", e);
+        setBroOfDayStatus("Signal lost: Connection timed out.");
       }
     }
 
@@ -719,36 +562,12 @@ letter-spacing: 1px;
           calculateFusePrice();
         }
       } catch (e) { console.error('Ticker error', e); }
-      await updateTickerTransmissions();
-    }
-    
-    async function updateTickerTransmissions() {
-      const track = document.getElementById('warning-ticker-track');
-      try {
-        const res = await fetch('/api/transmissions');
-        const data = await res.json();
-        const txs = data.transmissions || [];
-        if (txs.length > 0) {
-          // 12-hour rotation logic for exactly 3 active messages
-          const cycle = Math.floor(Date.now() / (12 * 60 * 60 * 1000));
-          const idx = cycle % txs.length;
-          
-          const getTx = (i) => txs[(i + txs.length) % txs.length].transmission_text;
-          const activeTxs = [getTx(idx), getTx(idx - 1), getTx(idx - 2)];
-          
-          track.innerHTML = activeTxs.map(text => `<span class="ticker-item">${text}</span>`).join(' <span style="opacity:0.3">//</span> ');
-          // Clone for loop
-          track.innerHTML += ' <span style="opacity:0.3">//</span> ' + track.innerHTML;
-        } else {
-          track.innerHTML = '<span class="ticker-item">SIGNAL STABLE</span>';
-        }
-      } catch (e) { console.error('Ticker transmission error', e); }
     }
 
     function toggleFuseUnlock() {
       state.fuseUnlocked = !state.fuseUnlocked;
       const badge = document.getElementById('fuse-lock-badge');
-      badge.textContent = state.fuseUnlocked ? 'ACTIVE' : 'ENCRYPTED';
+      badge.textContent = state.fuseUnlocked ? "ACTIVE" : "ENCRYPTED";
       badge.style.borderColor = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
       badge.style.color = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
     }
@@ -764,13 +583,16 @@ letter-spacing: 1px;
           body: JSON.stringify({ txjson: { TransactionType: 'SignIn' } })
         });
         const payload = await res.json();
+        
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         if (!isMobile && payload?.refs?.qr_png) {
           document.getElementById('qr-image').src = payload.refs.qr_png;
           document.getElementById('qr-overlay').style.display = 'flex';
         }
+
         const url = (isMobile && payload?.next?.app_deep_link) ? payload.next.app_deep_link : payload?.next?.always;
         if (isMobile && url) window.open(url, '_blank');
+        
         const uuid = payload?.uuid;
         let attempts = 0;
         const timer = setInterval(async () => {
@@ -805,27 +627,59 @@ letter-spacing: 1px;
     function setWalletUI(connected, address) {
       const btn = document.getElementById('wallet-btn');
       const status = document.getElementById('xaman-status');
+      const msg = document.getElementById('status-msg');
       if (connected) {
         btn.textContent = 'LINKED';
         btn.disabled = false;
         status.textContent = address.slice(0, 6) + '...' + address.slice(-4);
+        if (msg) {
+          // msg.textContent = "AUTHENTICATION COMPLETE";
+          // msg.style.color = "var(--cyan)";
+        }
       }
     }
 
     async function fetchUserNfts(address) {
+      const cacheKey = \`bithomp_user_nfts_\${address}\`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < 600000) { // 10 minutes cache for user NFTs
+            console.log("Using cached user Bithomp results");
+            state.userNfts = data;
+            renderNftSelection();
+            if (state.userNfts.length > 0) selectNft(0);
+            return;
+          }
+        } catch (e) {
+          localStorage.removeItem(cacheKey);
+        }
+      }
+
       try {
-        const response = await fetch(`/api/nft?owner=${address}&issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);
+        
+        const response = await fetch(\`/api/nft?owner=\${address}&issuer=\${CONFIG.ISSUER}&taxon=1&list=nfts\`);
         const result = await response.json();
         const nfts = result?.nfts || [];
+        
         state.userNfts = [];
         for (const n of nfts) {
            try {
              const metaUri = xrplUriToHttp(n.uri);
              const meta = await (await fetch(metaUri)).json();
-             state.userNfts.push({ name: meta.name || 'BRO #' + n.nftokenID.slice(-4), image: xrplUriToHttp(meta.image) });
+             state.userNfts.push({
+               name: meta.name || 'BRO #' + n.nftokenID.slice(-4),
+               image: xrplUriToHttp(meta.image)
+             });
            } catch(e){}
         }
+
         if (state.userNfts.length > 0) {
+          localStorage.setItem(cacheKey, JSON.stringify({
+            data: state.userNfts,
+            timestamp: Date.now()
+          }));
           renderNftSelection();
           selectNft(0);
         }
@@ -837,7 +691,9 @@ letter-spacing: 1px;
       if (!track) return;
       track.innerHTML = state.userNfts.map((nft, index) => {
         const active = state.selectedNft?.name === nft.name;
-        return `<div class="nft-select-card ${active ? 'active' : ''}" onclick="selectNft(${index})"><img src="${nft.image}" alt=""></div>`;
+        return \`<div class="nft-select-card \${active ? 'active' : ''}" onclick="selectNft(\${index})">
+          <img src="\${nft.image}" alt="">
+        </div>\`;
       }).join('');
     }
 
@@ -859,22 +715,36 @@ letter-spacing: 1px;
       input.value = '';
       state.chat.push({ role: 'user', content: text });
       renderChatLog();
+
       const log = document.getElementById('chat-log');
       const bubble = document.createElement('div');
       bubble.className = 'bubble system';
       bubble.innerHTML = '<div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">SYSTEM</div><div class="msg-content">...</div>';
       log.appendChild(bubble);
       const contentEl = bubble.querySelector('.msg-content');
+
       try {
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: state.chat, operative: { name: 'Operative', walletAddress: state.wallet, traits: state.selectedNft ? [state.selectedNft.name] : [] } })
+          body: JSON.stringify({ 
+            messages: state.chat,
+            operative: { name: 'Operative', walletAddress: state.wallet, traits: state.selectedNft ? [state.selectedNft.name] : [] }
+          })
         });
-        if (!res.ok) throw new Error('SIGNAL LOST');
+
+        if (!res.ok) {
+          const errData = await res.json();
+          contentEl.style.color = '#ff3b6b';
+          contentEl.textContent = 'ERROR: ' + (errData.details || errData.error || 'SIGNAL LOST');
+          return;
+        }
+
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
         let fullText = '';
+        contentEl.textContent = '';
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -894,107 +764,38 @@ letter-spacing: 1px;
           }
         }
         state.chat.push({ role: 'assistant', content: fullText });
-      } catch (e) { contentEl.textContent = 'ERROR: ' + e.message; }
+      } catch (e) {
+        contentEl.style.color = '#ff3b6b';
+        contentEl.textContent = 'ERROR: SIGNAL LOST (' + e.message + ')';
+      }
     }
 
     function renderChatLog() {
       const log = document.getElementById('chat-log');
-      log.innerHTML = state.chat.map(e => `<div class="bubble ${e.role === 'user' ? 'user' : 'system'}"><div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>${e.content}</div>`).join('');
+      log.innerHTML = state.chat.map(e => \`
+        <div class="bubble \${e.role === 'user' ? 'user' : 'system'}">
+          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">\${e.role.toUpperCase()}</div>
+          \${e.content}
+        </div>
+      \`).join('');
       log.scrollTop = log.scrollHeight;
     }
 
     function switchTab(index) {
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
-      if (index === 1) fetchTransmissions();
-      if (index === 3) fetchLeaderboard();
-    }
-
-    async function fetchTransmissions() {
-      const liveEl = document.getElementById('live-transmissions');
-      const specimenEl = document.getElementById('weekly-specimen-area');
-      
-      // Fetch Specimens for the Weekly Story
-      try {
-        const sRes = await fetch('/api/specimens'); // Assuming this endpoint exists or proxying via generic query
-        const sData = await sRes.json();
-        const specimens = sData.specimens || [];
-        if (specimens.length > 0) {
-          // Weekly rotation: use weeks since epoch
-          const weekIndex = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
-          const activeSpecimen = specimens[weekIndex % specimens.length];
-          specimenEl.innerHTML = `
-            <div class="weekly-specimen-card">
-              <img src="${activeSpecimen.image_url}" class="weekly-specimen-img" alt="">
-              <div class="weekly-specimen-info">
-                <div class="muted" style="font-size: 10px; margin-bottom: 8px;">WEEKLY SPECIMEN RELAY // ${activeSpecimen.name}</div>
-                <p style="margin: 0; line-height: 1.6;">${activeSpecimen.backstory}</p>
-              </div>
-            </div>
-          `;
-        }
-      } catch (e) { console.error('Specimen fetch error', e); }
-
-      // Fetch Transmissions for the Decrypted Relay
-      try {
-        const res = await fetch('/api/transmissions');
-        const data = await res.json();
-        const txs = data.transmissions || [];
-        if (txs.length > 0) {
-          const cycle = Math.floor(Date.now() / (12 * 60 * 60 * 1000));
-          const activeTx = txs[cycle % txs.length];
-          liveEl.innerHTML = `
-            <div class="story-transmission" style="border-color: #ff3b6b; background: rgba(255,59,107,0.05); margin-top: 20px;">
-              <span class="story-timestamp" style="color: #ff3b6b;">ACTIVE RELAY :: DECRYPTED</span>
-              <p>${activeTx.transmission_text}</p>
-              <div class="muted" style="font-size: 9px; margin-top: 8px;">NEXT DECRYPTION CYCLE IN: ${getRotationCountdown()}</div>
-            </div>
-          `;
-        }
-      } catch (e) { liveEl.innerHTML = '<p class="muted">Error: Signal relay failure.</p>'; }
-    }
-    
-    function getRotationCountdown() {
-      const cycleMs = 12 * 60 * 60 * 1000;
-      const remaining = cycleMs - (Date.now() % cycleMs);
-      const hours = Math.floor(remaining / (60 * 60 * 1000));
-      const mins = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
-      return `${hours}H ${mins}M`;
-    }
-    
-    async function fetchLeaderboard() {
-      const rowsEl = document.getElementById('leaderboard-rows');
-      try {
-        const res = await fetch('/api/leaderboard');
-        const data = await res.json();
-        if (data.leaderboard) {
-          rowsEl.innerHTML = data.leaderboard.map((player, idx) => `
-            <div class='leader-row'>
-              <div>#${idx + 1}</div>
-              <div style="color: var(--cyan);">${player.name}</div>
-              <div>${player.chatXp}</div>
-              <div>${player.tradeScore}</div>
-              <strong style="color: #fff;">${player.totalScore}</strong>
-            </div>
-          `).join('');
-        }
-      } catch (e) { rowsEl.innerHTML = "<div class='leader-row'><div style='grid-column: span 5;'>Error loading leaderboard.</div></div>"; }
-    }
-
-    function openLegal(type) {
-      document.getElementById(type + '-modal').style.display = 'flex';
-    }
-    function closeLegal() {
-      document.querySelectorAll('.legal-modal').forEach(m => m.style.display = 'none');
     }
 
     function init() {
-      updateTickerTransmissions();
+      const ticker = document.getElementById('warning-ticker-track');
+      const items = ['SIGNAL STABLE', 'NEUROLINK OPERATIONAL SOON', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
+      ticker.innerHTML = items.concat(items).map(i => \`<span class="ticker-item">\${i}</span>\`).join(' " ');
       loadBroOfDay();
       updateTicker();
       setInterval(updateTicker, 15000);
       document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') startChatStream(); });
     }
+
     window.onload = () => { init(); };
   </script>
 </body>
