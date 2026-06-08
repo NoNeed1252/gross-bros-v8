@@ -891,7 +891,12 @@ letter-spacing: 1px;
         if (data.transmissions?.length) {
           const filtered = data.transmissions.filter(t => {
             const txt = t.transmission_text.toLowerCase();
-            return !txt.includes('warning') && !txt.includes('alert') && !txt.includes('failed mining');
+            const blacklist = [
+              'warning', 'alert', 'failed mining', 
+              'cosmic wreckage', 'mutated strain', 'now they roam', 
+              'interplanetary mining', 'ledger\'s digital essence'
+            ];
+            return !blacklist.some(term => txt.includes(term.toLowerCase()));
           });
           
           container.innerHTML = filtered.map(t => `
