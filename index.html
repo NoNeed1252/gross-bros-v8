@@ -69,7 +69,7 @@
     }
     .ticker-track {
       display: inline-flex; align-items: center; gap: 1.2rem; padding: .65rem 1rem;
-      animation: ticker 22s linear infinite; will-change: transform;
+      animation: ticker 35s linear infinite; will-change: transform;
     }
     .ticker-item { color: rgba(0,255,200,.9); font-size: 12px; white-space: nowrap; }
     @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
@@ -503,11 +503,6 @@ letter-spacing: 1px;
     function dailyRotationSeed() {
       const now = new Date();
       return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 86400000);
-    }
-
-    function normalizeTaxon(value) {
-      const numeric = Number(value);
-      return Number.isFinite(numeric) ? numeric : null;
     }
 
     function cleanLoreText(metadata) {
