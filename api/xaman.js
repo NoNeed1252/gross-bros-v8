@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
-// Environment variables
-const apiKey = process.env.NEXT_PUBLIC_XAMAN_API_KEY;
-const apiSecret = process.env.XAMAN_API_SECRET;
+// Environment variables - Support both Xaman and Xumm naming conventions
+const apiKey = process.env.NEXT_PUBLIC_XAMAN_API_KEY || process.env.XAMAN_API_KEY || process.env.XUMM_API_KEY;
+const apiSecret = process.env.XAMAN_API_SECRET || process.env.XUMM_API_SECRET;
 
 const XAMAN_API_BASE = 'https://xumm.app/api/v1/platform';
 
@@ -12,6 +12,11 @@ const XAMAN_API_BASE = 'https://xumm.app/api/v1/platform';
  */
 async function xamanFetch(endpoint, options = {}) {
   const url = `${XAMAN_API_BASE}${endpoint}`;
+  
+  if (!apiKey || !apiSecret) {
+    throw new Error('Xaman API configuration missing (API Key or Secret)');
+  }
+
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -23,8 +28,14 @@ async function xamanFetch(endpoint, options = {}) {
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error?.message || 'Xaman API error');
+    let errorMsg = 'Xaman API error';
+    try {
+      const errorData = await response.json();
+      errorMsg = errorData.error?.message || \`Xaman API Error: \${response.status}\`;
+    } catch (e) {
+      errorMsg = \`Xaman API HTTP \${response.status}\`;
+    }
+    throw new Error(errorMsg);
   }
 
   return response.json();
@@ -51,6 +62,7 @@ async function handleCreatePayload(req, res) {
     return res.status(200).json({
       uuid: result.uuid,
       next: result.next.always,
+      refs: result.refs, // Include full refs for QR fallback
       qrUrl: result.refs.qr_png,
     });
   } catch (error) {
@@ -68,7 +80,7 @@ async function handleCheckPayload(req, res, uuid) {
   }
 
   try {
-    const result = await xamanFetch(`/payload/${uuid}`);
+    const result = await xamanFetch(\`/payload/\${uuid}\`);
     const isSigned = result.meta.resolved && result.meta.signed;
     const address = result.response.account || null;
 
