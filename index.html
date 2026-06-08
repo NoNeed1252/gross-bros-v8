@@ -21,7 +21,7 @@
       content: " ";
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03));
       background-size: 100% 2px, 3px 100%;
       pointer-events: none;
       z-index: 100;
@@ -29,7 +29,7 @@
     }
     .crt-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03));
       background-size: 100% 2px, 3px 100%;
       pointer-events: none;
       z-index: 101;
@@ -516,22 +516,409 @@ letter-spacing: 1px;
     async function safeFetch(url, options = {}) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2500);
-      const safetyTimeout = setTimeout(() => {
-        document.body.classList.remove('loading-state');
-      }, 3000);
       try {
-        loadBroOfDay();
-        updateTicker();
+        const res = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (!res.ok) return null;
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          console.warn('safeFetch: Failed to parse JSON, returning null', url);
+          return null;
+        }
       } catch (e) {
-        console.error("Critical error during initialization:", e);
+        clearTimeout(timeoutId);
+        console.error('SafeFetch Error:', e);
+        return null;
+      }
+   }
+    const state = { 
+      connected: false, 
+      wallet: "", 
+      chat: [], 
+      fuseUnlocked: true, 
+      fuseToken: "XRP", 
+      selectedNft: null, 
+      userNfts: [], 
+      fuseTargetUsd: 50,
+      xrpPrice: 0
+    };
+
+    function hexToUtf8(hex) {
+      if (!hex || typeof hex !== 'string') return '';
+      try {
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < hex.length; i += 2) {
+          bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+        }
+        return new TextDecoder().decode(bytes);
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function xrplUriToHttp(uri) {
+      const value = String(uri || '').trim();
+      if (!value) return '';
+      if (/^[0-9a-fA-F]+$/.test(value)) {
+        return xrplUriToHttp(hexToUtf8(value));
+      }
+      if (value.startsWith('ipfs://')) {
+        return CONFIG.GATEWAY + value.slice('ipfs://'.length).replace(/^\/+/ , '');
+      }
+      if (value.startsWith('ar://')) {
+        return 'https://arweave.net/' + value.slice('ar://'.length).replace(/^\/+/ , '');
+      }
+      return value;
+    }
+
+    function dailyRotationSeed() {
+      const now = new Date();
+      return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 86400000);
+    }
+
+    function cleanLoreText(metadata) {
+      const candidates = [metadata?.lore, metadata?.backstory, metadata?.story, metadata?.description];
+      const raw = candidates.find((value) => typeof value === 'string' && value.trim()) || '';
+      const lines = String(raw)
+        .replace(/\r\n/g, '\n')
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .filter((line) => !/^(traits?|attributes?|serial(?: number)?|background(?: type)?|token(?: id)?|issuer|taxon|edition|rarity|owner|contract)\b[:\-]*/i.test(line))
+        .filter((line) => !/^#\s*\d+/.test(line));
+      const text = lines.join(' ').replace(/\s{2,}/g, ' ').trim();
+      return text || 'Live NFT lore is loading from the full BRO collection.';
+    }
+
+    function setBroOfDayStatus(message) {
+      const el = document.getElementById("bro-of-day-status");
+      if (el) el.textContent = message;
+    }
+
+    async function loadBroOfDay() {
+      const imgEl = document.getElementById("bro-of-day-image");
+      const descEl = document.getElementById("bro-of-day-description");
+      try {
+        setBroOfDayStatus("Crawl in progress...");
+        const res = await fetch(`/api/nft?issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);
+        if (!res.ok) throw new Error("API response error");
+        const result = await res.json();
+        const nfts = result?.nfts || [];
+        if (nfts.length === 0) throw new Error("No NFTs found.");
+        
+        const seed = dailyRotationSeed();
+        let meta = null;
+        let attempts = 0;
+        
+        while (!meta && attempts < Math.min(nfts.length, 10)) {
+          const selected = nfts[(seed + attempts) % nfts.length];
+          const uri = selected.uri;
+          if (uri) {
+            const metaUri = xrplUriToHttp(uri);
+            meta = await safeFetch(metaUri);
+          }
+          attempts++;
+        }
+        
+        if (!meta) throw new Error("Metadata unreachable.");
+        
+        if (imgEl) imgEl.src = xrplUriToHttp(meta.image || meta.image_url);
+        if (descEl) descEl.textContent = cleanLoreText(meta);
+        setBroOfDayStatus("Signal synchronized.");
+      } catch (e) {
+        console.error("loadBroOfDay error:", e);
+        setBroOfDayStatus("Signal lost. Defaulting to standard protocols.");
+        if (descEl && (!descEl.textContent || descEl.textContent.includes("loading"))) {
+          descEl.textContent = "The archive is currently undergoing maintenance. Signal integrity will be restored shortly.";
+        }
       } finally {
-        clearTimeout(safetyTimeout);
+        document.body.classList.remove('loading-state');
+      }
+    }
+
+    function calculateFusePrice() {
+      const amountEl = document.getElementById("fuse-token-amount");
+      if (state.fuseToken === 'RLUSD') {
+        amountEl.textContent = state.fuseTargetUsd + ' RLUSD';
+      } else if (state.xrpPrice > 0) {
+        amountEl.textContent = (state.fuseTargetUsd / state.xrpPrice).toFixed(2) + ' XRP';
+      } else {
+        amountEl.textContent = '--';
+      }
+    }
+
+    async function updateTicker() {
+      try {
+        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd');
+        const data = await res.json();
+        if (data?.ripple?.usd) {
+          state.xrpPrice = data.ripple.usd;
+          document.getElementById('fuse-token-rate').textContent = state.xrpPrice.toFixed(4) + ' USD';
+          calculateFusePrice();
+        }
+      } catch (e) { 
+        console.error('Ticker error', e); 
+        const res = await safeFetch('/api/ticker');
+        if (res?.xrp_price) {
+          state.xrpPrice = res.xrp_price;
+          document.getElementById('fuse-token-rate').textContent = state.xrpPrice.toFixed(4) + ' USD';
+          calculateFusePrice();
+        }
+      }
+    }
+
+    function toggleFuseUnlock() {
+      state.fuseUnlocked = !state.fuseUnlocked;
+      const badge = document.getElementById('fuse-lock-badge');
+      badge.textContent = state.fuseUnlocked ? 'ACTIVE' : 'ENCRYPTED';
+      badge.style.borderColor = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
+      badge.style.color = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
+    }
+
+    async function connectXaman() {
+      const btn = document.getElementById('wallet-btn');
+      btn.disabled = true;
+      btn.textContent = 'CONNECTING...';
+      try {
+        const payload = await safeFetch('/api/xaman?action=create-payload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ txjson: { TransactionType: 'SignIn' } })
+        });
+        if (!payload) throw new Error("Payload creation failed");
+        
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (!isMobile && payload?.refs?.qr_png) {
+          document.getElementById('qr-image').src = payload.refs.qr_png;
+          document.getElementById('qr-overlay').style.display = 'flex';
+        }
+
+        const url = (isMobile && payload?.next?.app_deep_link) ? payload.next.app_deep_link : payload?.next?.always;
+        if (isMobile && url) window.open(url, '_blank');
+        
+        const uuid = payload?.uuid;
+        let attempts = 0;
+        const timer = setInterval(async () => {
+          attempts += 1;
+          if (attempts > 60) {
+            clearInterval(timer);
+            btn.disabled = false;
+            btn.textContent = 'CONNECT XAMAN';
+            return;
+          }
+          const status = await safeFetch('/api/xaman?action=check-payload&uuid=' + encodeURIComponent(uuid));
+          if (!status) return;
+          if ((status.meta && status.meta.signed) || status.signed) {
+            clearInterval(timer);
+            document.getElementById('qr-overlay').style.display = 'none';
+            const address = status?.response?.account || status?.account || status?.resolved?.account || '';
+            if (address) {
+              state.connected = true;
+              state.wallet = address;
+              setWalletUI(true, address);
+              fetchUserNfts(address);
+            }
+          }
+        }, 2500);
+      } catch (error) {
+        console.error(error);
+        btn.disabled = false;
+        btn.textContent = 'CONNECT XAMAN';
+      }
+    }
+
+    function setWalletUI(connected, address) {
+      const btn = document.getElementById('wallet-btn');
+      const status = document.getElementById('xaman-status');
+      if (connected) {
+        btn.textContent = 'LINKED';
+        btn.disabled = false;
+        status.textContent = address.slice(0, 6) + '...' + address.slice(-4);
+      }
+    }
+
+    async function fetchUserNfts(address) {
+      try {
+        const response = await fetch(`/api/nft?owner=${address}&issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);
+        const result = await response.json();
+        const nfts = result?.nfts || [];
+        
+        state.userNfts = [];
+        for (const n of nfts) {
+           try {
+             const metaUri = xrplUriToHttp(n.uri);
+             const meta = await (await fetch(metaUri)).json();
+             state.userNfts.push({
+               name: meta.name || 'BRO #' + n.nftokenID.slice(-4),
+               image: xrplUriToHttp(meta.image)
+             });
+           } catch(e){}
+        }
+
+        if (state.userNfts.length === 0) {
+          state.userNfts = MOCK_NFTS;
+        }
+        renderNftSelection();
+        selectNft(0);
+      } catch (e) { 
+        console.error("User NFT fetch error", e); 
+        state.userNfts = MOCK_NFTS;
+        renderNftSelection();
+        selectNft(0);
+      }
+    }
+
+    function renderNftSelection() {
+      const track = document.getElementById('nft-selection-track');
+      if (!track) return;
+      track.innerHTML = state.userNfts.map((nft, index) => {
+        const active = state.selectedNft?.name === nft.name;
+        return `<div class="nft-select-card ${active ? 'active' : ''}" onclick="selectNft(${index})">
+          <img src="${nft.image}" alt="">
+        </div>`;
+      }).join('');
+    }
+
+    function selectNft(index) {
+      const nft = state.userNfts[index];
+      if (!nft) return;
+      state.selectedNft = nft;
+      document.getElementById('held-nft-empty').style.display = 'none';
+      document.getElementById('connected-nft-display').style.display = 'flex';
+      document.getElementById('connected-nft-image').src = nft.image;
+      document.getElementById('connected-nft-name').textContent = nft.name;
+      renderNftSelection();
+    }
+
+    async function startChatStream() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      state.chat.push({ role: 'user', content: text });
+      renderChatLog();
+
+      const log = document.getElementById('chat-log');
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble system';
+      bubble.innerHTML = '<div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">SYSTEM</div><div class="msg-content">...</div>';
+      log.appendChild(bubble);
+      const contentEl = bubble.querySelector('.msg-content');
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            messages: state.chat,
+            operative: { name: 'Operative', walletAddress: state.wallet, traits: state.selectedNft ? [state.selectedNft.name] : [] }
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'SIGNAL LOST');
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+        contentEl.textContent = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const lines = decoder.decode(value).split('\n');
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const dataText = line.slice(6);
+            if (dataText === '[DONE]') break;
+            try {
+              const json = JSON.parse(dataText);
+              if (json.token) {
+                fullText += json.token;
+                contentEl.textContent = fullText;
+                log.scrollTop = log.scrollHeight;
+              }
+            } catch (e) {}
+          }
+        }
+        state.chat.push({ role: 'assistant', content: fullText });
+      } catch (e) {
+        contentEl.textContent = 'ERROR: ' + e.message;
+      }
+    }
+
+    function renderChatLog() {
+      const log = document.getElementById('chat-log');
+      log.innerHTML = state.chat.map(e => `
+        <div class="bubble ${e.role === 'user' ? 'user' : 'system'}">
+          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>
+          ${e.content}
+        </div>
+      `).join('');
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function switchTab(index) {
+      document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
+      document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
+      if (index === 3) fetchLeaderboard();
+    }
+
+    async function fetchLeaderboard() {
+      const rowsEl = document.getElementById('leaderboard-rows');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      try {
+        const res = await fetch('/api/leaderboard', { signal: controller.signal });
+        clearTimeout(timeoutId);
+        const data = await res.json();
+        if (data && data.leaderboard && data.leaderboard.length > 0) {
+          rowsEl.innerHTML = data.leaderboard.map((player, idx) => `
+            <div class='leader-row'>
+              <div>#${idx + 1}</div>
+              <div style="color: var(--cyan);">${player.name}</div>
+              <div>${player.chatXp}</div>
+              <div>${player.tradeScore}</div>
+              <strong style="color: #fff;">${player.totalScore}</strong>
+            </div>
+          `).join('');
+        } else {
+          rowsEl.innerHTML = "<div class='leader-row'><div style='grid-column: span 5;'>No data found on the network.</div></div>";
+        }
+      } catch (e) {
+        clearTimeout(timeoutId);
+        rowsEl.innerHTML = "<div class='leader-row'><div style='grid-column: span 5;'>Connection timed out or error.</div></div>";
+      }
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'block'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    async function init() {
+      const ticker = document.getElementById('warning-ticker-track');
+      const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
+      if (ticker) {
+        ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' " ');
+      }
+      
+      document.body.classList.add('loading-state');
+
+      // Safety timeout to clear loading state within 3 seconds
+      setTimeout(() => {
         document.body.classList.remove('loading-state');
         const statusEl = document.getElementById("bro-of-day-status");
         if (statusEl && statusEl.textContent === "Initializing...") {
           statusEl.textContent = "Signal standby.";
         }
-      }
+      }, 3000);
+
+      // Decouple initialization tasks so they do not block each other
+      loadBroOfDay();
+      updateTicker();
 
       setInterval(updateTicker, 30000);
       const chatInput = document.getElementById('chat-input');
