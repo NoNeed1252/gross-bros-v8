@@ -3,11 +3,21 @@ export const config = {
 };
 
 export default async function handler(req) {
+  const url = new URL(req.url);
+  const filterDate = url.searchParams.get('date'); // Expected format: YYYY-MM-DD
+  
   const SUPABASE_URL = 'https://bwvnhlmvyjuowyyltraw.supabase.co';
   const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dm5obG12eWp1b3d5eWx0cmF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MzMwOTksImV4cCI6MjA5NTMwOTA5OX0.A51xIwF9TiTWw5BhWit1Pdf4dk-Pw1yK4wr8rrRGuOQ';
 
   try {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/transmissions?select=*&order=date_added.desc`, {
+    let queryUrl = `${SUPABASE_URL}/rest/v1/transmissions?select=*&order=date_added.desc`;
+    
+    if (filterDate) {
+      // Assuming date_added is a timestamp/date field in Supabase
+      queryUrl += `&date_added=gte.${filterDate}T00:00:00&date_added=lt.${filterDate}T23:59:59`;
+    }
+
+    const response = await fetch(queryUrl, {
       method: 'GET',
       headers: {
         'apikey': SUPABASE_KEY,
