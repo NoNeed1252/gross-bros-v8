@@ -18,14 +18,12 @@ jobs:
           password: vAUL03juyPr1hu
           script: |
             echo "Starting sync process..."
-            # Try to find the directory if the default doesn't exist
             if [ -d "/root/gross-bros-v8" ]; then
               cd /root/gross-bros-v8
             elif [ -d "gross-bros-v8" ]; then
               cd gross-bros-v8
             else
-              echo "Error: Directory gross-bros-v8 not found in /root or home."
-              ls -la
+              echo "Error: Directory gross-bros-v8 not found."
               exit 1
             fi
             
@@ -33,20 +31,26 @@ jobs:
             git fetch origin main || exit 1
             git reset --hard origin/main || exit 1
             
+            echo "Syncing index.html to public/index.html..."
+            cp index.html public/index.html
+            
             echo "Installing dependencies..."
             npm install || exit 1
             
             echo "Restarting application..."
-            # Use --update-env to pick up potential config changes
-            if pm2 list | grep -q "gross-bros-v7"; then
-              echo "Restarting existing process..."
-              pm2 restart gross-bros-v7 --update-env || exit 1
-            elif [ -f "ecosystem.config.js" ]; then
-              echo "Starting from ecosystem config..."
-              pm2 start ecosystem.config.js || exit 1
+            if pm2 list | grep -q "gross-bros-v8"; then
+              echo "Restarting gross-bros-v8..."
+              pm2 restart gross-bros-v8 --update-env || exit 1
             else
-              echo "Starting server.js directly..."
-              pm2 start server.js --name "gross-bros-v7" || exit 1
+              echo "Starting gross-bros-v8..."
+              pm2 start ecosystem.config.js || exit 1
+            fi
+            
+            # Stop old process if running
+            if pm2 list | grep -q "gross-bros-v7"; then
+              echo "Stopping old gross-bros-v7..."
+              pm2 stop gross-bros-v7 || true
+              pm2 delete gross-bros-v7 || true
             fi
             
             echo "Saving PM2 state..."
