@@ -1,0 +1,1 @@
+This commit was made to trigger a Vercel redeployment and ensure that the newly added environment variables for the Xaman wallet connection are correctly injected into the production environment.
