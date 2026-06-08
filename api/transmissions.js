@@ -11,7 +11,7 @@ export default async function handler(req) {
 
   try {
     const nowStr = new Date().toISOString();
-    // Use 'transmission_text' instead of 'content' to match Supabase schema
+    // Query 'transmission_text' to match the database schema
     let queryUrl = `${SUPABASE_URL}/rest/v1/transmissions?select=id,transmission_text,date_added&date_added=lte.${nowStr}&order=date_added.desc`;
     
     if (filterDate) {
