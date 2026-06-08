@@ -89,9 +89,9 @@ async function handleCheckPayload(req, res, uuid) {
   }
 }
 
-router.post('/', async (req, res) => {
-  const action = req.body.action || req.query.action;
-  const uuid = req.body.uuid || req.query.uuid;
+const handler = async (req, res) => {
+  const action = req.body?.action || req.query?.action;
+  const uuid = req.body?.uuid || req.query?.uuid;
 
   if (action === 'create-payload') {
     return handleCreatePayload(req, res);
@@ -102,21 +102,10 @@ router.post('/', async (req, res) => {
   }
 
   return res.status(400).json({ error: 'Invalid action use create-payload or check-payload' });
-});
+};
 
-router.get('/', async (req, res) => {
-  const action = req.query.action || req.body?.action;
-  const uuid = req.query.uuid || req.body?.uuid;
-
-  if (action === 'create-payload') {
-    return handleCreatePayload(req, res);
-  }
-
-  if (action === 'check-payload') {
-    return handleCheckPayload(req, res, uuid);
-  }
-
-  return res.status(400).json({ error: 'Invalid action use create-payload or check-payload' });
-});
-
+// Export the router for server.js
+router.all('/', handler);
 module.exports = router;
+// Export the handler as default for Vercel Serverless Functions
+module.exports.default = handler;
