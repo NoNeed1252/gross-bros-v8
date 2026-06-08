@@ -382,7 +382,7 @@ letter-spacing: 1px;
           <div id="story-container" style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
             <div class="story-transmission">
               <span class="story-timestamp">SYSTEM_BOOT :: ORIGIN</span>
-              <p>The Galactic Gross Bros emerged from the static when a fracture opened in the ledger, turning the city’s pulse into raw signal. They are the glitch in the machine, the bio-digital mutation that refuses to be purged. The archive below is being reconstructed from fragmented neural relays...</p>
+              <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger. When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence. Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers. The archive below is being reconstructed from fragmented neural relays...</p>
             </div>
             <div id="live-transmissions">
               <p class="muted">Scanning for live signals...</p>
@@ -581,22 +581,18 @@ letter-spacing: 1px;
         // 1. Try to fetch from Bithomp via proxy first
         const nfts = await fetchCollectionNfts(CONFIG.ISSUER);
         
-        let selected;
         if (nfts.length > 0) {
           const seed = dailyRotationSeed();
-          selected = nfts[seed % nfts.length];
+          const selected = nfts[seed % nfts.length];
           const metaUri = xrplUriToHttp(selected.URI);
-          const meta = await (await fetch(metaUri)).json();
+          const metaRes = await fetch(metaUri);
+          const meta = await metaRes.json();
           
           if (imgEl) imgEl.src = xrplUriToHttp(meta.image);
           if (descEl) descEl.textContent = cleanLoreText(meta);
           setBroOfDayStatus("Signal synchronized.");
         } else {
-          // 2. Fallback to Supabase specimens if Bithomp is empty
-          console.log("Bithomp return empty, checking Supabase specimens...");
-          // This is a placeholder for a future /api/specimens route or direct fetch if exposed
-          // For now we rely on the client knowing how to handle this state
-          throw new Error("No NFTs found in primary relay.");
+          setBroOfDayStatus("Signal lost: No NFTs found.");
         }
       } catch (e) {
         setBroOfDayStatus("Signal lost: " + e.message);
