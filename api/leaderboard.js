@@ -3,9 +3,9 @@ export const config = {
 };
 
 export default async function handler(req) {
-  const supabaseUrl = 'https://c37f58b0-0d6d-5d61-8031-ff8b566c6ef6.supabase.co';
+  const supabaseUrl = 'https://bwvnhlmvyjuowyyltraw.supabase.co';
   // Use SUPABASE_ANON_KEY from env, fallback to the known JWT for edge runtime consistency
-  const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dm5obG12eWp1b3d5eWx0cmF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MzMwOTksImV4cCI6MjA5NTMwOTA5OX0.A51xIwF9TiTWw5BhWit1Pdf4dk-Pw1yK4wr8rrRGuOQ';
 
   try {
     if (!supabaseKey) {
