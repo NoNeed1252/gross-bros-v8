@@ -220,7 +220,6 @@
       background: rgba(0,0,0,.5); color: #f1fffd; font: inherit; outline: none;
     }
     .fuse-panel { display: grid; gap: 14px; background: linear-gradient(180deg, rgba(7,18,17,.98), rgba(2,8,8,.98)); }
-    .fuse-panel { display: grid; gap: 14px; background: linear-gradient(180deg, rgba(7,18,17,.98), rgba(2,8,8,.98)); }
     .fuse-head { display: flex; align-items: center; justify-content: space-between; }
     .fuse-badge { padding: 8px 12px; border-radius: 999px; border: 1px solid var(--cyan); font-size: 10px; }
     .fuse-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
@@ -787,10 +786,11 @@
       btn.disabled = true;
       btn.textContent = 'CONNECTING...';
       try {
-        const payload = await safeFetch('/api/xaman?action=create-payload', {
+        const payload = await safeFetch('/api/xaman', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
+            action: 'create-payload',
             txjson: { TransactionType: 'SignIn' },
             options: { return_url: window.location.href }
           })
