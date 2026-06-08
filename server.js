@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-// Import as a normal module, but we will wrap it since it looks like an export default handler
+// Import the handler directly
 const xamanHandler = require('./api/xaman');
 
 const app = express();
@@ -13,12 +13,10 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // API Routes
-// Xaman route wrapper
 app.all('/api/xaman', (req, res) => {
     xamanHandler(req, res);
 });
 
-// New Routes matching Vercel logic
 app.get('/api/ticker', async (req, res) => {
   try {
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd');
@@ -64,7 +62,6 @@ app.get('/api/leaderboard', async (req, res) => {
   }
 });
 
-// Transmissions API for VPS
 app.get('/api/transmissions', async (req, res) => {
   const SUPABASE_URL = 'https://bwvnhlmvyjuowyyltraw.supabase.co';
   const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dm5obG12eWp1b3d5eWx0cmF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MzMwOTksImV4cCI6MjA5NTMwOTA5OX0.A51xIwF9TiTWw5BhWit1Pdf4dk-Pw1yK4wr8rrRGuOQ';
@@ -172,7 +169,6 @@ Task: Assist with fusion and NFT analysis in character. Stay concise.`;
   }
 });
 
-// Basic health check
 app.get('/api/status', (req, res) => {
     res.json({ 
         status: 'online', 
@@ -181,7 +177,6 @@ app.get('/api/status', (req, res) => {
     });
 });
 
-// Fallback to index.html for SPA behavior
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

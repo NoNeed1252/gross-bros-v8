@@ -32,17 +32,14 @@ async function xamanFetch(endpoint, options = {}) {
 
 /**
  * Handle payload creation logic
- * Refactored to be generic: uses txjson and options from the request body
  */
 async function handleCreatePayload(req, res) {
   try {
-    const { txjson, options } = req.body;
+    const body = req.method === 'POST' ? req.body : req.query;
+    const { txjson, options } = body;
 
-    // Use provided txjson or fallback to a basic SignIn
     const payloadBody = {
-      txjson: txjson || {
-        TransactionType: 'SignIn',
-      },
+      txjson: txjson || { TransactionType: 'SignIn' },
       options: options || {}
     };
 
@@ -53,7 +50,7 @@ async function handleCreatePayload(req, res) {
 
     return res.status(200).json({
       uuid: result.uuid,
-      next: result.next.always, // The link to open Xaman/show QR
+      next: result.next.always,
       qrUrl: result.refs.qr_png,
     });
   } catch (error) {
@@ -72,8 +69,6 @@ async function handleCheckPayload(req, res, uuid) {
 
   try {
     const result = await xamanFetch(`/payload/${uuid}`);
-
-    // Check if signed and resolve address
     const isSigned = result.meta.resolved && result.meta.signed;
     const address = result.response.account || null;
 
@@ -81,7 +76,7 @@ async function handleCheckPayload(req, res, uuid) {
       signed: isSigned,
       address: address,
       status: result.meta.status,
-      response: result.response // Include full response for metadata verification
+      response: result.response
     });
   } catch (error) {
     console.error('Error checking Xaman payload:', error);
@@ -90,8 +85,9 @@ async function handleCheckPayload(req, res, uuid) {
 }
 
 const handler = async (req, res) => {
-  const action = req.body?.action || req.query?.action;
-  const uuid = req.body?.uuid || req.query?.uuid;
+  const body = req.method === 'POST' ? req.body : req.query;
+  const action = body?.action;
+  const uuid = body?.uuid;
 
   if (action === 'create-payload') {
     return handleCreatePayload(req, res);
@@ -104,8 +100,9 @@ const handler = async (req, res) => {
   return res.status(400).json({ error: 'Invalid action use create-payload or check-payload' });
 };
 
-// Export the router for server.js
+// Vercel Serverless Function entry point
+module.exports = handler;
+
+// Also expose as router for local server.js
+module.exports.router = router;
 router.all('/', handler);
-module.exports = router;
-// Export the handler as default for Vercel Serverless Functions
-module.exports.default = handler;
