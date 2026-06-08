@@ -69,7 +69,7 @@
     }
     .ticker-track {
       display: inline-flex; align-items: center; gap: 1.2rem; padding: .65rem 1rem;
-      animation: ticker 30s linear infinite; will-change: transform;
+      animation: ticker 80s linear infinite; will-change: transform;
     }
     .ticker-item { color: rgba(0,255,200,.9); font-size: 12px; white-space: nowrap; }
     @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
@@ -636,10 +636,15 @@ letter-spacing: 1px;
         const data = await res.json();
         const txs = data.transmissions || [];
         if (txs.length > 0) {
-          // Show up to 10 most recent transmissions in the ticker
-          const recentTxs = txs.slice(-10).reverse();
-          track.innerHTML = recentTxs.map(tx => `<span class="ticker-item">${tx.transmission_text}</span>`).join(' <span style="opacity:0.3">//</span> ');
-          // Clone items for smooth infinite loop
+          // 12-hour rotation logic for exactly 3 active messages
+          const cycle = Math.floor(Date.now() / (12 * 60 * 60 * 1000));
+          const idx = cycle % txs.length;
+          
+          const getTx = (i) => txs[(i + txs.length) % txs.length].transmission_text;
+          const activeTxs = [getTx(idx), getTx(idx - 1), getTx(idx - 2)];
+          
+          track.innerHTML = activeTxs.map(text => `<span class="ticker-item">${text}</span>`).join(' <span style="opacity:0.3">//</span> ');
+          // Clone for loop
           track.innerHTML += ' <span style="opacity:0.3">//</span> ' + track.innerHTML;
         } else {
           track.innerHTML = '<span class="ticker-item">SIGNAL STABLE</span>';
