@@ -379,8 +379,9 @@ letter-spacing: 1px;
           <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
           <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
           <div style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
-            <p>The Gross Bros were forged when a fracture opened in the ledger and turned the city into signal.</p>
-            <p>The archive below preserves the origin story only.</p>
+            <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger.</p>
+            <p>When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
+            <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
           </div>
         </div>
       </section>
@@ -865,22 +866,7 @@ letter-spacing: 1px;
     function switchTab(index) {
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
-      if (index === 1) fetchStoryline();
       if (index === 3) fetchLeaderboard();
-    }
-
-    async function fetchStoryline() {
-      const container = document.querySelector('#section-1 div.grid-story');
-      if (!container) return;
-      try {
-        const res = await fetch('https://bwvnhlmvyjuowyyltraw.supabase.co/rest/v1/transmissions?select=transmission_text&order=date_added.desc', {
-           headers: {
-             'apikey': 'SUPABASE_KEY_HERE', // This would need the actual key
-             'Authorization': 'Bearer SUPABASE_KEY_HERE'
-           }
-        });
-        // Logic to render follows...
-      } catch(e){}
     }
 
     async function fetchLeaderboard() {
@@ -915,7 +901,7 @@ letter-spacing: 1px;
 
     async function init() {
       const ticker = document.getElementById('warning-ticker-track');
-      const items = ['BOLO: GGB-7 BREACH DETECTED', 'WARNING: VOLATILE ENERGY SPIKE', 'NEURAL LINK INTERFERENCE DETECTED', 'SIGNAL FRAGMENTATION IN SECTOR 4', 'UNAUTHORIZED LEDGER ACCESS ATTEMPT', 'EMERGENCY BROADCAST SYSTEM ACTIVE', 'BRO-7 RECONSTRUCT SEQUENCE READY'];
+      const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
       if (ticker) {
         ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' " ');
       }
