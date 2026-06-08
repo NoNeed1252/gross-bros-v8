@@ -290,6 +290,26 @@ letter-spacing: 1px;
   .title { font-size: 11px; letter-spacing: 0.1em; }
 }
 
+/* STORY STYLES */
+.story-transmission {
+  border-left: 2px solid var(--cyan);
+  padding: 16px;
+  margin-bottom: 16px;
+  background: rgba(0, 255, 200, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+.story-transmission::before {
+  content: "LIVE_DATA";
+  position: absolute;
+  top: 4px; right: 8px;
+  font-size: 8px; opacity: 0.3;
+}
+.story-timestamp {
+  font-size: 10px; opacity: 0.5; margin-bottom: 8px;
+  display: block;
+}
+
 </style>
 </head>
 <body>
@@ -357,11 +377,16 @@ letter-spacing: 1px;
 
       <section id='section-1' class='section'>
         <div class='panel'>
-          <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
-          <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
-          <div style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
-            <p>The Gross Bros were forged when a fracture opened in the ledger and turned the city into signal.</p>
-            <p>The archive below preserves the origin story only.</p>
+          <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>NEURAL RELAY ARCHIVE</div>
+          <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE TRANSMISSIONS</h2>
+          <div id="story-container" style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
+            <div class="story-transmission">
+              <span class="story-timestamp">SYSTEM_BOOT :: ORIGIN</span>
+              <p>The Gross Bros were forged when a fracture opened in the ledger and turned the city into signal. The archive below is being reconstructed from fragmented neural relays...</p>
+            </div>
+            <div id="live-transmissions">
+              <p class="muted">Scanning for live signals...</p>
+            </div>
           </div>
         </div>
       </section>
@@ -809,9 +834,29 @@ letter-spacing: 1px;
     function switchTab(index) {
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
+      if (index === 1) fetchTransmissions();
       if (index === 3) fetchLeaderboard();
     }
 
+    async function fetchTransmissions() {
+      const liveEl = document.getElementById('live-transmissions');
+      try {
+        const res = await fetch('/api/transmissions');
+        const data = await res.json();
+        if (data.transmissions && data.transmissions.length > 0) {
+          liveEl.innerHTML = data.transmissions.map(t => `
+            <div class="story-transmission">
+              <span class="story-timestamp">${new Date(t.date_added).toLocaleString()} :: RELAY</span>
+              <p>${t.transmission_text}</p>
+            </div>
+          `).join('');
+        } else {
+          liveEl.innerHTML = '<p class="muted">No active signals found in the relay archive.</p>';
+        }
+      } catch (e) {
+        liveEl.innerHTML = '<p class="muted">Error: Signal relay failure.</p>';
+      }
+    }
     
     async function fetchLeaderboard() {
       const rowsEl = document.getElementById('leaderboard-rows');
