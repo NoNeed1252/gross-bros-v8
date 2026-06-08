@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
-const xamanRouter = require('./api/xaman');
+// Import as a normal module, but we will wrap it since it looks like an export default handler
+const xamanHandler = require('./api/xaman').default;
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -12,7 +13,10 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // API Routes
-app.use('/api/xaman', xamanRouter);
+// Xaman route wrapper
+app.all('/api/xaman', (req, res) => {
+    xamanHandler(req, res);
+});
 
 // New Routes matching Vercel logic
 app.get('/api/ticker', async (req, res) => {
