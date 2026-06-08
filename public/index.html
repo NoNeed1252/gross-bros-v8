@@ -309,6 +309,22 @@ letter-spacing: 1px;
       font-weight: bold;
       cursor: pointer;
     }
+
+    /* Transmission styling */
+    .transmission-item {
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 10px;
+    }
+    .transmission-date {
+      font-size: 10px;
+      color: rgba(0, 255, 200, 0.5);
+      margin-bottom: 4px;
+    }
+    .transmission-content {
+      font-size: 14px;
+      line-height: 1.6;
+    }
 </style>
 </head>
 <body>
@@ -377,10 +393,15 @@ letter-spacing: 1px;
       <section id='section-1' class='section'>
         <div class='panel'>
           <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
-          <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
-          <div style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
-            <p>The Gross Bros were forged when a fracture opened in the ledger and turned the city into signal.</p>
-            <p>The archive below preserves the origin story only.</p>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:0;'>LORE</h2>
+            <div style="display: flex; gap: 8px;">
+              <input type="date" id="lore-date-filter" onchange="loadTransmissions(this.value)">
+              <button class="btn" onclick="document.getElementById('lore-date-filter').value=''; loadTransmissions()">CLEAR</button>
+            </div>
+          </div>
+          <div id="transmissions-container" style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
+            <p>Scanning frequencies for transmissions...</p>
           </div>
         </div>
       </section>
@@ -638,6 +659,31 @@ letter-spacing: 1px;
       }
     }
 
+    async function loadTransmissions(date = '') {
+      const container = document.getElementById('transmissions-container');
+      container.innerHTML = '<p>Synchronizing transmissions...</p>';
+      
+      try {
+        const url = date ? `/api/transmissions?date=${date}` : '/api/transmissions';
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        if (data.transmissions && data.transmissions.length > 0) {
+          container.innerHTML = data.transmissions.map(t => `
+            <div class="transmission-item">
+              <div class="transmission-date">${new Date(t.date_added).toLocaleString()}</div>
+              <div class="transmission-content">${t.content}</div>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<p>No transmissions found on this frequency.</p>';
+        }
+      } catch (e) {
+        console.error("Failed to load transmissions:", e);
+        container.innerHTML = '<p>Signal lost. Unable to retrieve archive.</p>';
+      }
+    }
+
     function calculateFusePrice() {
       const amountEl = document.getElementById("fuse-token-amount");
       if (state.fuseToken === 'RLUSD') {
@@ -865,6 +911,7 @@ letter-spacing: 1px;
     function switchTab(index) {
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
+      if (index === 1) loadTransmissions();
       if (index === 3) fetchLeaderboard();
     }
 
