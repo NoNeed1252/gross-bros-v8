@@ -531,7 +531,7 @@ letter-spacing: 1px;
     const MOCK_NFTS = [
       { name: "TEST SPECIMEN #001", image: "https://ipfs.io/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ" },
       { name: "TEST SPECIMEN #042", image: "https://ipfs.io/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" },
-      { name: "TEST SPECIMEN #088", image: "https://ipfs.io/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" }
+      { name: "TEST SPECIMEN #088", image: "https://ipfs.io/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" }
     ];
     
     async function safeFetch(url, options = {}) {
@@ -672,7 +672,7 @@ letter-spacing: 1px;
           container.innerHTML = data.transmissions.map(t => `
             <div class="transmission-item">
               <div class="transmission-date">${new Date(t.date_added).toLocaleString()}</div>
-              <div class="transmission-content">${t.content}</div>
+              <div class="transmission-content">${t.transmission_text || t.content || ''}</div>
             </div>
           `).join('');
         } else {
@@ -741,8 +741,11 @@ letter-spacing: 1px;
           document.getElementById('qr-overlay').style.display = 'flex';
         }
 
-        if (isMobile && payload?.next?.always) {
-          window.location.href = payload.next.always;
+        if (isMobile && payload?.next) {
+          const targetUrl = payload.next.app_deep_link || payload.next.always;
+          if (targetUrl) {
+            window.location.href = targetUrl;
+          }
         }
         
         const uuid = payload?.uuid;
