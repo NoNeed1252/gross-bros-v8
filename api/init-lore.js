@@ -5,13 +5,16 @@ export default async function handler(req, res) {
     { transmission_text: "BOLO: ALL OPERATIVES REPORT TO FUSION LAB. NEUROLINK STABILIZATION IN PROGRESS" }
   ];
 
+  // Supabase Anon Key found in project configuration
+  const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dm5obG12eWp1b3d5eWx0cmF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MzMwOTksImV4cCI6MjA5NTMwOTA5OX0.A51xIwF9TiTWw5BhWit1Pdf4dk-Pw1yK4wr8rrRGuOQ';
+
   try {
     const response = await fetch('https://bwvnhlmvyjuowyyltraw.supabase.co/rest/v1/transmissions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': 'c37f58b0-0d6d-5d61-8031-ff8b566c6ef6',
-        'Authorization': 'Bearer c37f58b0-0d6d-5d61-8031-ff8b566c6ef6',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
         'Prefer': 'return=representation'
       },
       body: JSON.stringify(transmissions)
