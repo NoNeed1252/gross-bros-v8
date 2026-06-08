@@ -11,15 +11,14 @@ export default async function handler(req) {
 
   try {
     const nowStr = new Date().toISOString();
-    // Default: fetch all transmissions where date_added <= current time (lte)
-    let queryUrl = `${SUPABASE_URL}/rest/v1/transmissions?select=*&date_added=lte.${nowStr}&order=date_added.desc`;
+    // Use 'transmission_text' instead of 'content' to match Supabase schema
+    let queryUrl = `${SUPABASE_URL}/rest/v1/transmissions?select=id,transmission_text,date_added&date_added=lte.${nowStr}&order=date_added.desc`;
     
     if (filterDate) {
       const startOfDay = `${filterDate}T00:00:00`;
       const endOfDay = `${filterDate}T23:59:59`;
-      // Ensure future transmissions are never leaked, capping at current time
       const limitDate = endOfDay < nowStr ? endOfDay : nowStr;
-      queryUrl = `${SUPABASE_URL}/rest/v1/transmissions?select=*&date_added=gte.${startOfDay}&date_added=lte.${limitDate}&order=date_added.desc`;
+      queryUrl = `${SUPABASE_URL}/rest/v1/transmissions?select=id,transmission_text,date_added&date_added=gte.${startOfDay}&date_added=lte.${limitDate}&order=date_added.desc`;
     }
 
     const response = await fetch(queryUrl, {
