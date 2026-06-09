@@ -813,35 +813,43 @@
           document.getElementById('qr-overlay').style.display = 'flex';
           
           const uuid = payload?.uuid;
-          let attempts = 0;
-          const timer = setInterval(async () => {
-            attempts += 1;
-            if (attempts > 60) {
-              clearInterval(timer);
-              btn.disabled = false;
-              btn.textContent = 'CONNECT XAMAN';
-              return;
-            }
-            const status = await safeFetch('/api/xaman?action=check-payload&uuid=' + encodeURIComponent(uuid));
-            if (!status) return;
-            if ((status.meta && status.meta.signed) || status.signed) {
-              clearInterval(timer);
-              document.getElementById('qr-overlay').style.display = 'none';
-              const address = status?.response?.account || status?.account || status?.resolved?.account || '';
-              if (address) {
-                state.connected = true;
-                state.wallet = address;
-                setWalletUI(true, address);
-                fetchUserNfts(address);
-              }
-            }
-          }, 2500);
+          checkPayloadStatus(uuid);
         }
       } catch (error) {
         console.error(error);
         btn.disabled = false;
         btn.textContent = 'CONNECT XAMAN';
       }
+    }
+
+    async function checkPayloadStatus(uuid) {
+      if (!uuid) return;
+      const btn = document.getElementById('wallet-btn');
+      let attempts = 0;
+      const timer = setInterval(async () => {
+        attempts += 1;
+        if (attempts > 60) {
+          clearInterval(timer);
+          if (!state.connected) {
+            btn.disabled = false;
+            btn.textContent = 'CONNECT XAMAN';
+          }
+          return;
+        }
+        const status = await safeFetch('/api/xaman?action=check-payload&uuid=' + encodeURIComponent(uuid));
+        if (!status) return;
+        if ((status.meta && status.meta.signed) || status.signed) {
+          clearInterval(timer);
+          document.getElementById('qr-overlay').style.display = 'none';
+          const address = status?.response?.account || status?.account || status?.resolved?.account || '';
+          if (address) {
+            state.connected = true;
+            state.wallet = address;
+            setWalletUI(true, address);
+            fetchUserNfts(address);
+          }
+        }
+      }, 2500);
     }
 
     function setWalletUI(connected, address) {
@@ -1043,6 +1051,15 @@
       }
       
       document.body.classList.add('loading-state');
+
+      // Check for Xaman payload redirect parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const payloadUuid = urlParams.get('xummPayloadUUID') || urlParams.get('payload_uuid');
+      if (payloadUuid) {
+        document.getElementById('wallet-btn').textContent = 'VERIFYING...';
+        document.getElementById('wallet-btn').disabled = true;
+        checkPayloadStatus(payloadUuid);
+      }
 
       setTimeout(() => {
         document.body.classList.remove('loading-state');
