@@ -362,7 +362,7 @@ letter-spacing: 1px;
             <h1 id="status-msg" style='font-family:Orbitron,sans-serif;font-size:clamp(28px,5vw,62px);margin:10px 0 0;'>BRO OF THE DAY</h1>
             <p style='line-height:1.8;color:#ddfff9;opacity:.86;max-width:58ch'>Daily rotation pulled from the full issuer collection, with one NFT selected every 24 hours.</p>
             <div class='row'>
-              <button class='btn' onclick="switchTab(1)">READ WEEKLY LORE</button>
+              <button class='btn' onclick="switchTab(1)">READ TRANSMISSIONS</button>
               <button class='btn' onclick="window.open('https://xrp.cafe/collection/galactic-gross-bros', '_blank')">BUY A BRO</button>
             </div>
           </div>
@@ -383,10 +383,13 @@ letter-spacing: 1px;
 
       <section id='section-1' class='section'>
         <div class='panel'>
-          <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Weekly Chronicle</div>
-          <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE ARCHIVE</h2>
-          <div id="weekly-story-container" style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
-            <p id="weekly-story-text">Loading the latest transmission from the frontier...</p>
+          <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
+          <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
+          <div style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
+            <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger. When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
+            <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
+            <p style='margin-top: 20px; font-family:Orbitron,sans-serif; letter-spacing:0.2em; color:var(--cyan);'>CHAPTER 1: THE NEURAL AWAKENING</p>
+            <p class="muted" style="margin-top: 10px; font-size: 12px; opacity: 0.5;">Transmissions refresh every week. More transmissions coming soon...</p>
           </div>
         </div>
       </section>
@@ -957,22 +960,9 @@ letter-spacing: 1px;
       return lastSunday.getUTCFullYear() * 100 + (lastSunday.getUTCMonth() + 1) * 10 + lastSunday.getUTCDate();
     }
 
-    const TICKER_ITEMS = [
-      "SIGNAL STABLE", "NEURAL LINK ACTIVE", "FUSION READY", "ENCRYPTION ENABLED", 
-      "SCANNING PERIMETER", "RELAY SECURED", "XRP LEDGER SYNCHRONIZED", "BRO CORE INITIALIZED",
-      "FRAGMENT DETECTED IN SECTOR 7", "DECRYPTING LEDGER DATA", "SIGNAL STRENGTH 98%",
-      "VOX POPULI BROADCASTING", "THE DEN IS WATCHING", "REDACTED PROTOCOLS ACTIVE",
-      "QUANTUM ENCRYPTION ENGAGED", "GRID STATUS: NOMINAL"
-    ];
+    const TICKER_ITEMS = ['XRP-7 VOLATILE ENERGY: ACTIVE', 'MUTATED STRAIN DETECTED', 'NEURAL LINK ESTABLISHED', 'BERT ENGINE CRITICAL', 'DROP FLOW SECURED', 'FUSION ENGINE CHARGED', 'XRPL ROOT SEQUENCE STABLE'];
 
-    const WEEKLY_STORIES = [
-      "The fracture in the ledger widened this week. The city is now 40% signal. The Gross Bros are congregating at the old relay station.",
-      "A new frequency was detected coming from the deep vaults. It sounds like laughter, but the data says it's a warning.",
-      "Bert's fusion experiments have reached a critical state. The air in the lab smells like burnt static and old copper.",
-      "The Galactic Council has gone silent. Only the static remains, whispering secrets of the ledger's origin.",
-      "Scavengers found a cache of ancient BERT tokens near the fracture. They say the tokens were still warm.",
-      "The neural CRT relay is picking up transmissions from 2088. The Gross Bros haven't changed much."
-    ];
+    
 
     function updateLiveTransmissions() {
       const ticker = document.getElementById('warning-ticker-track');
@@ -987,20 +977,11 @@ letter-spacing: 1px;
       ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' &bull; ');
     }
 
-    function updateWeeklyLore() {
-      const storyEl = document.getElementById('weekly-story-text');
-      if (!storyEl) return;
-      
-      const seed = getWeeklySeed();
-      const story = WEEKLY_STORIES[seed % WEEKLY_STORIES.length];
-      storyEl.textContent = story;
-    }
-
     async function init() {
       document.body.classList.add('loading-state');
 
       updateLiveTransmissions();
-      updateWeeklyLore();
+      
       
       setTimeout(() => {
         document.body.classList.remove('loading-state');
