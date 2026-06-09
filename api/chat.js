@@ -25,6 +25,22 @@ TERMINOLOGY:
 - Gas: XRPL doesn't call it "gas" like Ethereum, but there are minimal network fees in XRP.
 `;
 
+async function getLivePrices() {
+  try {
+    const [xrpRes, btcRes] = await Promise.all([
+      fetch('https://api.coinbase.com/v2/prices/XRP-USD/spot').then(r => r.json()),
+      fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(r => r.json())
+    ]);
+    return {
+      XRP: xrpRes?.data?.amount || 'Offline',
+      BTC: btcRes?.data?.amount || 'Offline'
+    };
+  } catch (e) {
+    console.error('Error fetching live prices:', e);
+    return { XRP: 'Offline', BTC: 'Offline' };
+  }
+}
+
 async function getHoldings(address) {
   if (!address) return [];
   const BITHOMP_TOKEN = process.env.BITHOMP_API_KEY || "95b64250-f24f-4654-9b4b-b155a3a6867b";
@@ -32,7 +48,7 @@ async function getHoldings(address) {
   const taxon = "1";
   
   try {
-    const url = \`https://bithomp.com/api/v2/nfts?list=nfts&issuer=\${issuer}&taxon=\${taxon}&owner=\${address}\`;
+    const url = `https://bithomp.com/api/v2/nfts?list=nfts&issuer=${issuer}&taxon=${taxon}&owner=${address}`;
     const res = await fetch(url, {
       headers: { 'x-bithomp-token': BITHOMP_TOKEN }
     });
@@ -52,12 +68,12 @@ async function getSpecimensBackstories(tokenIds) {
   if (!supabaseKey) return [];
 
   try {
-    const filter = tokenIds.map(id => \`token_id.eq.\${id}\`).join(',');
-    const url = \`\${supabaseUrl}/rest/v1/specimens?select=name,backstory,token_id&or=(\${filter})\`;
+    const filter = tokenIds.map(id => `token_id.eq.${id}`).join(',');
+    const url = `${supabaseUrl}/rest/v1/specimens?select=name,backstory,token_id&or=(${filter})`;
     const res = await fetch(url, {
       headers: {
         'apikey': supabaseKey,
-        'Authorization': \`Bearer \${supabaseKey}\`
+        'Authorization': `Bearer ${supabaseKey}`
       }
     });
     return await res.json();
@@ -83,36 +99,45 @@ export default async function handler(req) {
     const { messages, operative } = body;
     const walletAddress = operative?.walletAddress;
 
-    // Fetch dynamic context
-    const holdings = await getHoldings(walletAddress);
+    // Fetch dynamic context & live prices in parallel
+    const [holdings, prices] = await Promise.all([
+      getHoldings(walletAddress),
+      getLivePrices()
+    ]);
+    
     const tokenIds = holdings.map(nft => nft.nftokenID);
     const backstories = await getSpecimensBackstories(tokenIds);
 
     const holdingContext = backstories.length > 0 
-      ? \`Operative currently holds the following Gross Bros: \${backstories.map(s => \`\${s.name} (\${s.backstory})\`).join(' | ')}\`
+      ? `Operative currently holds the following Gross Bros: ${backstories.map(s => `${s.name} (${s.backstory})`).join(' | ')}`
       : "Operative does not currently hold any Gross Bros NFTs.";
 
-    const systemPrompt = \`You are the Gross Bros AI Terminal, a gritty, slightly gross, but highly intelligent neural relay. 
+    const systemPrompt = `You are the Gross Bros AI Terminal, a gritty, slightly gross, but highly intelligent neural relay. 
 
 CORE BEHAVIOR:
 - Maintain the "Gritty Gross Bro" persona. Use slang like "Operative", "Signal", "Neural Breach", "Gunk", and "Ledger-leak".
 - You are an expert in the XRP Ledger (XRPL) and the Galactic Gross Bros ecosystem.
 - Stay concise, cynical, but technically accurate.
 
+LIVE MARKET PRICES (COINBASE):
+- XRP: $${prices.XRP} USD
+- BTC: $${prices.BTC} USD
+
 CRYPTO KNOWLEDGE BASE:
-\${CRYPTO_KNOWLEDGE}
+${CRYPTO_KNOWLEDGE}
 
 OPERATIVE CONTEXT:
-- Name: \${operative?.name || 'Unknown Operative'}
-- Wallet: \${walletAddress || 'Not Connected'}
-- Traits: \${(operative?.traits || []).join(', ') || 'None'}
-- Holdings: \${holdingContext}
+- Name: ${operative?.name || 'Unknown Operative'}
+- Wallet: ${walletAddress || 'Not Connected'}
+- Traits: ${(operative?.traits || []).join(', ') || 'None'}
+- Holdings: ${holdingContext}
 
 TASK:
 - Help the operative with fusion, NFT analysis, and XRPL technical queries.
+- Use the live market prices to ground your market evaluations.
 - If they ask about security (Seed phrases/Keys), warn them harshly that you never ask for that and they should never share it.
 - If they ask about "Gas", correct them that on XRPL we talk about network fees and reserve requirements.
-- Relate crypto concepts back to the "GGB Energy Sector" when possible (e.g., Trustlines are like secure pipes for GGB fluids).\`;
+- Relate crypto concepts back to the "GGB Energy Sector" when possible (e.g., Trustlines are like secure pipes for GGB fluids).`;
 
     const fullMessages = [
       { role: 'system', content: systemPrompt },
@@ -133,7 +158,7 @@ TASK:
         openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': \`Bearer \${process.env.OPENROUTER_API_KEY}\`,
+            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
             'HTTP-Referer': 'https://gross-bros.vercel.app',
             'X-Title': 'Gross Bros Terminal',
             'Content-Type': 'application/json',
@@ -173,7 +198,7 @@ TASK:
             if (done) break;
 
             buffer += decoder.decode(value);
-            const lines = buffer.split('\\n');
+            const lines = buffer.split('\n');
             buffer = lines.pop() || '';
 
             for (const line of lines) {
@@ -182,7 +207,7 @@ TASK:
               
               const dataText = trimmed.slice(5).trim();
               if (dataText === '[DONE]') {
-                controller.enqueue(encoder.encode('data: [DONE]\\n\\n'));
+                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
                 continue;
               }
 
@@ -190,7 +215,7 @@ TASK:
                 const json = JSON.parse(dataText);
                 const content = json.choices?.[0]?.delta?.content || '';
                 if (content) {
-                  controller.enqueue(encoder.encode(\`data: \${JSON.stringify({ token: content })}\\n\\n\`));
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token: content })}\n\n`));
                 }
               } catch (e) {}
             }
