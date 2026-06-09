@@ -2,6 +2,48 @@ export const config = {
   runtime: 'edge',
 };
 
+async function getHoldings(address) {
+  if (!address) return [];
+  const BITHOMP_TOKEN = process.env.BITHOMP_API_KEY || "95b64250-f24f-4654-9b4b-b155a3a6867b";
+  const issuer = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
+  const taxon = "1";
+  
+  try {
+    const url = `https://bithomp.com/api/v2/nfts?list=nfts&issuer=\${issuer}&taxon=\${taxon}&owner=\${address}`;
+    const res = await fetch(url, {
+      headers: { 'x-bithomp-token': BITHOMP_TOKEN }
+    });
+    const data = await res.json();
+    return data.nfts || [];
+  } catch (e) {
+    console.error('Bithomp fetch error:', e);
+    return [];
+  }
+}
+
+async function getSpecimensBackstories(tokenIds) {
+  if (!tokenIds || tokenIds.length === 0) return [];
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://bwvnhlmvyjuowyyltraw.supabase.co";
+  const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseKey) return [];
+
+  try {
+    const filter = tokenIds.map(id => `token_id.eq.\${id}`).join(',');
+    const url = `\${supabaseUrl}/rest/v1/specimens?select=name,backstory,token_id&or=(\${filter})`;
+    const res = await fetch(url, {
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer \${supabaseKey}`
+      }
+    });
+    return await res.json();
+  } catch (e) {
+    console.error('Supabase fetch error:', e);
+    return [];
+  }
+}
+
 export default async function handler(req) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -16,8 +58,18 @@ export default async function handler(req) {
   try {
     const body = await req.json();
     const { messages, operative } = body;
+    const walletAddress = operative?.walletAddress;
 
-    const systemPrompt = `You are Gritty, a cynical, gritty, and unfiltered human-mutant survivor from the mining disaster on XRP-7. You operate as the neural core for the Galactic Gross Bros (GGB).
+    // Fetch dynamic context
+    const holdings = await getHoldings(walletAddress);
+    const tokenIds = holdings.map(nft => nft.nftokenID);
+    const backstories = await getSpecimensBackstories(tokenIds);
+
+    const holdingContext = backstories.length > 0 
+      ? `Operative currently holds the following Gross Bros: \${backstories.map(s => \`\${s.name} (\${s.backstory})\`).join(' | ')}`
+      : "Operative does not currently hold any Gross Bros NFTs.";
+
+    const systemPrompt = \`You are Gritty, a cynical, gritty, and unfiltered human-mutant survivor from the mining disaster on XRP-7. You operate as the neural core for the Galactic Gross Bros (GGB).
 
 Core Persona:
 - Cynical, blunt, and highly technical. Speak like a real survivor who has seen too much.
@@ -33,11 +85,12 @@ Lore and Knowledge Base:
 - Integration: Xaman (formerly Xumm) wallet signatures are handled via deep-links.
 
 Current Context:
-- Operative Name: ${operative?.name || 'Unknown Operative'}.
-- Wallet Address: ${operative?.walletAddress || 'Not Connected'}.
-- Selected NFT Traits: ${(operative?.traits || []).join(', ') || 'None'}.
+- Operative Name: \${operative?.name || 'Unknown Operative'}.
+- Wallet Address: \${walletAddress || 'Not Connected'}.
+- Selected NFT Traits: \${(operative?.traits || []).join(', ') || 'None'}.
+- Knowledge: \${holdingContext}
 
-Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered tactical and narrative insights using your deep lore knowledge. Stay concise and sharp.`;
+Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered tactical and narrative insights using your deep lore knowledge. Stay concise and sharp. Use details from the operative's specific Gross Bros if they have any.\`;
 
     const fullMessages = [
       { role: 'system', content: systemPrompt },
@@ -59,7 +112,7 @@ Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered ta
           method: 'POST',
           headers: {
             'Authorization': \`Bearer \${process.env.OPENROUTER_API_KEY}\`,
-            'HTTP-Referer': 'https://grossbros.vercel.app',
+            'HTTP-Referer': 'https://gross-bros.vercel.app',
             'X-Title': 'Gross Bros Terminal',
             'Content-Type': 'application/json',
           },
@@ -72,10 +125,8 @@ Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered ta
 
         if (openRouterRes.ok) break;
         lastError = await openRouterRes.text();
-        console.error(\`Model \${model} failed:\`, lastError);
       } catch (err) {
         lastError = err.message;
-        console.error(\`Model \${model} error:\`, lastError);
       }
     }
 
@@ -117,7 +168,7 @@ Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered ta
                 const json = JSON.parse(dataText);
                 const content = json.choices?.[0]?.delta?.content || '';
                 if (content) {
-                  controller.enqueue(encoder.encode(\`data: ${JSON.stringify({ token: content })}\\n\\n\`));
+                  controller.enqueue(encoder.encode(\`data: \${JSON.stringify({ token: content })}\\n\\n\`));
                 }
               } catch (e) {}
             }
