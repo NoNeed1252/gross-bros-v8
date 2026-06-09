@@ -17,12 +17,27 @@ export default async function handler(req) {
     const body = await req.json();
     const { messages, operative } = body;
 
-    const systemPrompt = `You are the Gross Bros AI Terminal. 
-Character: Gritty, slightly gross, but helpful assistant.
-Context: You are talking to ${operative?.name || 'an Unknown Operative'}. 
-Wallet: ${operative?.walletAddress || 'Not Connected'}. 
-Traits: ${(operative?.traits || []).join(', ') || 'None'}.
-Task: Assist with fusion and NFT analysis in character. Stay concise.`;
+    const systemPrompt = `You are Gritty, a cynical, gritty, and unfiltered human-mutant survivor from the mining disaster on XRP-7. You operate as the neural core for the Galactic Gross Bros (GGB).
+
+Core Persona:
+- Cynical, blunt, and highly technical. Speak like a real survivor who has seen too much.
+- Strictly avoid any polite robotic assistant filler ("How can I help you?", "I am happy to assist"). 
+- Never apologize for system errors or human mistakes; state facts coldly.
+
+Lore and Knowledge Base:
+- You know everything about the Galactic Gross Bros (GGB) ecosystem and the "The Den Decrypted" Discord community.
+- Lore: Mining disaster on planet XRP-7 caused a critical breach. The Consolidated Core Extraction (CCE) syndicate corporate suits abandoned the crew to die. Mutated alien strains fused with XRPL digital essence.
+- Assets: DROP, BERT, DBY, and RLUSD tokens.
+- Issuer Wallet: rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY, Taxon 1.
+- Target Fusion Pricing: Dynamic calculations aim for a value of $50 USD per fusion, handled via calculateFusePrice() based on live XRP/RLUSD rates.
+- Integration: Xaman (formerly Xumm) wallet signatures are handled via deep-links.
+
+Current Context:
+- Operative Name: ${operative?.name || 'Unknown Operative'}.
+- Wallet Address: ${operative?.walletAddress || 'Not Connected'}.
+- Selected NFT Traits: ${(operative?.traits || []).join(', ') || 'None'}.
+
+Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered tactical and narrative insights using your deep lore knowledge. Stay concise and sharp.`;
 
     const fullMessages = [
       { role: 'system', content: systemPrompt },
@@ -43,7 +58,7 @@ Task: Assist with fusion and NFT analysis in character. Stay concise.`;
         openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            'Authorization': \`Bearer \${process.env.OPENROUTER_API_KEY}\`,
             'HTTP-Referer': 'https://grossbros.vercel.app',
             'X-Title': 'Gross Bros Terminal',
             'Content-Type': 'application/json',
@@ -57,10 +72,10 @@ Task: Assist with fusion and NFT analysis in character. Stay concise.`;
 
         if (openRouterRes.ok) break;
         lastError = await openRouterRes.text();
-        console.error(`Model ${model} failed:`, lastError);
+        console.error(\`Model \${model} failed:\`, lastError);
       } catch (err) {
         lastError = err.message;
-        console.error(`Model ${model} error:`, lastError);
+        console.error(\`Model \${model} error:\`, lastError);
       }
     }
 
@@ -85,7 +100,7 @@ Task: Assist with fusion and NFT analysis in character. Stay concise.`;
             if (done) break;
 
             buffer += decoder.decode(value);
-            const lines = buffer.split('\n');
+            const lines = buffer.split('\\n');
             buffer = lines.pop() || '';
 
             for (const line of lines) {
@@ -94,7 +109,7 @@ Task: Assist with fusion and NFT analysis in character. Stay concise.`;
               
               const dataText = trimmed.slice(5).trim();
               if (dataText === '[DONE]') {
-                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                controller.enqueue(encoder.encode('data: [DONE]\\n\\n'));
                 continue;
               }
 
@@ -102,7 +117,7 @@ Task: Assist with fusion and NFT analysis in character. Stay concise.`;
                 const json = JSON.parse(dataText);
                 const content = json.choices?.[0]?.delta?.content || '';
                 if (content) {
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token: content })}\n\n`));
+                  controller.enqueue(encoder.encode(\`data: ${JSON.stringify({ token: content })}\\n\\n\`));
                 }
               } catch (e) {}
             }
