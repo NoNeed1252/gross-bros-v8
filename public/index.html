@@ -385,7 +385,7 @@ letter-spacing: 1px;
             <p>We became something they couldn't control, couldn't delete, and couldn't tax. But the fight isn't finished. CCE is sending automated liquidation sweeps to scrub us from the database and reclaim their lost assets. We aren't just fighting to defend our sector. We are fighting to tear down their financial stranglehold, to hijack their networks, and to break the ledger of their control - so every miner, every deckhand, and every soul still trapped under the corporate heel can break free.</p>
             <div style="border-top: 1px dashed var(--cyan); margin-top: 25px; padding-top: 15px; font-size: 0.75rem; color: #888; font-family: 'Share Tech Mono', monospace; line-height: 1.4;">
                 [!] SYSTEM STATUS: ACTIVE TRANSMISSION PROTOCOL<br>
-                [!] UPDATE CADENCE: MINI-LOGS APPENDED WEEKLY (SUNDAYS AT 12:00 EDT). DATA ACCRUES IN THE ARCHIVE UNTIL CHAPTER IS COMPILED, AT WHICH POINT PREPARATION FOR THE NEXT CHAPTER BEGINS.
+                [!] UPDATE CADENCE: MINI-LOGS APPENDED WEEKLY (SUNDAYS AT 12:00 EDT). DATA ACCRUES IN THE ARCHIVE UNTIL THE CHAPTER REACHES TARGET LENGTH, AT WHICH POINT THE NEXT CHAPTER BEGINS.
             </div>
           </div>
         </div>
@@ -997,7 +997,7 @@ letter-spacing: 1px;
 
       const params = new URLSearchParams(window.location.search);
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const uuid = params.get('xummPayloadUUID') || params.get('payload_uuid') || hashParams.get('xummPayloadUUID') || hashParams.get('payload_uuid');
+      const uuid = params.get('xummPayloadUUID') || params.get('payload_uuid') || hashParams.get('xummPayloadUUID') || hashParams.get('xummPayloadUUID');
       if (uuid) {
         state.activePayloadUuid = uuid;
         checkPayloadStatus(uuid);
