@@ -2,7 +2,7 @@
 <html lang='en'>
 <head>
   <meta charset='UTF-8'>
-  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
   <title>GUARDIAN BROADCAST OS v8.9.5 STABLE</title>
   <link rel='preconnect' href='https://fonts.googleapis.com'>
   <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
@@ -13,7 +13,6 @@
     html, body { 
       margin: 0; padding: 0; background: var(--bg); color: var(--cyan);
       font-family: 'Share Tech Mono', monospace; height: 100%; width: 100%;
-      overflow-x: hidden;
     }
     a { color: inherit; }
 
@@ -39,13 +38,15 @@
 
     .shell { 
       position: relative;
-      z-index: 10;
+      z-index: 10; /* Above backgrounds, below overlays */
       max-width: 1480px; min-height: calc(100vh - 24px); margin: 12px auto;
-      border: 24px solid #1f1f1f; border-radius: 0; overflow: hidden;
+      border: 24px solid #1f1f1f; border-radius: 24px; overflow: hidden;
       background: #050505; box-shadow: 0 30px 70px -20px rgba(0,0,0,.95), 0 0 100px -20px var(--cyan);
       display: flex; flex-direction: column;
     }
-    
+    @media (max-width: 640px) {
+      .shell { margin: 8px auto; min-height: calc(100vh - 16px); border-width: 0; }
+    }
     .topbar {
       background: #0a0a0a; border-bottom: 1px solid var(--line);
       display: flex; align-items: center; justify-content: space-between; gap: 14px;
@@ -67,14 +68,14 @@
       overflow: hidden; white-space: nowrap; background: linear-gradient(90deg, rgba(0,255,200,.08), rgba(0,255,200,.03));
     }
     .ticker-track {
-      display: inline-flex; align-items: center; gap: 1.2rem; padding: .65rem 1rem;
-      animation: ticker 20s linear infinite; will-change: transform;
+      display: inline-flex; align-items: center; gap: 4rem; padding: .65rem 1rem;
+      animation: ticker 25s linear infinite; will-change: transform;
     }
-    .ticker-item { color: rgba(0,255,200,.9); font-size: 12px; white-space: nowrap; }
+    .ticker-item { color: rgba(0,255,200,.9); font-size: 13px; white-space: nowrap; letter-spacing: 1px; }
     @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
     .tabs {
       display: flex; overflow-x: auto; border-bottom: 1px solid var(--line);
-      background: #0b0b0b; -webkit-overflow-scrolling: touch;
+      background: #0b0b0b;
     }
     .tab {
       flex: 1 0 120px; padding: 16px 12px; text-align: center; cursor: pointer;
@@ -247,31 +248,31 @@
     }
     .qr-container img { max-width: 300px; display: block; }
   
-    .social-links { display: grid; gap: 16px; }
-    .social-card { 
-      display: flex; 
-      align-items: center; 
-      justify-content: space-between; 
-      padding: 20px; 
-      border: 1px solid rgba(0,255,200,0.2); 
-      border-radius: 20px; 
-      background: rgba(0,255,200,0.04); 
-      text-decoration: none; 
-      transition: all 0.2s ease;
-    }
-    .social-card:hover {
-      background: rgba(0,255,200,0.08);
-      border-color: var(--cyan);
-      box-shadow: 0 0 15px rgba(0,255,200,0.1);
-    }
-    .social-card .label { 
-      font-family: 'Orbitron', sans-serif; 
-      font-size: 14px; 
-      color: var(--cyan); 
-      margin-bottom: 6px; 
-      letter-spacing: 1px;
-    }
-    .social-card .desc { font-size: 12px; color: rgba(0,255,200,0.7); }
+.social-links { display: grid; gap: 16px; }
+.social-card { 
+display: flex; 
+align-items: center; 
+justify-content: space-between; 
+padding: 20px; 
+border: 1px solid rgba(0,255,200,0.2); 
+border-radius: 20px; 
+background: rgba(0,255,200,0.04); 
+text-decoration: none; 
+transition: all 0.2s ease;
+}
+.social-card:hover {
+background: rgba(0,255,200,0.08);
+border-color: var(--cyan);
+box-shadow: 0 0 15px rgba(0,255,200,0.1);
+}
+.social-card .label { 
+font-family: 'Orbitron', sans-serif; 
+font-size: 14px; 
+color: var(--cyan); 
+margin-bottom: 6px; 
+letter-spacing: 1px;
+}
+.social-card .desc { font-size: 12px; color: rgba(0,255,200,0.7); }
 
     /* Privacy and Terms Modals */
     .modal {
@@ -308,103 +309,7 @@
       font-weight: bold;
       cursor: pointer;
     }
-
-    .transmission-item { padding: 12px 0; border-bottom: 1px solid var(--line); }
-    .transmission-date { font-size: 10px; opacity: 0.5; }
-    .transmission-text { font-size: 13px; line-height: 1.5; color: #ddfff9; margin-top: 6px; }
-
-    /* Mobile Responsive Overrides for iPhone SE (320px viewport compatibility) */
-    @media (max-width: 640px) {
-      .shell { 
-        margin: 4px; 
-        min-height: calc(100vh - 8px); 
-        border: 4px solid #1f1f1f; 
-        border-radius: 0;
-        box-shadow: none;
-      }
-      .topbar { 
-        padding: 10px; 
-        gap: 10px; 
-        justify-content: center;
-        text-align: center;
-      }
-      .brand {
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-      }
-      .title {
-        font-size: 13px;
-        letter-spacing: 0.1em;
-        text-align: center;
-      }
-      .subtitle {
-        font-size: 9px;
-        text-align: center;
-      }
-      .wallet-btn {
-        width: 100%;
-        padding: 10px;
-        font-size: 12px;
-        border-radius: 12px;
-      }
-      .status {
-        width: 100%;
-        text-align: center;
-        font-size: 10px;
-      }
-      .tabs {
-        justify-content: flex-start;
-      }
-      .tab {
-        flex: 1 0 90px;
-        padding: 12px 6px;
-        font-size: 11px;
-      }
-      .content {
-        padding: 10px;
-      }
-      .panel {
-        padding: 12px;
-        border-radius: 12px;
-      }
-      .grid-2 {
-        grid-template-columns: 1fr;
-      }
-      .nft-art {
-        width: 100%;
-        border-radius: 12px;
-      }
-      .nft-art::after {
-        font-size: 9px;
-        letter-spacing: 0.15em;
-        padding: 6px 8px;
-      }
-      .chat-terminal-actions {
-        grid-template-columns: 1fr;
-        gap: 8px;
-      }
-      input, select {
-        padding: 10px 12px;
-        border-radius: 12px;
-        font-size: 13px;
-      }
-      .fuse-button-box {
-        justify-content: space-between;
-        padding: 8px 10px;
-        border-radius: 12px;
-      }
-      .leader-row {
-        grid-template-columns: 45px 1fr 60px 70px 70px;
-        padding: 10px 6px;
-        font-size: 11px;
-      }
-      .modal-content {
-        padding: 24px;
-        margin: 5vh auto;
-      }
-    }
-  </style>
+</style>
 </head>
 <body>
   <div class="crt-overlay"></div>
@@ -450,7 +355,7 @@
             <h1 id="status-msg" style='font-family:Orbitron,sans-serif;font-size:clamp(28px,5vw,62px);margin:10px 0 0;'>BRO OF THE DAY</h1>
             <p style='line-height:1.8;color:#ddfff9;opacity:.86;max-width:58ch'>Daily rotation pulled from the full issuer collection, with one NFT selected every 24 hours.</p>
             <div class='row'>
-              <button class='btn' onclick="switchTab(1)">READ TRANSMISSIONS</button>
+              <button class='btn' onclick="switchTab(1)">READ WEEKLY LORE</button>
               <button class='btn' onclick="window.open('https://xrp.cafe/collection/galactic-gross-bros', '_blank')">BUY A BRO</button>
             </div>
           </div>
@@ -471,15 +376,11 @@
 
       <section id='section-1' class='section'>
         <div class='panel'>
-          <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
-          <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
-          <div id="static-origin-story" style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
-            <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger.</p>
-            <p>When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
-            <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
+          <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Weekly Chronicle</div>
+          <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE ARCHIVE</h2>
+          <div id="weekly-story-container" style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
+            <p id="weekly-story-text">Loading the latest transmission from the frontier...</p>
           </div>
-          <div class='muted' style="margin-top: 30px; border-top: 1px solid var(--line); padding-top: 12px;">LIVE TRANSMISSIONS</div>
-          <div id="transmissions-container" style="margin-top: 12px;"></div>
         </div>
       </section>
 
@@ -611,11 +512,6 @@
       { name: "TEST SPECIMEN #088", image: "https://ipfs.io/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" }
     ];
     
-    // Global fallback for any cached references
-    function CRT_Effect_Init() {
-      console.log("CRT neural scanlines initialized successfully.");
-    }
-    
     async function safeFetch(url, options = {}) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2500);
@@ -635,8 +531,7 @@
         console.error('SafeFetch Error:', e);
         return null;
       }
-    }
-    
+   }
     const state = { 
       connected: false, 
       wallet: "", 
@@ -709,7 +604,7 @@
       const descEl = document.getElementById("bro-of-day-description");
       try {
         setBroOfDayStatus("Crawl in progress...");
-        const res = await fetch(\`/api/nft?issuer=\${CONFIG.ISSUER}&taxon=1&list=nfts\`);
+        const res = await fetch(`/api/nft?issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);
         if (!res.ok) throw new Error("API response error");
         const result = await res.json();
         const nfts = result?.nfts || [];
@@ -786,39 +681,42 @@
 
     async function connectXaman() {
       const btn = document.getElementById('wallet-btn');
+      if (state.connected) {
+        state.connected = false;
+        state.wallet = "";
+        localStorage.removeItem('ggb_wallet');
+        btn.textContent = 'CONNECT XAMAN';
+        document.getElementById('xaman-status').textContent = 'Wallet disconnected.';
+        document.getElementById('held-nft-empty').style.display = 'block';
+        document.getElementById('connected-nft-display').style.display = 'none';
+        state.userNfts = [];
+        renderNftSelection();
+        return;
+      }
+
       btn.disabled = true;
       btn.textContent = 'CONNECTING...';
       try {
-        const payload = await safeFetch('/api/xaman', {
+        const payload = await safeFetch('/api/xaman?action=create-payload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            action: 'create-payload',
-            txjson: { TransactionType: 'SignIn' },
-            options: { return_url: window.location.href }
-          })
+          body: JSON.stringify({ txjson: { TransactionType: 'SignIn' } })
         });
         if (!payload) throw new Error("Payload creation failed");
         
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        const uuid = payload?.uuid;
-
-        if (uuid) {
-          checkPayloadStatus(uuid);
-        }
-
-        // Deep linking for mobile - prioritize deep link for Xaman native integration
-        if (isMobile) {
-            const deepLink = payload?.next?.app_deep_link || payload?.next?.always;
-            if (deepLink) {
-              window.location.href = deepLink;
-              return;
-            }
-        }
-
-        if (payload?.refs?.qr_png) {
+        if (!isMobile && payload?.refs?.qr_png) {
           document.getElementById('qr-image').src = payload.refs.qr_png;
           document.getElementById('qr-overlay').style.display = 'flex';
+        }
+
+        const url = (isMobile && payload?.next?.app_deep_link) ? payload.next.app_deep_link : (payload?.next?.always || payload?.next);
+        
+        state.activePayloadUuid = payload?.uuid;
+        startPolling(payload?.uuid);
+        
+        if (isMobile && url) {
+          window.location.href = url;
         }
       } catch (error) {
         console.error(error);
@@ -827,47 +725,46 @@
       }
     }
 
-    async function checkPayloadStatus(uuid) {
-      if (!uuid) return;
-      state.activePayloadUuid = uuid;
+    function startPolling(uuid) {
       if (checkInterval) clearInterval(checkInterval);
-      const btn = document.getElementById('wallet-btn');
       let attempts = 0;
-
-      const checkSingle = async () => {
-        const status = await safeFetch('/api/xaman?action=check-payload&uuid=' + encodeURIComponent(uuid));
-        if (!status) return false;
-        if ((status.meta && status.meta.signed) || status.signed) {
-          clearInterval(checkInterval);
-          document.getElementById('qr-overlay').style.display = 'none';
-          const address = status?.response?.account || status?.account || status?.resolved?.account || '';
-          if (address) {
-            state.connected = true;
-            state.wallet = address;
-            setWalletUI(true, address);
-            fetchUserNfts(address);
-            return true;
-          }
-        }
-        return false;
-      };
-
-      // Run immediate check
-      const isSigned = await checkSingle();
-      if (isSigned) return;
-
       checkInterval = setInterval(async () => {
         attempts += 1;
         if (attempts > 60) {
-          clearInterval(checkInterval);
-          if (!state.connected) {
-            btn.disabled = false;
-            btn.textContent = 'CONNECT XAMAN';
-          }
+          stopPolling();
+          const btn = document.getElementById('wallet-btn');
+          btn.disabled = false;
+          btn.textContent = 'CONNECT XAMAN';
           return;
         }
-        await checkSingle();
+        await checkPayloadStatus(uuid);
       }, 2500);
+    }
+
+    function stopPolling() {
+      if (checkInterval) {
+        clearInterval(checkInterval);
+        checkInterval = null;
+      }
+      state.activePayloadUuid = null;
+    }
+
+    async function checkPayloadStatus(uuid) {
+      if (!uuid) return;
+      const status = await safeFetch('/api/xaman?action=check-payload&uuid=' + encodeURIComponent(uuid));
+      if (!status) return;
+      if ((status.meta && status.meta.signed) || status.signed) {
+        stopPolling();
+        document.getElementById('qr-overlay').style.display = 'none';
+        const address = status?.response?.account || status?.account || status?.resolved?.account || status?.address || '';
+        if (address) {
+          state.connected = true;
+          state.wallet = address;
+          localStorage.setItem('ggb_wallet', address);
+          setWalletUI(true, address);
+          fetchUserNfts(address);
+        }
+      }
     }
 
     function setWalletUI(connected, address) {
@@ -882,7 +779,7 @@
 
     async function fetchUserNfts(address) {
       try {
-        const response = await fetch(\`/api/nft?owner=\${address}&issuer=\${CONFIG.ISSUER}&taxon=1&list=nfts\`);
+        const response = await fetch(`/api/nft?owner=${address}&issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);
         const result = await response.json();
         const nfts = result?.nfts || [];
         
@@ -916,9 +813,9 @@
       if (!track) return;
       track.innerHTML = state.userNfts.map((nft, index) => {
         const active = state.selectedNft?.name === nft.name;
-        return \`<div class="nft-select-card \${active ? 'active' : ''}" onclick="selectNft(\${index})">
-          <img src="\${nft.image}" alt="">
-        </div>\`;
+        return `<div class="nft-select-card ${active ? 'active' : ''}" onclick="selectNft(${index})">
+          <img src="${nft.image}" alt="">
+        </div>`;
       }).join('');
     }
 
@@ -971,7 +868,7 @@
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          const lines = decoder.decode(value).split('\\n');
+          const lines = decoder.decode(value).split('\n');
           for (const line of lines) {
             if (!line.startsWith('data: ')) continue;
             const dataText = line.slice(6);
@@ -994,42 +891,20 @@
 
     function renderChatLog() {
       const log = document.getElementById('chat-log');
-      log.innerHTML = state.chat.map(e => \`
-        <div class="bubble \${e.role === 'user' ? 'user' : 'system'}">
-          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">\${e.role.toUpperCase()}</div>
-          \${e.content}
+      log.innerHTML = state.chat.map(e => `
+        <div class="bubble ${e.role === 'user' ? 'user' : 'system'}">
+          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>
+          ${e.content}
         </div>
-      \`).join('');
+      `).join('');
       log.scrollTop = log.scrollHeight;
     }
 
     function switchTab(index) {
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
-      if (index === 1) loadLore();
       if (index === 3) fetchLeaderboard();
     }
-
-    async function loadLore() {
-      const container = document.getElementById('transmissions-container');
-      try {
-        const res = await fetch('/api/transmissions');
-        const data = await res.json();
-        if (data.transmissions?.length) {
-          container.innerHTML = data.transmissions.map(t => \`
-            <div class="transmission-item">
-              <div class="transmission-date">\${new Date(t.date_added).toLocaleString()}</div>
-              <div class="transmission-text">\${t.transmission_text || t.content || ''}</div>
-            </div>
-          \`).join('');
-        } else {
-          container.innerHTML = '<p class="muted">No recent transmissions.</p>';
-        }
-      } catch (e) { container.innerHTML = '<p class="muted">Signal interference detected.</p>'; }
-    }
-    
-    // Explicit alias to avoid any missing handler issues
-    const loadTransmissions = loadLore;
 
     async function fetchLeaderboard() {
       const rowsEl = document.getElementById('leaderboard-rows');
@@ -1040,15 +915,15 @@
         clearTimeout(timeoutId);
         const data = await res.json();
         if (data && data.leaderboard && data.leaderboard.length > 0) {
-          rowsEl.innerHTML = data.leaderboard.map((player, idx) => \`
+          rowsEl.innerHTML = data.leaderboard.map((player, idx) => `
             <div class='leader-row'>
-              <div>#\${idx + 1}</div>
-              <div style="color: var(--cyan);">\${player.name}</div>
-              <div>\${player.chatXp}</div>
-              <div>\${player.tradeScore}</div>
-              <strong style="color: #fff;">\${player.totalScore}</strong>
+              <div>#${idx + 1}</div>
+              <div style="color: var(--cyan);">${player.name}</div>
+              <div>${player.chatXp}</div>
+              <div>${player.tradeScore}</div>
+              <strong style="color: #fff;">${player.totalScore}</strong>
             </div>
-          \`).join('');
+          `).join('');
         } else {
           rowsEl.innerHTML = "<div class='leader-row'><div style='grid-column: span 5;'>No data found on the network.</div></div>";
         }
@@ -1061,28 +936,65 @@
     function openModal(id) { document.getElementById(id).style.display = 'block'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    async function init() {
+    // Ticker and Weekly Lore Logic
+    function getRotationSeed(hours) {
+      const now = new Date();
+      return Math.floor(now.getTime() / (hours * 3600 * 1000));
+    }
+
+    function getWeeklySeed() {
+      const now = new Date();
+      const day = now.getUTCDay();
+      const diff = now.getUTCDate() - day;
+      const lastSunday = new Date(now.setUTCDate(diff));
+      return lastSunday.getUTCFullYear() * 100 + (lastSunday.getUTCMonth() + 1) * 10 + lastSunday.getUTCDate();
+    }
+
+    const TICKER_ITEMS = [
+      "SIGNAL STABLE", "NEURAL LINK ACTIVE", "FUSION READY", "ENCRYPTION ENABLED", 
+      "SCANNING PERIMETER", "RELAY SECURED", "XRP LEDGER SYNCHRONIZED", "BRO CORE INITIALIZED",
+      "FRAGMENT DETECTED IN SECTOR 7", "DECRYPTING LEDGER DATA", "SIGNAL STRENGTH 98%",
+      "VOX POPULI BROADCASTING", "THE DEN IS WATCHING", "REDACTED PROTOCOLS ACTIVE",
+      "QUANTUM ENCRYPTION ENGAGED", "GRID STATUS: NOMINAL"
+    ];
+
+    const WEEKLY_STORIES = [
+      "The fracture in the ledger widened this week. The city is now 40% signal. The Gross Bros are congregating at the old relay station.",
+      "A new frequency was detected coming from the deep vaults. It sounds like laughter, but the data says it's a warning.",
+      "Bert's fusion experiments have reached a critical state. The air in the lab smells like burnt static and old copper.",
+      "The Galactic Council has gone silent. Only the static remains, whispering secrets of the ledger's origin.",
+      "Scavengers found a cache of ancient BERT tokens near the fracture. They say the tokens were still warm.",
+      "The neural CRT relay is picking up transmissions from 2088. The Gross Bros haven't changed much."
+    ];
+
+    function updateLiveTransmissions() {
       const ticker = document.getElementById('warning-ticker-track');
-      const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
-      if (ticker) {
-        ticker.innerHTML = items.concat(items).map(i => \`<span class="ticker-item">\${i}</span>\`).join(' " ');
+      if (!ticker) return;
+      
+      const seed = getRotationSeed(6);
+      const items = [];
+      for(let i=0; i<3; i++) {
+        items.push(TICKER_ITEMS[(seed + i) % TICKER_ITEMS.length]);
       }
       
+      ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' &bull; ');
+    }
+
+    function updateWeeklyLore() {
+      const storyEl = document.getElementById('weekly-story-text');
+      if (!storyEl) return;
+      
+      const seed = getWeeklySeed();
+      const story = WEEKLY_STORIES[seed % WEEKLY_STORIES.length];
+      storyEl.textContent = story;
+    }
+
+    async function init() {
       document.body.classList.add('loading-state');
 
-      // Check for Xaman payload redirect parameters (check Search AND Hash for mobile fragments)
-      const urlParams = new URLSearchParams(window.location.search);
-      const hashParams = new URLSearchParams(window.location.hash.replace('#' , ''));
-      const payloadUuid = urlParams.get('xummPayloadUUID') || urlParams.get('payload_uuid') || 
-                          hashParams.get('xummPayloadUUID') || hashParams.get('payload_uuid');
-                          
-      if (payloadUuid) {
-        console.log("Xaman payload detected, initializing verification:", payloadUuid);
-        document.getElementById('wallet-btn').textContent = 'VERIFYING...';
-        document.getElementById('wallet-btn').disabled = true;
-        checkPayloadStatus(payloadUuid);
-      }
-
+      updateLiveTransmissions();
+      updateWeeklyLore();
+      
       setTimeout(() => {
         document.body.classList.remove('loading-state');
         const statusEl = document.getElementById("bro-of-day-status");
@@ -1094,7 +1006,26 @@
       loadBroOfDay();
       updateTicker();
 
+      const savedWallet = localStorage.getItem('ggb_wallet');
+      if (savedWallet) {
+        state.connected = true;
+        state.wallet = savedWallet;
+        setWalletUI(true, savedWallet);
+        fetchUserNfts(savedWallet);
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const uuid = params.get('xummPayloadUUID') || params.get('payload_uuid') || hashParams.get('xummPayloadUUID') || hashParams.get('payload_uuid');
+      if (uuid) {
+        state.activePayloadUuid = uuid;
+        checkPayloadStatus(uuid);
+        startPolling(uuid);
+      }
+
       setInterval(updateTicker, 30000);
+      setInterval(updateLiveTransmissions, 60000);
+
       const chatInput = document.getElementById('chat-input');
       if (chatInput) {
         chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') startChatStream(); });
@@ -1102,9 +1033,8 @@
     }
 
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && state.activePayloadUuid && !state.connected) {
-         console.log("Tab returned to foreground, force checking payload status:", state.activePayloadUuid);
-         checkPayloadStatus(state.activePayloadUuid);
+      if (document.visibilityState === 'visible' && state.activePayloadUuid) {
+        checkPayloadStatus(state.activePayloadUuid);
       }
     });
 
