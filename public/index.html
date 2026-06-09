@@ -646,8 +646,11 @@
       selectedNft: null, 
       userNfts: [], 
       fuseTargetUsd: 50,
-      xrpPrice: 0
+      xrpPrice: 0,
+      activePayloadUuid: null
     };
+
+    let checkInterval = null;
 
     function hexToUtf8(hex) {
       if (!hex || typeof hex !== 'string') return '';
@@ -706,7 +709,7 @@
       const descEl = document.getElementById("bro-of-day-description");
       try {
         setBroOfDayStatus("Crawl in progress...");
-        const res = await fetch(`/api/nft?issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);
+        const res = await fetch(\`/api/nft?issuer=\${CONFIG.ISSUER}&taxon=1&list=nfts\`);
         if (!res.ok) throw new Error("API response error");
         const result = await res.json();
         const nfts = result?.nfts || [];
@@ -798,7 +801,12 @@
         if (!payload) throw new Error("Payload creation failed");
         
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        
+        const uuid = payload?.uuid;
+
+        if (uuid) {
+          checkPayloadStatus(uuid);
+        }
+
         // Deep linking for mobile - prioritize deep link for Xaman native integration
         if (isMobile) {
             const deepLink = payload?.next?.app_deep_link || payload?.next?.always;
@@ -811,9 +819,6 @@
         if (payload?.refs?.qr_png) {
           document.getElementById('qr-image').src = payload.refs.qr_png;
           document.getElementById('qr-overlay').style.display = 'flex';
-          
-          const uuid = payload?.uuid;
-          checkPayloadStatus(uuid);
         }
       } catch (error) {
         console.error(error);
@@ -824,22 +829,16 @@
 
     async function checkPayloadStatus(uuid) {
       if (!uuid) return;
+      state.activePayloadUuid = uuid;
+      if (checkInterval) clearInterval(checkInterval);
       const btn = document.getElementById('wallet-btn');
       let attempts = 0;
-      const timer = setInterval(async () => {
-        attempts += 1;
-        if (attempts > 60) {
-          clearInterval(timer);
-          if (!state.connected) {
-            btn.disabled = false;
-            btn.textContent = 'CONNECT XAMAN';
-          }
-          return;
-        }
+
+      const checkSingle = async () => {
         const status = await safeFetch('/api/xaman?action=check-payload&uuid=' + encodeURIComponent(uuid));
-        if (!status) return;
+        if (!status) return false;
         if ((status.meta && status.meta.signed) || status.signed) {
-          clearInterval(timer);
+          clearInterval(checkInterval);
           document.getElementById('qr-overlay').style.display = 'none';
           const address = status?.response?.account || status?.account || status?.resolved?.account || '';
           if (address) {
@@ -847,8 +846,27 @@
             state.wallet = address;
             setWalletUI(true, address);
             fetchUserNfts(address);
+            return true;
           }
         }
+        return false;
+      };
+
+      // Run immediate check
+      const isSigned = await checkSingle();
+      if (isSigned) return;
+
+      checkInterval = setInterval(async () => {
+        attempts += 1;
+        if (attempts > 60) {
+          clearInterval(checkInterval);
+          if (!state.connected) {
+            btn.disabled = false;
+            btn.textContent = 'CONNECT XAMAN';
+          }
+          return;
+        }
+        await checkSingle();
       }, 2500);
     }
 
@@ -864,7 +882,7 @@
 
     async function fetchUserNfts(address) {
       try {
-        const response = await fetch(`/api/nft?owner=${address}&issuer=${CONFIG.ISSUER}&taxon=1&list=nfts`);
+        const response = await fetch(\`/api/nft?owner=\${address}&issuer=\${CONFIG.ISSUER}&taxon=1&list=nfts\`);
         const result = await response.json();
         const nfts = result?.nfts || [];
         
@@ -898,9 +916,9 @@
       if (!track) return;
       track.innerHTML = state.userNfts.map((nft, index) => {
         const active = state.selectedNft?.name === nft.name;
-        return `<div class="nft-select-card ${active ? 'active' : ''}" onclick="selectNft(${index})">
-          <img src="${nft.image}" alt="">
-        </div>`;
+        return \`<div class="nft-select-card \${active ? 'active' : ''}" onclick="selectNft(\${index})">
+          <img src="\${nft.image}" alt="">
+        </div>\`;
       }).join('');
     }
 
@@ -953,7 +971,7 @@
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          const lines = decoder.decode(value).split('\n');
+          const lines = decoder.decode(value).split('\\n');
           for (const line of lines) {
             if (!line.startsWith('data: ')) continue;
             const dataText = line.slice(6);
@@ -976,12 +994,12 @@
 
     function renderChatLog() {
       const log = document.getElementById('chat-log');
-      log.innerHTML = state.chat.map(e => `
-        <div class="bubble ${e.role === 'user' ? 'user' : 'system'}">
-          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>
-          ${e.content}
+      log.innerHTML = state.chat.map(e => \`
+        <div class="bubble \${e.role === 'user' ? 'user' : 'system'}">
+          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">\${e.role.toUpperCase()}</div>
+          \${e.content}
         </div>
-      `).join('');
+      \`).join('');
       log.scrollTop = log.scrollHeight;
     }
 
@@ -998,12 +1016,12 @@
         const res = await fetch('/api/transmissions');
         const data = await res.json();
         if (data.transmissions?.length) {
-          container.innerHTML = data.transmissions.map(t => `
+          container.innerHTML = data.transmissions.map(t => \`
             <div class="transmission-item">
-              <div class="transmission-date">${new Date(t.date_added).toLocaleString()}</div>
-              <div class="transmission-text">${t.transmission_text || t.content || ''}</div>
+              <div class="transmission-date">\${new Date(t.date_added).toLocaleString()}</div>
+              <div class="transmission-text">\${t.transmission_text || t.content || ''}</div>
             </div>
-          `).join('');
+          \`).join('');
         } else {
           container.innerHTML = '<p class="muted">No recent transmissions.</p>';
         }
@@ -1022,15 +1040,15 @@
         clearTimeout(timeoutId);
         const data = await res.json();
         if (data && data.leaderboard && data.leaderboard.length > 0) {
-          rowsEl.innerHTML = data.leaderboard.map((player, idx) => `
+          rowsEl.innerHTML = data.leaderboard.map((player, idx) => \`
             <div class='leader-row'>
-              <div>#${idx + 1}</div>
-              <div style="color: var(--cyan);">${player.name}</div>
-              <div>${player.chatXp}</div>
-              <div>${player.tradeScore}</div>
-              <strong style="color: #fff;">${player.totalScore}</strong>
+              <div>#\${idx + 1}</div>
+              <div style="color: var(--cyan);">\${player.name}</div>
+              <div>\${player.chatXp}</div>
+              <div>\${player.tradeScore}</div>
+              <strong style="color: #fff;">\${player.totalScore}</strong>
             </div>
-          `).join('');
+          \`).join('');
         } else {
           rowsEl.innerHTML = "<div class='leader-row'><div style='grid-column: span 5;'>No data found on the network.</div></div>";
         }
@@ -1047,7 +1065,7 @@
       const ticker = document.getElementById('warning-ticker-track');
       const items = ['SIGNAL STABLE', 'NEURAL LINK ACTIVE', 'FUSION READY', 'ENCRYPTION ENABLED', 'SCANNING PERIMETER', 'RELAY SECURED'];
       if (ticker) {
-        ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">${i}</span>`).join(' " ');
+        ticker.innerHTML = items.concat(items).map(i => \`<span class="ticker-item">\${i}</span>\`).join(' " ');
       }
       
       document.body.classList.add('loading-state');
@@ -1082,6 +1100,13 @@
         chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') startChatStream(); });
       }
     }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && state.activePayloadUuid && !state.connected) {
+         console.log("Tab returned to foreground, force checking payload status:", state.activePayloadUuid);
+         checkPayloadStatus(state.activePayloadUuid);
+      }
+    });
 
     document.addEventListener('DOMContentLoaded', () => { init(); });
   </script>
