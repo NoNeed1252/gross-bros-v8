@@ -256,7 +256,7 @@ var CombatSystem = {
                     type: type,
                     hp: 1,
                     direction: 1,
-                    speed: 1 + (this.state.wave * 0.2)
+                    speed: 0.8 + (this.state.wave * 0.2)
                 });
             }
         }
@@ -298,7 +298,7 @@ var CombatSystem = {
             this.state.bullets.push({
                 x: this.state.player.x + this.state.player.w / 2 - 2,
                 y: this.state.player.y,
-                w: 4, h: 10, speed: 7
+                w: 4, h: 10, speed: 8
             });
             this.state.lastFire = now;
         }
@@ -320,7 +320,7 @@ var CombatSystem = {
             e.x += e.direction * e.speed;
             if (e.x <= 0 || e.x >= 300 - e.w) edgeHit = true;
             
-            if (Math.random() < 0.005 * this.state.wave) {
+            if (Math.random() < 0.004 * this.state.wave) {
                 this.state.enemyBullets.push({
                     x: e.x + e.w/2,
                     y: e.y + e.h,
