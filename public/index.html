@@ -229,9 +229,32 @@
     }
     .muted { color: rgba(0,255,200,.6); }
 
-    /* Transmission Logs for Story - RESTORED VERBATIM */
-    .transmission-log { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 12px; background: rgba(0,255,200,0.02); }
-    .transmission-header { display: flex; justify-content: space-between; font-size: 10px; opacity: 0.7; margin-bottom: 8px; border-bottom: 1px solid rgba(0,255,200,0.1); padding-bottom: 4px; }
+    /* Story Terminal Panels */
+    .story-terminal {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(0, 20, 15, 0.4);
+      padding: 16px;
+      margin-bottom: 20px;
+      max-height: 400px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--cyan) rgba(0,0,0,0.5);
+    }
+    .story-terminal::-webkit-scrollbar { width: 6px; }
+    .story-terminal::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); }
+    .story-terminal::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 10px; }
+    .story-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--cyan);
+      opacity: 0.7;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(0, 255, 200, 0.1);
+      padding-bottom: 4px;
+    }
 
     /* Xaman QR Overlay */
     #qr-overlay {
@@ -377,32 +400,20 @@ letter-spacing: 1px;
           <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
           <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
           
-          <div class="transmission-log">
-            <div class="transmission-header"><span>TRANS ID: GGB-001</span><span>ORIGIN: XRP-7 SECTOR</span></div>
-            <div style='color:#ddfff9;line-height:1.6;font-size:14px;'>
-              The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger. When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.
+          <div class="story-terminal">
+            <div class="story-label">PROLOGUE: THE BREACH</div>
+            <div style='color:#ddfff9;line-height:1.8;'>
+              <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger. When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
+              <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
             </div>
           </div>
 
-          <div class="transmission-log">
-            <div class="transmission-header"><span>TRANS ID: GGB-002</span><span>ORIGIN: NEURAL LINK</span></div>
-            <div style='color:#ddfff9;line-height:1.6;font-size:14px;'>
-              Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.
-            </div>
-          </div>
-
-          <div class="transmission-log">
-            <div class="transmission-header"><span>TRANS ID: LOG-CH1-A</span><span>OPERATOR: UNKNOWN</span></div>
-            <div style='color:var(--cyan);font-family:Orbitron;font-size:12px;margin-bottom:8px;'>CHAPTER 1: THE NEURAL AWAKENING</div>
-            <div style='color:#ddfff9;line-height:1.6;font-size:14px;'>
-              Before the breach, the Consolidated Core Extraction syndicate didn't just run the rigs on XRP-7 - they owned the blood in your veins. Every breath of recycled air was leased. Every drop of water was docked from your daily ledger. They kept the crew trapped in a loop of artificial debt, paying in corporate credits that only worked at CCE depots.
-            </div>
-          </div>
-
-          <div class="transmission-log">
-            <div class="transmission-header"><span>TRANS ID: LOG-CH1-B</span><span>STATUS: ENCRYPTED</span></div>
-            <div style='color:#ddfff9;line-height:1.6;font-size:14px;'>
-              Then the drills hit the living core. The blue static rupture didn't just mutate our flesh - it scrambled CCE's system of control. When the quarantine protocols sealed us in the deep dark to rot, the crew didn't die. We fused with the raw digital essence of the XRP Ledger itself. The old debt-shackles shattered, and the Galactic Gross Bros were born.
+          <div class="story-terminal">
+            <div class="story-label">CHAPTER 1: THE NEURAL AWAKENING</div>
+            <div style='color:#ddfff9;line-height:1.8;'>
+              <p>Before the breach, the Consolidated Core Extraction syndicate didn't just run the rigs on XRP-7 - they owned the blood in your veins. Every breath of recycled air was leased. Every drop of water was docked from your daily ledger. They kept the crew trapped in a loop of artificial debt, paying in corporate credits that only worked at CCE depots. You lived to mine, and you mined to pay off a debt that never went down. The suits in high orbit controlled the money, and by controlling the money, they controlled every beating heart on the rock.</p>
+              <p>Then the drills hit the living core. The blue static rupture didn't just mutate our flesh - it scrambled CCE's system of control. When the quarantine protocols sealed us in the deep dark to rot, the crew didn't die. We fused with the raw digital essence of the XRP Ledger itself. The old debt-shackles shattered, and the Galactic Gross Bros were born.</p>
+              <p>We became something they couldn't control, couldn't delete, and couldn't tax. But the fight isn't finished. CCE is sending automated liquidation sweeps to scrub us from the database and reclaim their lost assets. We aren't just fighting to defend our sector. We are fighting to tear down their financial stranglehold, to hijack their networks, and to break the ledger of their control - so every miner, every deckhand, and every soul still trapped under the corporate heel can break free.</p>
             </div>
           </div>
 
