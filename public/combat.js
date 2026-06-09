@@ -245,6 +245,11 @@ var CombatSystem = {
         const width = 30;
         const height = 30;
         
+        const wave = this.state.wave;
+        const enemySpeed = (wave <= 10) 
+            ? 0.7 + (wave * 0.05) 
+            : 1.2 + ((wave - 10) * 0.25);
+
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
                 const type = (r % 2 === 0) ? 'enemySpore' : 'enemyAcid';
@@ -256,7 +261,7 @@ var CombatSystem = {
                     type: type,
                     hp: 1,
                     direction: 1,
-                    speed: 0.8 + (this.state.wave * 0.2)
+                    speed: enemySpeed
                 });
             }
         }
@@ -316,15 +321,24 @@ var CombatSystem = {
 
         // Update Enemies
         let edgeHit = false;
+        const wave = this.state.wave;
+        const fireChance = (wave <= 10)
+            ? 0.003 + (wave * 0.0002)
+            : 0.005 + ((wave - 10) * 0.0015);
+        
+        const bulletSpeed = (wave <= 10)
+            ? 2.5 + (wave * 0.1)
+            : 3.5 + ((wave - 10) * 0.5);
+
         this.state.enemies.forEach(e => {
             e.x += e.direction * e.speed;
             if (e.x <= 0 || e.x >= 300 - e.w) edgeHit = true;
             
-            if (Math.random() < 0.004 * this.state.wave) {
+            if (Math.random() < fireChance) {
                 this.state.enemyBullets.push({
                     x: e.x + e.w/2,
                     y: e.y + e.h,
-                    w: 4, h: 10, speed: 3 + this.state.wave/2
+                    w: 4, h: 10, speed: bulletSpeed
                 });
             }
         });
