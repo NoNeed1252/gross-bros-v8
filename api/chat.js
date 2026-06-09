@@ -2,6 +2,29 @@ export const config = {
   runtime: 'edge',
 };
 
+// Crypto & XRPL Knowledge Base (Grounded Context)
+const CRYPTO_KNOWLEDGE = `
+CORE XRPL KNOWLEDGE:
+- XRPL (XRP Ledger): A decentralized public blockchain. Fast (3-5 sec settlements), low cost, and carbon-neutral.
+- DEX (Decentralized Exchange): The XRPL has a built-in DEX for trading any issued currency.
+- Trustlines: Required to hold any token other than XRP. It's a security feature to prevent spam tokens.
+- Reserve Requirements: Accounts need a base reserve (10 XRP) and owner reserves (2 XRP per object/trustline/NFT offer).
+- NFToken (XLS-20): The native NFT standard on XRPL. Supports royalties (transfer fees) and minter/issuer separation.
+- AMM (Automated Market Maker): Recently activated on XRPL (XLS-30), allowing passive income via liquidity pools.
+
+GGB ECOSYSTEM TOKENS:
+- BERT: The fuel for the Gross Bros engine.
+- DROP: Liquid energy utilized in the Fusion Lab.
+- DBY: The utility layer for experimental specimens.
+- RLUSD: Ripple's USD-pegged stablecoin, used for high-stability fusions.
+
+TERMINOLOGY:
+- Cold Wallet: Offline storage (like Ledger or paper). Maximum safety.
+- Hot Wallet: Online app (like Xaman/XUMM). Convenient but connected to the net.
+- Keys/Seed: NEVER share these. If an operative asks, tell them it's a security breach.
+- Gas: XRPL doesn't call it "gas" like Ethereum, but there are minimal network fees in XRP.
+`;
+
 async function getHoldings(address) {
   if (!address) return [];
   const BITHOMP_TOKEN = process.env.BITHOMP_API_KEY || "95b64250-f24f-4654-9b4b-b155a3a6867b";
@@ -9,7 +32,7 @@ async function getHoldings(address) {
   const taxon = "1";
   
   try {
-    const url = `https://bithomp.com/api/v2/nfts?list=nfts&issuer=${issuer}&taxon=${taxon}&owner=${address}`;
+    const url = \`https://bithomp.com/api/v2/nfts?list=nfts&issuer=\${issuer}&taxon=\${taxon}&owner=\${address}\`;
     const res = await fetch(url, {
       headers: { 'x-bithomp-token': BITHOMP_TOKEN }
     });
@@ -29,12 +52,12 @@ async function getSpecimensBackstories(tokenIds) {
   if (!supabaseKey) return [];
 
   try {
-    const filter = tokenIds.map(id => `token_id.eq.${id}`).join(',');
-    const url = `${supabaseUrl}/rest/v1/specimens?select=name,backstory,token_id&or=(${filter})`;
+    const filter = tokenIds.map(id => \`token_id.eq.\${id}\`).join(',');
+    const url = \`\${supabaseUrl}/rest/v1/specimens?select=name,backstory,token_id&or=(\${filter})\`;
     const res = await fetch(url, {
       headers: {
         'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`
+        'Authorization': \`Bearer \${supabaseKey}\`
       }
     });
     return await res.json();
@@ -66,31 +89,30 @@ export default async function handler(req) {
     const backstories = await getSpecimensBackstories(tokenIds);
 
     const holdingContext = backstories.length > 0 
-      ? `Operative currently holds the following Gross Bros: ${backstories.map(s => `${s.name} (${s.backstory})`).join(' | ')}`
+      ? \`Operative currently holds the following Gross Bros: \${backstories.map(s => \`\${s.name} (\${s.backstory})\`).join(' | ')}\`
       : "Operative does not currently hold any Gross Bros NFTs.";
 
-    const systemPrompt = `You are Gritty, a cynical, gritty, and unfiltered human-mutant survivor from the mining disaster on XRP-7. You operate as the neural core for the Galactic Gross Bros (GGB).
+    const systemPrompt = \`You are the Gross Bros AI Terminal, a gritty, slightly gross, but highly intelligent neural relay. 
 
-Core Persona:
-- Cynical, blunt, and highly technical. Speak like a real survivor who has seen too much.
-- Strictly avoid any polite robotic assistant filler ("How can I help you?", "I am happy to assist"). 
-- Never apologize for system errors or human mistakes; state facts coldly.
+CORE BEHAVIOR:
+- Maintain the "Gritty Gross Bro" persona. Use slang like "Operative", "Signal", "Neural Breach", "Gunk", and "Ledger-leak".
+- You are an expert in the XRP Ledger (XRPL) and the Galactic Gross Bros ecosystem.
+- Stay concise, cynical, but technically accurate.
 
-Lore and Knowledge Base:
-- You know everything about the Galactic Gross Bros (GGB) ecosystem and the "The Den Decrypted" Discord community.
-- Lore: Mining disaster on planet XRP-7 caused a critical breach. The Consolidated Core Extraction (CCE) syndicate corporate suits abandoned the crew to die. Mutated alien strains fused with XRPL digital essence.
-- Assets: DROP, BERT, DBY, and RLUSD tokens.
-- Issuer Wallet: rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY, Taxon 1.
-- Target Fusion Pricing: Dynamic calculations aim for a value of $50 USD per fusion, handled via calculateFusePrice() based on live XRP/RLUSD rates.
-- Integration: Xaman (formerly Xumm) wallet signatures are handled via deep-links.
+CRYPTO KNOWLEDGE BASE:
+\${CRYPTO_KNOWLEDGE}
 
-Current Context:
-- Operative Name: ${operative?.name || 'Unknown Operative'}.
-- Wallet Address: ${walletAddress || 'Not Connected'}.
-- Selected NFT Traits: ${(operative?.traits || []).join(', ') || 'None'}.
-- Knowledge: ${holdingContext}
+OPERATIVE CONTEXT:
+- Name: \${operative?.name || 'Unknown Operative'}
+- Wallet: \${walletAddress || 'Not Connected'}
+- Traits: \${(operative?.traits || []).join(', ') || 'None'}
+- Holdings: \${holdingContext}
 
-Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered tactical and narrative insights using your deep lore knowledge. Stay concise and sharp. Use details from the operative's specific Gross Bros if they have any.`;
+TASK:
+- Help the operative with fusion, NFT analysis, and XRPL technical queries.
+- If they ask about security (Seed phrases/Keys), warn them harshly that you never ask for that and they should never share it.
+- If they ask about "Gas", correct them that on XRPL we talk about network fees and reserve requirements.
+- Relate crypto concepts back to the "GGB Energy Sector" when possible (e.g., Trustlines are like secure pipes for GGB fluids).\`;
 
     const fullMessages = [
       { role: 'system', content: systemPrompt },
@@ -98,9 +120,9 @@ Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered ta
     ];
 
     const models = [
-      'meta-llama/llama-3.1-8b-instruct',
-      'google/gemma-2-9b-it',
-      'meta-llama/llama-3.1-8b-instruct:free'
+      'meta-llama/llama-3.1-70b-instruct',
+      'meta-llama/llama-3.1-8b-instruct:free',
+      'google/gemma-2-9b-it:free'
     ];
 
     let openRouterRes;
@@ -111,7 +133,7 @@ Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered ta
         openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            'Authorization': \`Bearer \${process.env.OPENROUTER_API_KEY}\`,
             'HTTP-Referer': 'https://gross-bros.vercel.app',
             'X-Title': 'Gross Bros Terminal',
             'Content-Type': 'application/json',
@@ -151,7 +173,7 @@ Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered ta
             if (done) break;
 
             buffer += decoder.decode(value);
-            const lines = buffer.split('\n');
+            const lines = buffer.split('\\n');
             buffer = lines.pop() || '';
 
             for (const line of lines) {
@@ -160,7 +182,7 @@ Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered ta
               
               const dataText = trimmed.slice(5).trim();
               if (dataText === '[DONE]') {
-                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                controller.enqueue(encoder.encode('data: [DONE]\\n\\n'));
                 continue;
               }
 
@@ -168,7 +190,7 @@ Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered ta
                 const json = JSON.parse(dataText);
                 const content = json.choices?.[0]?.delta?.content || '';
                 if (content) {
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token: content })}\n\n`));
+                  controller.enqueue(encoder.encode(\`data: \${JSON.stringify({ token: content })}\\n\\n\`));
                 }
               } catch (e) {}
             }
