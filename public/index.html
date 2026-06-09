@@ -307,6 +307,31 @@ letter-spacing: 1px;
       font-weight: bold;
       cursor: pointer;
     }
+
+    /* Storyline Terminal Panels */
+    .story-terminal {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(0, 20, 15, 0.4);
+      padding: 16px;
+      margin-bottom: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--cyan) rgba(0,0,0,0.5);
+    }
+    .story-terminal::-webkit-scrollbar { width: 6px; }
+    .story-terminal::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); }
+    .story-terminal::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 10px; }
+    .story-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--cyan);
+      opacity: 0.7;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
 </style>
 </head>
 <body>
@@ -376,17 +401,24 @@ letter-spacing: 1px;
         <div class='panel'>
           <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
           <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
-          <div style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
+          
+          <div class="story-terminal">
+            <div class="story-label">Archive Log: Origin</div>
             <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger. When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
             <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
-            <p id="chapter-1-header" style='margin-top: 20px; font-family:Orbitron,sans-serif; letter-spacing:0.2em; color:var(--cyan);'>CHAPTER 1: THE NEURAL AWAKENING</p>
+          </div>
+
+          <div class="story-terminal">
+            <div class="story-label">Archive Log: Chapter 1</div>
+            <p id="chapter-1-header" style='font-family:Orbitron,sans-serif; letter-spacing:0.2em; color:var(--cyan); margin-bottom: 12px;'>THE NEURAL AWAKENING</p>
             <p>Before the breach, the Consolidated Core Extraction syndicate didn't just run the rigs on XRP-7 - they owned the blood in your veins. Every breath of recycled air was leased. Every drop of water was docked from your daily ledger. They kept the crew trapped in a loop of artificial debt, paying in corporate credits that only worked at CCE depots. You lived to mine, and you mined to pay off a debt that never went down. The suits in high orbit controlled the money, and by controlling the money, they controlled every beating heart on the rock.</p>
             <p>Then the drills hit the living core. The blue static rupture didn't just mutate our flesh - it scrambled CCE's system of control. When the quarantine protocols sealed us in the deep dark to rot, the crew didn't die. We fused with the raw digital essence of the XRP Ledger itself. The old debt-shackles shattered, and the Galactic Gross Bros were born.</p>
             <p>We became something they couldn't control, couldn't delete, and couldn't tax. But the fight isn't finished. CCE is sending automated liquidation sweeps to scrub us from the database and reclaim their lost assets. We aren't just fighting to defend our sector. We are fighting to tear down their financial stranglehold, to hijack their networks, and to break the ledger of their control - so every miner, every deckhand, and every soul still trapped under the corporate heel can break free.</p>
-            <div style="border-top: 1px dashed var(--cyan); margin-top: 25px; padding-top: 15px; font-size: 0.75rem; color: #888; font-family: 'Share Tech Mono', monospace; line-height: 1.4;">
-                [!] SYSTEM STATUS: ACTIVE TRANSMISSION PROTOCOL<br>
-                [!] UPDATE CADENCE: MINI-LOGS APPENDED WEEKLY (SUNDAYS AT 12:00 EDT). DATA ACCRUES IN THE ARCHIVE UNTIL THE CHAPTER REACHES TARGET LENGTH, AT WHICH POINT THE NEXT CHAPTER BEGINS.
-            </div>
+          </div>
+
+          <div style="border-top: 1px dashed var(--line); margin-top: 25px; padding-top: 15px; font-size: 0.75rem; color: #888; font-family: 'Share Tech Mono', monospace; line-height: 1.4;">
+              [!] SYSTEM STATUS: ACTIVE TRANSMISSION PROTOCOL<br>
+              [!] UPDATE CADENCE: MINI-LOGS APPENDED WEEKLY (SUNDAYS AT 12:00 EDT). DATA ACCRUES IN THE ARCHIVE UNTIL CHAPTER IS COMPILED, AT WHICH POINT PREPARATION FOR THE NEXT CHAPTER BEGINS.
           </div>
         </div>
       </section>
@@ -997,7 +1029,7 @@ letter-spacing: 1px;
 
       const params = new URLSearchParams(window.location.search);
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const uuid = params.get('xummPayloadUUID') || params.get('payload_uuid') || hashParams.get('xummPayloadUUID') || hashParams.get('xummPayloadUUID');
+      const uuid = params.get('xummPayloadUUID') || params.get('payload_uuid') || hashParams.get('xummPayloadUUID') || hashParams.get('payload_uuid');
       if (uuid) {
         state.activePayloadUuid = uuid;
         checkPayloadStatus(uuid);
