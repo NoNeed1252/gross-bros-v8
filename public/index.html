@@ -49,7 +49,7 @@
       display: flex; flex-direction: column;
     }
     @media (max-width: 640px) {
-      .shell { margin: 0; min-height: 100vh; border-width: 0; border-radius: 0; }
+      .shell { margin: 8px auto; min-height: calc(100vh - 16px); border-width: 0; }
     }
     .topbar {
       background: #0a0a0a; border-bottom: 1px solid var(--line);
@@ -126,9 +126,6 @@
       align-items: center;
       justify-content: center;
     }
-    @media (max-width: 480px) {
-      .nft-art { aspect-ratio: 1 / 1; max-height: 240px; }
-    }
     .nft-art img {
       width: 100%;
       height: 100%;
@@ -178,21 +175,15 @@
       box-shadow: 0 0 50px rgba(0, 255, 200, 0.15);
       position: relative;
     }
+    @media (max-width: 640px) {
+      .held-nft-panel { border-radius: 0; border-left: none; border-right: none; }
+    }
     .held-nft-image-wrapper {
       width: 100%; height: auto; aspect-ratio: 1/1; border: none;
-      border-bottom: 2px solid rgba(0, 255, 200, 0.4); border-radius: 0;
       background: #000;
     }
     .held-nft-image-wrapper img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; }
-    .held-nft-info { 
-      width: 100%; padding: 22px; text-align: center;
-      background: linear-gradient(180deg, rgba(0,255,200,0.15), transparent);
-    }
-    .held-nft-name { 
-      font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: bold; 
-      color: var(--cyan); letter-spacing: 0.2em; text-transform: uppercase;
-      text-shadow: 0 0 15px var(--cyan);
-    }
+    
     .held-nft-empty {
       padding: 80px 20px; text-align: center; color: rgba(0,255,200,0.25);
       font-family: 'Orbitron', sans-serif; letter-spacing: 0.3em; text-transform: uppercase;
@@ -407,7 +398,6 @@ letter-spacing: 1px;
           <div id='held-nft-display' class='held-nft-panel'>
             <div id="connected-nft-display" style="display:none; align-items:center; gap:16px; width:100%;">
                <div class="held-nft-image-wrapper"><img id="connected-nft-image" src="" alt=""></div>
-               <div class="held-nft-info"><span class="held-nft-name" id="connected-nft-name">--</span></div>
             </div>
             <div id="held-nft-empty" class="held-nft-empty" style="opacity:0.8; font-size:12px; letter-spacing:0.2em;">GUEST ACCESS</div>
           </div>
@@ -836,7 +826,7 @@ letter-spacing: 1px;
       document.getElementById('held-nft-empty').style.display = 'none';
       document.getElementById('connected-nft-display').style.display = 'flex';
       document.getElementById('connected-nft-image').src = nft.image;
-      document.getElementById('connected-nft-name').textContent = nft.name;
+      // document.getElementById('connected-nft-name').textContent = nft.name;
       renderNftSelection();
     }
 
@@ -851,7 +841,7 @@ letter-spacing: 1px;
       const log = document.getElementById('chat-log');
       const bubble = document.createElement('div');
       bubble.className = 'bubble system';
-      bubble.innerHTML = '<div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">SYSTEM</div><div class="msg-content">...</div>';
+      bubble.innerHTML = '<div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">SYSTEM</div><div class=\"msg-content\">...</div>';
       log.appendChild(bubble);
       const contentEl = bubble.querySelector('.msg-content');
 
@@ -962,8 +952,6 @@ letter-spacing: 1px;
 
     const TICKER_ITEMS = ['XRP-7 VOLATILE ENERGY: ACTIVE', 'MUTATED STRAIN DETECTED', 'NEURAL LINK ESTABLISHED', 'BERT ENGINE CRITICAL', 'DROP FLOW SECURED', 'FUSION ENGINE CHARGED', 'XRPL ROOT SEQUENCE STABLE'];
 
-    
-
     function updateLiveTransmissions() {
       const ticker = document.getElementById('warning-ticker-track');
       if (!ticker) return;
@@ -981,7 +969,6 @@ letter-spacing: 1px;
       document.body.classList.add('loading-state');
 
       updateLiveTransmissions();
-      
       
       setTimeout(() => {
         document.body.classList.remove('loading-state');
