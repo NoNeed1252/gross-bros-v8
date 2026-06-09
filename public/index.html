@@ -1052,10 +1052,14 @@
       
       document.body.classList.add('loading-state');
 
-      // Check for Xaman payload redirect parameters
+      // Check for Xaman payload redirect parameters (check Search AND Hash for mobile fragments)
       const urlParams = new URLSearchParams(window.location.search);
-      const payloadUuid = urlParams.get('xummPayloadUUID') || urlParams.get('payload_uuid');
+      const hashParams = new URLSearchParams(window.location.hash.replace('#' , ''));
+      const payloadUuid = urlParams.get('xummPayloadUUID') || urlParams.get('payload_uuid') || 
+                          hashParams.get('xummPayloadUUID') || hashParams.get('payload_uuid');
+                          
       if (payloadUuid) {
+        console.log("Xaman payload detected, initializing verification:", payloadUuid);
         document.getElementById('wallet-btn').textContent = 'VERIFYING...';
         document.getElementById('wallet-btn').disabled = true;
         checkPayloadStatus(payloadUuid);
