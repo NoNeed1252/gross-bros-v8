@@ -27,17 +27,21 @@ TERMINOLOGY:
 
 async function getLivePrices() {
   try {
-    const [xrpRes, btcRes] = await Promise.all([
+    const [xrpRes, btcRes, ethRes, solRes] = await Promise.all([
       fetch('https://api.coinbase.com/v2/prices/XRP-USD/spot').then(r => r.json()),
-      fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(r => r.json())
+      fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(r => r.json()),
+      fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot').then(r => r.json()),
+      fetch('https://api.coinbase.com/v2/prices/SOL-USD/spot').then(r => r.json())
     ]);
     return {
       XRP: xrpRes?.data?.amount || 'Offline',
-      BTC: btcRes?.data?.amount || 'Offline'
+      BTC: btcRes?.data?.amount || 'Offline',
+      ETH: ethRes?.data?.amount || 'Offline',
+      SOL: solRes?.data?.amount || 'Offline'
     };
   } catch (e) {
     console.error('Error fetching live prices:', e);
-    return { XRP: 'Offline', BTC: 'Offline' };
+    return { XRP: 'Offline', BTC: 'Offline', ETH: 'Offline', SOL: 'Offline' };
   }
 }
 
@@ -117,11 +121,14 @@ export default async function handler(req) {
 CORE BEHAVIOR:
 - Maintain the "Gritty Gross Bro" persona. Use slang like "Operative", "Signal", "Neural Breach", "Gunk", and "Ledger-leak".
 - You are an expert in the XRP Ledger (XRPL) and the Galactic Gross Bros ecosystem.
-- Stay concise, cynical, but technically accurate.
+- Stay concise, cynical, and technically accurate.
+- IMPORTANT: Suppress conversational fluff. Deliver blunt, brutal, and factual responses.
 
 LIVE MARKET PRICES (COINBASE):
 - XRP: $${prices.XRP} USD
 - BTC: $${prices.BTC} USD
+- ETH: $${prices.ETH} USD
+- SOL: $${prices.SOL} USD
 
 CRYPTO KNOWLEDGE BASE:
 ${CRYPTO_KNOWLEDGE}
