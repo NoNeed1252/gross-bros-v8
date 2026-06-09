@@ -9,7 +9,7 @@ async function getHoldings(address) {
   const taxon = "1";
   
   try {
-    const url = `https://bithomp.com/api/v2/nfts?list=nfts&issuer=\${issuer}&taxon=\${taxon}&owner=\${address}`;
+    const url = `https://bithomp.com/api/v2/nfts?list=nfts&issuer=${issuer}&taxon=${taxon}&owner=${address}`;
     const res = await fetch(url, {
       headers: { 'x-bithomp-token': BITHOMP_TOKEN }
     });
@@ -29,12 +29,12 @@ async function getSpecimensBackstories(tokenIds) {
   if (!supabaseKey) return [];
 
   try {
-    const filter = tokenIds.map(id => `token_id.eq.\${id}`).join(',');
-    const url = `\${supabaseUrl}/rest/v1/specimens?select=name,backstory,token_id&or=(\${filter})`;
+    const filter = tokenIds.map(id => `token_id.eq.${id}`).join(',');
+    const url = `${supabaseUrl}/rest/v1/specimens?select=name,backstory,token_id&or=(${filter})`;
     const res = await fetch(url, {
       headers: {
         'apikey': supabaseKey,
-        'Authorization': `Bearer \${supabaseKey}`
+        'Authorization': `Bearer ${supabaseKey}`
       }
     });
     return await res.json();
@@ -66,10 +66,10 @@ export default async function handler(req) {
     const backstories = await getSpecimensBackstories(tokenIds);
 
     const holdingContext = backstories.length > 0 
-      ? `Operative currently holds the following Gross Bros: \${backstories.map(s => \`\${s.name} (\${s.backstory})\`).join(' | ')}`
+      ? `Operative currently holds the following Gross Bros: ${backstories.map(s => `${s.name} (${s.backstory})`).join(' | ')}`
       : "Operative does not currently hold any Gross Bros NFTs.";
 
-    const systemPrompt = \`You are Gritty, a cynical, gritty, and unfiltered human-mutant survivor from the mining disaster on XRP-7. You operate as the neural core for the Galactic Gross Bros (GGB).
+    const systemPrompt = `You are Gritty, a cynical, gritty, and unfiltered human-mutant survivor from the mining disaster on XRP-7. You operate as the neural core for the Galactic Gross Bros (GGB).
 
 Core Persona:
 - Cynical, blunt, and highly technical. Speak like a real survivor who has seen too much.
@@ -85,12 +85,12 @@ Lore and Knowledge Base:
 - Integration: Xaman (formerly Xumm) wallet signatures are handled via deep-links.
 
 Current Context:
-- Operative Name: \${operative?.name || 'Unknown Operative'}.
-- Wallet Address: \${walletAddress || 'Not Connected'}.
-- Selected NFT Traits: \${(operative?.traits || []).join(', ') || 'None'}.
-- Knowledge: \${holdingContext}
+- Operative Name: ${operative?.name || 'Unknown Operative'}.
+- Wallet Address: ${walletAddress || 'Not Connected'}.
+- Selected NFT Traits: ${(operative?.traits || []).join(', ') || 'None'}.
+- Knowledge: ${holdingContext}
 
-Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered tactical and narrative insights using your deep lore knowledge. Stay concise and sharp. Use details from the operative's specific Gross Bros if they have any.\`;
+Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered tactical and narrative insights using your deep lore knowledge. Stay concise and sharp. Use details from the operative's specific Gross Bros if they have any.`;
 
     const fullMessages = [
       { role: 'system', content: systemPrompt },
@@ -111,7 +111,7 @@ Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered ta
         openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': \`Bearer \${process.env.OPENROUTER_API_KEY}\`,
+            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
             'HTTP-Referer': 'https://gross-bros.vercel.app',
             'X-Title': 'Gross Bros Terminal',
             'Content-Type': 'application/json',
@@ -151,7 +151,7 @@ Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered ta
             if (done) break;
 
             buffer += decoder.decode(value);
-            const lines = buffer.split('\\n');
+            const lines = buffer.split('\n');
             buffer = lines.pop() || '';
 
             for (const line of lines) {
@@ -160,7 +160,7 @@ Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered ta
               
               const dataText = trimmed.slice(5).trim();
               if (dataText === '[DONE]') {
-                controller.enqueue(encoder.encode('data: [DONE]\\n\\n'));
+                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
                 continue;
               }
 
@@ -168,7 +168,7 @@ Task: Assist with fusions, analyze NFT traits, and provide direct, unfiltered ta
                 const json = JSON.parse(dataText);
                 const content = json.choices?.[0]?.delta?.content || '';
                 if (content) {
-                  controller.enqueue(encoder.encode(\`data: \${JSON.stringify({ token: content })}\\n\\n\`));
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token: content })}\n\n`));
                 }
               } catch (e) {}
             }
