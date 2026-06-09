@@ -1,5 +1,7 @@
-const express = require('express');
-const router = express.Router();
+// api/xaman.js (Edge Runtime version)
+export const config = {
+  runtime: 'edge',
+};
 
 // Hardcoded Xaman keys to bypass Vercel environment variable injection failure
 const apiKey = '88e5dad9-93bf-4e2b-a4b8-563f16545c2d';
@@ -11,7 +13,7 @@ const XAMAN_API_BASE = 'https://xumm.app/api/v1/platform';
  * Helper to make authenticated requests to Xaman API
  */
 async function xamanFetch(endpoint, options = {}) {
-  const url = `${XAMAN_API_BASE}${endpoint}`;
+  const url = \`\${XAMAN_API_BASE}\${endpoint}\`;
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -23,8 +25,8 @@ async function xamanFetch(endpoint, options = {}) {
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error?.message || 'Xaman API error');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || \`Xaman API error: \${response.status}\`);
   }
 
   return response.json();
@@ -33,9 +35,10 @@ async function xamanFetch(endpoint, options = {}) {
 /**
  * Handle payload creation logic
  */
-async function handleCreatePayload(req, res) {
+async function handleCreatePayload(req) {
   try {
-    const { txjson, options } = req.body;
+    const body = await req.json().catch(() => ({}));
+    const { txjson, options } = body;
 
     const payloadBody = {
       txjson: txjson || {
@@ -49,77 +52,112 @@ async function handleCreatePayload(req, res) {
       body: JSON.stringify(payloadBody),
     });
 
-    return res.status(200).json({
+    return new Response(JSON.stringify({
       uuid: result.uuid,
       next: {
-        always: result.next.always,
-        app_deep_link: result.next.app_deep_link
+        always: result.next?.always,
+        app_deep_link: result.next?.app_deep_link
       },
-      qrUrl: result.refs.qr_png,
+      qrUrl: result.refs?.qr_png,
       refs: result.refs
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
     });
   } catch (error) {
     console.error('Error creating Xaman payload:', error);
-    return res.status(500).json({ error: error.message });
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
   }
 }
 
 /**
  * Handle payload status check logic
  */
-async function handleCheckPayload(req, res, uuid) {
+async function handleCheckPayload(uuid) {
   if (!uuid) {
-    return res.status(400).json({ error: 'Missing uuid' });
+    return new Response(JSON.stringify({ error: 'Missing uuid' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
   }
 
   try {
-    const result = await xamanFetch(`/payload/${uuid}`);
+    const result = await xamanFetch(\`/payload/\${uuid}\`);
 
-    const isSigned = result.meta.resolved && result.meta.signed;
-    const address = result.response.account || null;
+    const isSigned = result.meta?.resolved && result.meta?.signed;
+    const address = result.response?.account || null;
 
-    return res.status(200).json({
+    return new Response(JSON.stringify({
       signed: isSigned,
       address: address,
       account: address,
-      status: result.meta.status,
+      status: result.meta?.status,
       meta: result.meta,
       response: result.response
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
     });
   } catch (error) {
     console.error('Error checking Xaman payload:', error);
-    return res.status(500).json({ error: error.message });
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
   }
 }
 
-router.post('/', async (req, res) => {
-  const action = req.body.action || req.query.action;
-  const uuid = req.body.uuid || req.query.uuid;
+export default async function handler(req) {
+  const url = new URL(req.url);
+  let action = url.searchParams.get('action');
+  let uuid = url.searchParams.get('uuid');
 
-  if (action === 'create-payload') {
-    return handleCreatePayload(req, res);
+  // Handle OPTIONS for CORS
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      }
+    });
   }
 
-  if (action === 'check-payload') {
-    return handleCheckPayload(req, res, uuid);
+  if (req.method === 'POST') {
+    // If action/uuid not in query, we need to read body once
+    if (!action || (action === 'check-payload' && !uuid)) {
+      try {
+        const clonedReq = req.clone();
+        const body = await clonedReq.json().catch(() => ({}));
+        action = action || body.action;
+        uuid = uuid || body.uuid;
+      } catch (e) {}
+    }
+
+    if (action === 'create-payload') {
+      return handleCreatePayload(req);
+    }
+
+    if (action === 'check-payload') {
+      return handleCheckPayload(uuid);
+    }
+  } else if (req.method === 'GET') {
+    if (action === 'create-payload') {
+      // Create payload via GET is possible but txjson would have to be in query or default
+      return handleCreatePayload(req); 
+    }
+
+    if (action === 'check-payload') {
+      return handleCheckPayload(uuid);
+    }
   }
 
-  return res.status(400).json({ error: 'Invalid action' });
-});
-
-router.get('/', async (req, res) => {
-  const action = req.query.action || req.body?.action;
-  const uuid = req.query.uuid || req.body?.uuid;
-
-  if (action === 'create-payload') {
-    return handleCreatePayload(req, res);
-  }
-
-  if (action === 'check-payload') {
-    return handleCheckPayload(req, res, uuid);
-  }
-
-  return res.status(400).json({ error: 'Invalid action' });
-});
-
-module.exports = router;
+  return new Response(JSON.stringify({ error: 'Invalid action or method' }), {
+    status: 400,
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+  });
+}
