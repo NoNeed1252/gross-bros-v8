@@ -801,17 +801,27 @@ letter-spacing: 1px;
       }
     }
 
+    const LORE_ALERTS = [
+      'XRP-7 VOLATILE ENERGY: ACTIVE',
+      'MUTATED STRAIN DETECTED',
+      'NEURAL LINK ESTABLISHED',
+      'FUSION ENGINE CHARGED',
+      'XRPL ROOT SEQUENCE STABLE',
+      'SIGNAL BREACH MITIGATED',
+      'ALPHA PROTOCOL ONLINE'
+    ];
+
     async function updateTicker() {
       try {
-        const [pricesRes, dexRes, alertsRes] = await Promise.all([
-          fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple,bitcoin,ethereum,solana&vs_currencies=usd'),
-          fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools'),
-          fetch('/api/alerts')
+        const [pricesRes, dexRes, alertsRes] = await Promise.allSettled([
+          fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple,bitcoin,ethereum,solana&vs_currencies=usd').then(r => r.json()),
+          fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/tokens/raqVwqakELDXTXmU8FQw53fJ9Sehr7hDTR/pools').then(r => r.json()),
+          fetch('/api/alerts').then(r => r.json())
         ]);
         
-        const prices = await pricesRes.json();
-        const dexData = await dexRes.json();
-        const alertsData = await alertsRes.json();
+        const prices = pricesRes.status === 'fulfilled' ? pricesRes.value : {};
+        const atmData = dexRes.status === 'fulfilled' ? dexRes.value : {};
+        const alertsData = alertsRes.status === 'fulfilled' ? alertsRes.value : {};
 
         if (prices?.ripple?.usd) {
           state.xrpPrice = prices.ripple.usd;
@@ -827,24 +837,30 @@ letter-spacing: 1px;
           `SOL: $${prices?.solana?.usd || 'GUNKED'}`
         ];
 
-        if (dexData?.data) {
-          ['ATM', 'BERT', 'DROP'].forEach(sym => {
-            const pool = dexData.data.find(p => p.attributes?.name?.toUpperCase().includes(sym));
-            if (pool) priceItems.push(`${sym}: $${parseFloat(pool.attributes.base_token_price_usd).toFixed(8)}`);
-          });
+        // Specific lookup for ATM by contract address to ensure solidity
+        if (atmData?.data?.[0]?.attributes?.base_token_price_usd) {
+          priceItems.push(`ATM: $${parseFloat(atmData.data[0].attributes.base_token_price_usd).toFixed(8)}`);
+        } else {
+          priceItems.push(`ATM: GUNKED`);
         }
         
         let displayItems = [];
         
-        // Handle Supabase alerts with 6-hour rotation
+        // Handle Supabase alerts with 6-hour rotation and Lore Fallback
+        const rotationSeed = Math.floor(Date.now() / (6 * 60 * 60 * 1000));
+        
         if (alertsData?.alerts && alertsData.alerts.length > 0) {
-           const rotationIndex = Math.floor(Date.now() / (6 * 60 * 60 * 1000)) % alertsData.alerts.length;
+           const rotationIndex = rotationSeed % alertsData.alerts.length;
            const activeAlert = alertsData.alerts[rotationIndex].message;
            displayItems.push(`[SYSTEM ALERT] ${activeAlert.toUpperCase()}`);
+        } else {
+           // Fallback to gritty lore alerts if Supabase is empty/fails
+           const rotationIndex = rotationSeed % LORE_ALERTS.length;
+           displayItems.push(`[SYSTEM STATUS] ${LORE_ALERTS[rotationIndex]}`);
         }
         
         displayItems = displayItems.concat(priceItems);
-        displayItems.push('XRP-7 VOLATILE ENERGY: ACTIVE', 'NEURAL LINK STABLE', 'FUSION ENGINE CHARGED');
+        displayItems.push('XRP-7: STABLE', 'NEURAL LINK: LOCKED');
         
         state.tickerItems = displayItems;
         renderTicker();
@@ -856,7 +872,6 @@ letter-spacing: 1px;
     function renderTicker() {
       const track = document.getElementById('warning-ticker-track');
       if (!track) return;
-      // Double the items for seamless looping
       const content = state.tickerItems.concat(state.tickerItems).map(i => `<span class="ticker-item">${i}</span>`).join(' &bull; ');
       track.innerHTML = content;
     }
