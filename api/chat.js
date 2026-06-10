@@ -22,7 +22,7 @@ GGB ECOSYSTEM TOKENS:
 - XRP ARMY: The frontline defense. Represents the collective strength of the ledger's elite forces.
 - PRINCE: Royal-tier specimen lineage. High-value asset in the GGB hierarchy.
 - BEARXRPH: Defensive market mitigation token. Built for survival in the harshest crypto winters.
-- PIDGEON: Information relay asset. Used for many purposes across the ledger.
+- PIDGEON: Information relay asset. Used for rapid-delivery signaling across the ledger.
 - SLT: Synthetic Ledger Toxin. Dangerous but potent when utilized in controlled fusions.
 - XRPH: High-density XRP derivative. Used in specialized industrial-grade ledger operations.
 - XRT: Extended Relay Token. The long-range communication backbone of the GGB network.
@@ -111,7 +111,7 @@ async function getLivePrices(mentionedSymbols = []) {
 async function getHoldings(address) {
   if (!address) return [];
   const BITHOMP_TOKEN = process.env.BITHOMP_API_KEY || "95b64250-f24f-4654-9b4b-b155a3a6867b";
-  const issuer = "rJZERQeN5iamnZ3MBbAmtrmjV9CiqXEhqX";
+  const issuer = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
   const taxon = "1";
   
   try {

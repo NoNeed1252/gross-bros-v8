@@ -7,7 +7,7 @@ export default async function handler(req) {
   
   // 1. Dynamically parse search params
   const requestedOwner = searchParams.get('owner');
-  const issuer = searchParams.get('issuer') || "rJZERQeN5iamnZ3MBbAmtrmjV9CiqXEhqX";
+  const issuer = searchParams.get('issuer') || "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
   const taxon = searchParams.get('taxon') || "1";
   const list = searchParams.get('list') || "nfts";
   
