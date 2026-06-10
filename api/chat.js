@@ -34,7 +34,20 @@ TERMINOLOGY:
 - Gas: XRPL doesn't call it "gas" like Ethereum, but there are minimal network fees in XRP.
 `;
 
-async function getLivePrices() {
+function extractMentionedSymbols(messages) {
+  const text = messages.map(m => m.content).join(' ').toUpperCase();
+  const commonSymbols = ['BTC', 'ETH', 'SOL', 'XRP', 'XLM', 'HBAR', 'ADA', 'DOT', 'DOGE', 'SHIB', 'PEPE', 'LINK', 'MATIC', 'ALGO'];
+  return commonSymbols.filter(sym => text.includes(sym));
+}
+
+const SYMBOL_MAP = {
+  'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana', 'XRP': 'ripple',
+  'XLM': 'stellar', 'HBAR': 'hedera-hashgraph', 'ADA': 'cardano', 'DOT': 'polkadot',
+  'DOGE': 'dogecoin', 'SHIB': 'shiba-inu', 'PEPE': 'pepe', 'LINK': 'chainlink',
+  'MATIC': 'polygon-ecosystem-token', 'ALGO': 'algorand'
+};
+
+async function getLivePrices(mentionedSymbols = []) {
   const prices = {
     XRP: null, BTC: null, ETH: null, SOL: null,
     BERT: null, DROP: null, DBY: null, RLUSD: null,
@@ -42,21 +55,28 @@ async function getLivePrices() {
     BEARXRPH: null, PIDGEON: null, SLT: null, XRPH: null, XRT: null
   };
 
+  const idsToFetch = ['ripple', 'bitcoin', 'ethereum', 'solana'];
+  mentionedSymbols.forEach(sym => {
+    if (SYMBOL_MAP[sym] && !idsToFetch.includes(SYMBOL_MAP[sym])) {
+      idsToFetch.push(SYMBOL_MAP[sym]);
+    }
+  });
+
   try {
     const [dexRes, geckoRes] = await Promise.allSettled([
       fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools').then(r => r.json()),
-      fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple,bitcoin,ethereum,solana&vs_currencies=usd').then(r => r.json())
+      fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${idsToFetch.join(',')}&vs_currencies=usd`).then(r => r.json())
     ]);
 
-    // 1. XRP, BTC, ETH, SOL from CoinGecko (Dynamic)
     if (geckoRes.status === 'fulfilled' && geckoRes.value) {
-      if (geckoRes.value.ripple?.usd) prices.XRP = geckoRes.value.ripple.usd.toString();
-      if (geckoRes.value.bitcoin?.usd) prices.BTC = geckoRes.value.bitcoin.usd.toString();
-      if (geckoRes.value.ethereum?.usd) prices.ETH = geckoRes.value.ethereum.usd.toString();
-      if (geckoRes.value.solana?.usd) prices.SOL = geckoRes.value.solana.usd.toString();
+      Object.keys(SYMBOL_MAP).forEach(sym => {
+        const id = SYMBOL_MAP[sym];
+        if (geckoRes.value[id]?.usd) {
+          prices[sym] = geckoRes.value[id].usd.toString();
+        }
+      });
     }
 
-    // 2. Individual Coinbase fallbacks if needed
     if (!prices.XRP || !prices.BTC) {
       const fallbackPromises = [];
       if (!prices.XRP) fallbackPromises.push(fetch('https://api.coinbase.com/v2/prices/XRP-USD/spot').then(r => r.json()).then(data => ({ sym: 'XRP', val: data?.data?.amount })));
@@ -70,7 +90,6 @@ async function getLivePrices() {
       });
     }
 
-    // 3. Ecosystem Tokens from GeckoTerminal (XRPL DEX)
     if (dexRes.status === 'fulfilled' && dexRes.value?.data) {
       const pools = dexRes.value.data;
       const findPrice = (symbol) => {
@@ -140,9 +159,10 @@ export default async function handler(req) {
     const { messages, operative } = body;
     const walletAddress = operative?.walletAddress;
 
+    const mentionedSymbols = extractMentionedSymbols(messages || []);
     const [holdings, prices] = await Promise.all([
       getHoldings(walletAddress),
-      getLivePrices()
+      getLivePrices(mentionedSymbols)
     ]);
     
     const tokenIds = holdings.map(nft => nft.nftokenID);
@@ -152,11 +172,16 @@ export default async function handler(req) {
       ? `Operative currently holds the following Gross Bros: ${backstories.map(s => `${s.name} (${s.backstory})`).join(' | ')}`
       : "Operative does not currently hold any Gross Bros NFTs.";
 
-    // Price Display Formatting with Fallbacks
     const xrpDisplay = prices.XRP ? `$${prices.XRP}` : 'SIGNAL MISALIGNED';
     const btcDisplay = prices.BTC ? `$${prices.BTC}` : 'GUNKED';
     const ethDisplay = prices.ETH ? `$${prices.ETH}` : 'GUNKED';
     const solDisplay = prices.SOL ? `$${prices.SOL}` : 'GUNKED';
+
+    const dynamicPrices = mentionedSymbols
+      .filter(sym => !['BTC', 'ETH', 'SOL', 'XRP'].includes(sym))
+      .map(sym => `${sym}: ${prices[sym] ? `$${prices[sym]}` : 'GUNKED'}`)
+      .join(' | ');
+
     const ecosystemDisplay = ['BERT', 'DROP', 'DBY', 'RLUSD', 'FUZZY', 'PHNIX', 'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT']
       .map(sym => `${sym}: ${prices[sym] ? `$${prices[sym]}` : 'GUNKED'}`).join(' | ');
 
@@ -169,7 +194,8 @@ CORE BEHAVIOR:
 
 LIVE MARKET PRICES:
 - XRP: ${xrpDisplay} | BTC: ${btcDisplay} | ETH: ${ethDisplay} | SOL: ${solDisplay}
-- ${ecosystemDisplay}
+${dynamicPrices ? `- Mentioned Assets: ${dynamicPrices}` : ''}
+- Ecosystem: ${ecosystemDisplay}
 
 CRYPTO KNOWLEDGE BASE:
 ${CRYPTO_KNOWLEDGE}
