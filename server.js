@@ -2,12 +2,20 @@ const express = require('express');
 const path = require('path');
 // Import the handler directly
 const xamanHandler = require('./api/xaman');
+// Import Guardian Discord Integration
+const GuardianDiscord = require('./src/bot/discord');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 const HOST = '0.0.0.0';
 
 app.use(express.json());
+
+// Initialize Guardian Bot
+const guardian = new GuardianDiscord(
+    process.env.DISCORD_TOKEN,
+    process.env.DISCORD_WEBHOOK_URL
+);
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -103,12 +111,12 @@ app.get('/api/transmissions', async (req, res) => {
 app.post('/api/chat', async (req, res) => {
   try {
     const { messages, operative } = req.body;
-    const systemPrompt = `You are the Gross Bros AI Terminal. 
+    const systemPrompt = \`You are the Gross Bros AI Terminal. 
 Character: Gritty, slightly gross, but helpful assistant.
-Context: You are talking to ${operative?.name || 'an Unknown Operative'}. 
-Wallet: ${operative?.walletAddress || 'Not Connected'}. 
-Traits: ${(operative?.traits || []).join(', ') || 'None'}.
-Task: Assist with fusion and NFT analysis in character. Stay concise.`;
+Context: You are talking to \${operative?.name || 'an Unknown Operative'}. 
+Wallet: \${operative?.walletAddress || 'Not Connected'}. 
+Traits: \${(operative?.traits || []).join(', ') || 'None'}.
+Task: Assist with fusion and NFT analysis in character. Stay concise.\`;
 
     const fullMessages = [{ role: 'system', content: systemPrompt }, ...(messages || [])];
     const models = ['meta-llama/llama-3.1-8b-instruct', 'google/gemma-2-9b-it', 'meta-llama/llama-3.1-8b-instruct:free'];
@@ -119,7 +127,7 @@ Task: Assist with fusion and NFT analysis in character. Stay concise.`;
         openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            'Authorization': \`Bearer \${process.env.OPENROUTER_API_KEY}\`,
             'HTTP-Referer': 'https://grossbros.vercel.app',
             'X-Title': 'Gross Bros Terminal',
             'Content-Type': 'application/json',
@@ -127,7 +135,7 @@ Task: Assist with fusion and NFT analysis in character. Stay concise.`;
           body: JSON.stringify({ model, messages: fullMessages, stream: true }),
         });
         if (openRouterRes.ok) break;
-      } catch (err) { console.error(`Model ${model} error:`, err.message); }
+      } catch (err) { console.error(\`Model \${model} error:\`, err.message); }
     }
 
     if (!openRouterRes || !openRouterRes.ok) {
@@ -146,20 +154,20 @@ Task: Assist with fusion and NFT analysis in character. Stay concise.`;
       const { done, value } = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
+      const lines = buffer.split('\\n');
       buffer = lines.pop() || '';
       for (const line of lines) {
         const trimmed = line.trim();
         if (!trimmed || !trimmed.startsWith('data:')) continue;
         const dataText = trimmed.slice(5).trim();
         if (dataText === '[DONE]') {
-          res.write('data: [DONE]\n\n');
+          res.write('data: [DONE]\\n\\n');
           continue;
         }
         try {
           const json = JSON.parse(dataText);
           const content = json.choices?.[0]?.delta?.content || '';
-          if (content) res.write(`data: ${JSON.stringify({ token: content })}\n\n`);
+          if (content) res.write(\`data: \${JSON.stringify({ token: content })}\\n\\n\`);
         } catch (e) {}
       }
     }
@@ -181,6 +189,14 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, HOST, () => {
-    console.log(`Gross-Bros-V8 Terminal Server running at http://${HOST}:${PORT}`);
+app.listen(PORT, HOST, async () => {
+    console.log(\`Gross-Bros-V8 Terminal Server running at http://\${HOST}:\${PORT}\`);
+    
+    // Boot Discord bot
+    try {
+        await guardian.init();
+        console.log('[GUARDIAN] Discord integration active.');
+    } catch (err) {
+        console.error('[GUARDIAN] Discord boot failed:', err.message);
+    }
 });
