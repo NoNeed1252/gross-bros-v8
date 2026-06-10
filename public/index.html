@@ -1206,12 +1206,14 @@ letter-spacing: 1px;
 
     function renderChatLog() {
       const log = document.getElementById('chat-log');
-      log.innerHTML = state.chat.map(e => `
-        <div class="bubble ${e.role === 'user' ? 'user' : 'system'}">
-          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>
-          ${e.content}
-        </div>
-      `).join('');
+      log.innerHTML = state.chat.map(e => {
+        const role = e.role === 'user' ? 'USER' : 'SYSTEM';
+        const cls = e.role === 'user' ? 'user' : 'system';
+        return '<div class="bubble ' + cls + '">' +
+          '<div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">' + role + '</div>' +
+          e.content +
+        '</div>';
+      }).join('');
       log.scrollTop = log.scrollHeight;
     }
 
