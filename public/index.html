@@ -563,7 +563,7 @@ letter-spacing: 1px;
       ISSUER: "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY",
       RPC: "https://xrplcluster.com",
       GATEWAY: "https://ipfs.io/ipfs/",
-      WC_PROJECT_ID: '778a46b970868846c2688005bc9bc83d'
+      WC_PROJECT_ID: 'a16d6c0cad2df1ceea121c581b95cffb'
     };
     
     const MOCK_NFTS = [
@@ -574,7 +574,7 @@ letter-spacing: 1px;
     
     async function safeFetch(url, options = {}) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
       try {
         const res = await fetch(url, { ...options, signal: controller.signal });
         clearTimeout(timeoutId);
@@ -952,7 +952,7 @@ letter-spacing: 1px;
 
       try {
         const res = await fetch('/api/chat', {
-          method: 'POST',
+          method:_POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             messages: state.chat,
