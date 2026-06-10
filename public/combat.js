@@ -108,7 +108,7 @@ const CombatSystem = {
     },
 
     renderLayout() {
-        const container = document.getElementById('combat-container');
+        const container = document.getElementById('game-room-container');
         if (!container) return;
 
         container.innerHTML = `
@@ -120,7 +120,7 @@ const CombatSystem = {
                 </div>
 
                 <div id="canvas-wrapper" style="position: relative; width: 300px; height: 400px; background: #000; border: 2px solid rgba(0,255,200,0.2); border-radius: 8px;">
-                    <canvas id="combat-canvas" width="300" height="400" style="width: 100%; height: 100%; display: block;"></canvas>
+                    <canvas id="game-room-canvas" width="300" height="400" style="width: 100%; height: 100%; display: block;"></canvas>
                     <div id="game-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); z-index: 10;">
                         <h2 id="overlay-title" style="font-family: Orbitron; color: var(--cyan); margin-bottom: 20px;">READY?</h2>
                         <button class="btn" onclick="CombatSystem.startGame()" style="padding: 15px 40px; font-size: 18px;">START</button>
@@ -139,7 +139,7 @@ const CombatSystem = {
     },
 
     setupCanvas() {
-        this.canvas = document.getElementById('combat-canvas');
+        this.canvas = document.getElementById('game-room-canvas');
         if (!this.canvas) return;
         this.ctx = this.canvas.getContext('2d');
     },
