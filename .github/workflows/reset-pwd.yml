@@ -1,0 +1,16 @@
+
+name: Reset VPS Password
+on: workflow_dispatch
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Change Root Password
+        uses: appleboy/ssh-action@master
+        with:
+          host: 216.250.127.169
+          username: root
+          password: vAUL03juyPr1hu
+          script: |
+            echo "root:y%0f7ai83Qo3VESekxDkU8^g" | chpasswd
+            echo "Password successfully changed"
