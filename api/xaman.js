@@ -1,3 +1,7 @@
+export const config = {
+  runtime: 'edge',
+};
+
 const apiKey = '88e5dad9-93bf-4e2b-a4b8-563f16545c2d';
 const apiSecret = 'b09b8426-7a2e-4317-bf54-24eb976e5ed0';
 const XAMAN_API_BASE = 'https://xumm.app/api/v1/platform';
@@ -22,14 +26,30 @@ async function xamanFetch(endpoint, options = {}) {
   return response.json();
 }
 
-module.exports = async function handler(req, res) {
-  const action = req.body?.action || req.query?.action;
-  const uuid = req.body?.uuid || req.query?.uuid;
+export default async function handler(req) {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
+  if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers });
 
   try {
+    const { searchParams } = new URL(req.url);
+    let action = searchParams.get('action');
+    let uuid = searchParams.get('uuid');
+    let body = {};
+
+    if (req.method === 'POST') {
+      body = await req.json();
+      action = action || body.action;
+      uuid = uuid || body.uuid;
+    }
+
     if (action === 'create-payload') {
-      const txjson = req.body?.txjson;
-      const options = req.body?.options;
+      const txjson = body.txjson;
+      const options = body.options;
       const result = await xamanFetch('/payload', {
         method: 'POST',
         body: JSON.stringify({
@@ -38,7 +58,7 @@ module.exports = async function handler(req, res) {
         }),
       });
 
-      return res.status(200).json({
+      return new Response(JSON.stringify({
         uuid: result.uuid,
         next: {
           always: result.next.always,
@@ -46,26 +66,26 @@ module.exports = async function handler(req, res) {
         },
         qrUrl: result.refs.qr_png,
         refs: result.refs
-      });
+      }), { status: 200, headers: { ...headers, 'Content-Type': 'application/json' } });
     }
 
     if (action === 'check-payload') {
-      if (!uuid) return res.status(400).json({ error: 'Missing uuid' });
+      if (!uuid) return new Response(JSON.stringify({ error: 'Missing uuid' }), { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } });
       const result = await xamanFetch(`/payload/${uuid}`);
       const isSigned = result.meta.resolved && result.meta.signed;
-      return res.status(200).json({
+      return new Response(JSON.stringify({
         signed: isSigned,
         address: result.response.account || null,
         account: result.response.account || null,
         status: result.meta.status,
         meta: result.meta,
         response: result.response
-      });
+      }), { status: 200, headers: { ...headers, 'Content-Type': 'application/json' } });
     }
 
-    return res.status(400).json({ error: 'Invalid action' });
+    return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('Xaman API error:', error);
-    return res.status(500).json({ error: error.message });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } });
   }
-};
+}
