@@ -57,7 +57,7 @@ const SYMBOL_MAP = {
 
 const XRPL_TOKEN_ADDRESSES = {
   'ATM': 'raqVwqakELDXTXmU8FQw53fJ9Sehr7hDTR',
-  'BERT': 'rNoNeed1252BERTaddressHERE...', // Placeholder for other assets if needed
+  'BERT': 'rNoNeed1252BERTaddressHERE...',
   'DROP': 'rNoNeed1252DROPaddressHERE...'
 };
 
@@ -69,20 +69,31 @@ async function getLivePrices(mentionedSymbols = []) {
   ['ripple', 'bitcoin', 'ethereum', 'solana'].forEach(id => { if (!idsToFetch.includes(id)) idsToFetch.push(id); });
 
   try {
-    const [dexRes, geckoRes] = await Promise.allSettled([
+    const fetchPromises = [
       fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools').then(r => r.json()),
       fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + idsToFetch.join(',') + '&vs_currencies=usd').then(r => r.json())
-    ]);
+    ];
 
-    if (geckoRes.status === 'fulfilled' && geckoRes.value) {
+    // Parallel fetch for non-GGB, non-major tickers via DexScreener
+    const dexscreenerSymbols = mentionedSymbols.filter(sym => !SYMBOL_MAP[sym] && !XRPL_TOKEN_ADDRESSES[sym]);
+    dexscreenerSymbols.forEach(sym => {
+      fetchPromises.push(fetch('https://api.dexscreener.com/latest/dex/search?q=' + sym).then(r => r.json()).then(data => ({ sym, type: 'dex', data })));
+    });
+
+    const results = await Promise.allSettled(fetchPromises);
+    
+    const dexRes = results[0].status === 'fulfilled' ? results[0].value : null;
+    const geckoRes = results[1].status === 'fulfilled' ? results[1].value : null;
+
+    if (geckoRes) {
       Object.keys(SYMBOL_MAP).forEach(sym => {
         const id = SYMBOL_MAP[sym];
-        if (geckoRes.value[id]?.usd) prices[sym] = geckoRes.value[id].usd.toString();
+        if (geckoRes[id]?.usd) prices[sym] = geckoRes[id].usd.toString();
       });
     }
 
-    if (dexRes.status === 'fulfilled' && dexRes.value?.data) {
-      const pools = dexRes.value.data;
+    if (dexRes?.data) {
+      const pools = dexRes.data;
       mentionedSymbols.forEach(sym => {
         const pool = pools.find(p => {
           const nameMatch = p.attributes?.name?.toUpperCase().includes(sym.toUpperCase());
@@ -94,6 +105,17 @@ async function getLivePrices(mentionedSymbols = []) {
         }
       });
     }
+
+    // Process DexScreener results
+    results.slice(2).forEach(res => {
+      if (res.status === 'fulfilled' && res.value?.type === 'dex') {
+        const { sym, data } = res.value;
+        if (data.pairs && data.pairs.length > 0) {
+          const bestPair = data.pairs[0];
+          prices[sym] = bestPair.priceUsd + ' (' + bestPair.chainId.toUpperCase() + ') | Vol: $' + (bestPair.volume?.h24 || '0') + ' | 24h: ' + (bestPair.priceChange?.h24 || '0') + '%';
+        }
+      }
+    });
     
     // Specific search for ATM if still null
     if (!prices['ATM'] && mentionedSymbols.includes('ATM')) {
