@@ -2,8 +2,6 @@
   "rewrites": [
     { "source": "/api/chat", "destination": "/api/chat.js" },
     { "source": "/api/xaman", "destination": "/api/xaman.js" },
-    { "source": "/api/nft", "destination": "/api/nft.js" },
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/server.js" }
+    { "source": "/api/nft", "destination": "/api/nft.js" }
   ]
 }
