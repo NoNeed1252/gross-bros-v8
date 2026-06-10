@@ -803,13 +803,15 @@ letter-spacing: 1px;
 
     async function updateTicker() {
       try {
-        const [pricesRes, dexRes] = await Promise.all([
+        const [pricesRes, dexRes, alertsRes] = await Promise.all([
           fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple,bitcoin,ethereum,solana&vs_currencies=usd'),
-          fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools')
+          fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools'),
+          fetch('/api/alerts')
         ]);
         
         const prices = await pricesRes.json();
         const dexData = await dexRes.json();
+        const alertsData = await alertsRes.json();
 
         if (prices?.ripple?.usd) {
           state.xrpPrice = prices.ripple.usd;
@@ -818,7 +820,7 @@ letter-spacing: 1px;
           calculateFusePrice();
         }
 
-        const items = [
+        const priceItems = [
           `XRP: $${prices?.ripple?.usd || 'GUNKED'}`,
           `BTC: $${prices?.bitcoin?.usd || 'GUNKED'}`,
           `ETH: $${prices?.ethereum?.usd || 'GUNKED'}`,
@@ -828,12 +830,23 @@ letter-spacing: 1px;
         if (dexData?.data) {
           ['ATM', 'BERT', 'DROP'].forEach(sym => {
             const pool = dexData.data.find(p => p.attributes?.name?.toUpperCase().includes(sym));
-            if (pool) items.push(`${sym}: $${parseFloat(pool.attributes.base_token_price_usd).toFixed(8)}`);
+            if (pool) priceItems.push(`${sym}: $${parseFloat(pool.attributes.base_token_price_usd).toFixed(8)}`);
           });
         }
         
-        items.push('XRP-7 VOLATILE ENERGY: ACTIVE', 'NEURAL LINK STABLE', 'FUSION ENGINE CHARGED');
-        state.tickerItems = items;
+        let displayItems = [];
+        
+        // Handle Supabase alerts with 6-hour rotation
+        if (alertsData?.alerts && alertsData.alerts.length > 0) {
+           const rotationIndex = Math.floor(Date.now() / (6 * 60 * 60 * 1000)) % alertsData.alerts.length;
+           const activeAlert = alertsData.alerts[rotationIndex].message;
+           displayItems.push(`[SYSTEM ALERT] ${activeAlert.toUpperCase()}`);
+        }
+        
+        displayItems = displayItems.concat(priceItems);
+        displayItems.push('XRP-7 VOLATILE ENERGY: ACTIVE', 'NEURAL LINK STABLE', 'FUSION ENGINE CHARGED');
+        
+        state.tickerItems = displayItems;
         renderTicker();
       } catch (e) { 
         console.error('Ticker error', e); 
