@@ -17,7 +17,6 @@
     }
     a { color: inherit; }
 
-    /* Single Optimized Scanline Overlay */
     .crt-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
@@ -35,7 +34,7 @@
       background: #050505; box-shadow: 0 30px 70px -20px rgba(0,0,0,.95), 0 0 100px -20px var(--cyan);
       display: flex; flex-direction: column;
     }
-    @media (max-width: 640px) {
+    @media (max-width: 1024px) {
       .shell { margin: 0; min-height: 100vh; border-width: 0; border-radius: 0; }
     }
     .topbar {
@@ -65,6 +64,20 @@
     .section { display: none; }
     .section.active { display: block; }
     .panel { background: rgba(7,18,17,.95); border: 1px solid var(--line); border-radius: 24px; padding: 18px; }
+    
+    /* Lore Refactor Styles */
+    .lore-container { display: grid; gap: 24px; margin-top: 20px; }
+    .lore-box {
+      max-height: 400px; overflow-y: auto;
+      padding: 18px; border: 1px solid rgba(0,255,200,.12);
+      border-radius: 18px; background: rgba(0,0,0,.4);
+      scrollbar-width: thin; scrollbar-color: var(--cyan) transparent;
+    }
+    .lore-box::-webkit-scrollbar { width: 6px; }
+    .lore-box::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 10px; }
+    .lore-title { font-family: 'Orbitron', sans-serif; letter-spacing: 0.15em; color: var(--cyan); margin-bottom: 12px; font-size: 14px; text-transform: uppercase; }
+    .lore-text { color: #ddfff9; line-height: 1.8; font-size: 14px; }
+
     .grid { display: grid; gap: 16px; }
     .grid-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
     .nft-panel { position: relative; overflow: hidden; background: linear-gradient(180deg, rgba(7,18,17,.98), rgba(2,8,8,.98)); }
@@ -79,36 +92,69 @@
     input, select { padding: 14px 16px; border-radius: 18px; border: 1px solid rgba(0,255,200,.22); background: rgba(0,0,0,.5); color: #f1fffd; font: inherit; outline: none; width: 100%; }
     .leader-row { display: grid; grid-template-columns: 50px 1fr 80px 80px 80px; gap: 5px; align-items: center; padding: 12px; border-bottom: 1px solid rgba(0,255,200,.08); font-size: 13px; }
     .social-card { display: flex; align-items: center; justify-content: space-between; padding: 20px; border: 1px solid rgba(0,255,200,0.2); border-radius: 20px; background: rgba(0,255,200,0.04); text-decoration: none; }
+    
+    #qr-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; }
+    .qr-container { background: #fff; padding: 20px; border-radius: 12px; border: 4px solid var(--cyan); box-shadow: 0 0 30px var(--cyan); }
+    .qr-container img { max-width: 300px; display: block; }
 
-    /* Lore Specific Styling */
-    .lore-container { display: grid; gap: 24px; margin-top: 20px; }
-    .lore-box {
-      max-height: 400px; overflow-y: auto;
-      padding: 18px; border: 1px solid rgba(0,255,200,.12);
-      border-radius: 18px; background: rgba(0,0,0,.4);
-      scrollbar-width: thin; scrollbar-color: var(--cyan) transparent;
+    .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.98); backdrop-filter: blur(15px); overflow-y: auto; }
+    .modal-content { background-color: #050505; margin: 10vh auto; padding: 50px; border: 2px solid var(--cyan); box-shadow: 0 0 50px var(--cyan); width: 90%; max-width: 900px; color: var(--cyan); font-family: 'Share Tech Mono', monospace; position: relative; line-height: 1.6; }
+    .modal-close { position: absolute; top: 20px; right: 30px; color: var(--cyan); font-size: 32px; font-weight: bold; cursor: pointer; }
+    
+    .wallet-group { display: flex; align-items: center; gap: 12px; }
+    @media (max-width: 480px) {
+      .topbar { flex-direction: column; align-items: stretch; padding: 12px; gap: 16px; }
+      .wallet-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+      .wallet-btn { padding: 10px 4px; font-size: 11px; text-align: center; }
     }
-    .lore-box::-webkit-scrollbar { width: 6px; }
-    .lore-box::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 10px; }
-    .lore-title { font-family: 'Orbitron', sans-serif; letter-spacing: 0.15em; color: var(--cyan); margin-bottom: 12px; font-size: 14px; text-transform: uppercase; }
-    .lore-text { color: #ddfff9; line-height: 1.8; font-size: 14px; }
+    
+    .nft-selection-track { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; }
+    .nft-select-card { flex: 0 0 120px; padding: 8px; border-radius: 12px; border: 1px solid rgba(0,255,200,.15); background: rgba(0,0,0,.35); cursor: pointer; }
+    .nft-select-card.active { border-color: var(--cyan); }
+    .nft-select-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px; }
+    .held-nft-panel { border: 1px solid var(--line); border-radius: 24px; background: rgba(0,0,0,0.4); padding: 16px; margin-bottom: 16px; display: flex; justify-content: center; }
+    .held-nft-image-wrapper img { max-width: 200px; border-radius: 18px; border: 1px solid var(--line); }
+    .bubble { padding: 12px; border-radius: 18px; margin-bottom: 8px; font-size: 14px; }
+    .bubble.user { background: rgba(0,255,200,.1); border: 1px solid rgba(0,255,200,0.2); }
+    .bubble.system { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
   </style>
 </head>
 <body>
   <div class="crt-overlay"></div>
+
+  <div id="qr-overlay" onclick="this.style.display='none'">
+    <div class="qr-container"><img id="qr-image" src="" alt="Scan with Xaman"></div>
+    <p style="margin-top: 20px; font-family: Orbitron;">SCAN WITH XAMAN TO SYNC</p>
+    <button class="btn" style="margin-top: 10px;">CANCEL</button>
+  </div>
+
   <div class='shell'>
     <header class='topbar'>
-      <div class='brand'><div class='dot'></div><div><div class='title'>GGB OS v8.9.5</div></div></div>
-      <button id='wallet-btn' class='wallet-btn' onclick="connectXaman()">CONNECT XAMAN</button>
+      <div class='brand'>
+        <div class='dot'></div>
+        <div>
+          <div class='title'>GGB OS v8.9.5 STABLE</div>
+          <div class='subtitle'>Neural CRT relay // terminal interface</div>
+        </div>
+      </div>
+      <div class="wallet-group">
+        <button id='wallet-btn' class='wallet-btn' onclick="connectXaman()">CONNECT XAMAN</button>
+        <button id='wc-btn' class='wallet-btn' onclick="connectMultiChain()">MULTI-CHAIN</button>
+      </div>
+      <div id='xaman-status' class='status'>Disconnected.</div>
     </header>
+
     <div class='ticker'><div id='warning-ticker-track' class='ticker-track'></div></div>
+
     <nav class='tabs'>
       <div class='tab active' onclick="switchTab(0)">CONSOLE</div>
       <div class='tab' onclick="switchTab(1)">STORYLINE</div>
-      <div class='tab' onclick="switchTab(2)">CHAT</div>
+      <div class='tab' onclick="switchTab(2)">FUSION LAB</div>
       <div class='tab' onclick="switchTab(3)">GAME ROOM</div>
       <div class='tab' onclick="switchTab(4)">SCORE</div>
+      <div class='tab' onclick="switchTab(5)">SOCIALS</div>
     </nav>
+
     <main class='content'>
       <section id='section-0' class='section active'>
         <div class='grid grid-2'>
@@ -125,63 +171,195 @@
           </div>
         </div>
       </section>
+
       <section id='section-1' class='section'>
         <div class='panel'>
           <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
           <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
           
           <div class="lore-container">
-            <!-- PROLOGUE -->
             <div class="lore-box">
               <div class="lore-title">PROLOGUE: ORIGINS</div>
               <div class="lore-text">
-                <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger. When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
-                <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
+                <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger.</p>
+                <p>When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
               </div>
             </div>
 
-            <!-- CHAPTER 1 -->
             <div class="lore-box">
               <div class="lore-title">CHAPTER 1: THE NEURAL AWAKENING</div>
               <div class="lore-text">
-                <p>Before the breach, the Consolidated Core Extraction syndicate didn't just run the rigs on XRP-7 - they owned the blood in your veins. Every breath of recycled air was leased. Every drop of water was docked from your daily ledger. They kept the crew trapped in a loop of artificial debt, paying in corporate credits that only worked at CCE depots. You lived to mine, and you mined to pay off a debt that never went down. The suits in high orbit controlled the money, and by controlling the money, they controlled every beating heart on the rock.</p>
+                <p>Before the breach, the Consolidated Core Extraction syndicate didn't just run the rigs on XRP-7 - they owned the blood in your veins. Every breath of recycled air was leased. Every drop of water was docked from your daily ledger.</p>
                 <p>Then the drills hit the living core. The blue static rupture didn't just mutate our flesh - it scrambled CCE's system of control. When the quarantine protocols sealed us in the deep dark to rot, the crew didn't die. We fused with the raw digital essence of the XRP Ledger itself. The old debt-shackles shattered, and the Galactic Gross Bros were born.</p>
-                <p>We became something they couldn't control, couldn't delete, and couldn't tax. But the fight isn't finished. CCE is sending automated liquidation sweeps to scrub us from the database and reclaim their lost assets. We aren't just fighting to defend our sector. We are fighting to tear down their financial stranglehold, to hijack their networks, and to break the ledger of their control - so every miner, every deckhand, and every soul still trapped under the corporate heel can break free.</p>
+                <p>We are fighting to tear down their financial stranglehold, to hijack their networks, and to break the ledger of their control - so every miner and every soul still trapped under the corporate heel can break free.</p>
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div style="border-top: 1px dashed var(--cyan); margin-top: 25px; padding-top: 15px; font-size: 0.75rem; color: #888; font-family: 'Share Tech Mono', monospace; line-height: 1.4;">
-              [!] SYSTEM STATUS: ACTIVE TRANSMISSION PROTOCOL<br>
-              [!] UPDATE CADENCE: MINI-LOGS APPENDED WEEKLY (SUNDAYS AT 12:00 EDT). DATA ACCRUES IN THE ARCHIVE UNTIL CHAPTER IS COMPILED, AT WHICH POINT PREPARATION FOR THE NEXT CHAPTER BEGINS.
+      <section id='section-2' class='section'>
+        <div class='panel'>
+          <h2 style='font-family:Orbitron; margin: 0 0 10px;'>FUSION LAB</h2>
+          <div id='held-nft-display' class='held-nft-panel'>
+            <div id="connected-nft-display" style="display:none;"><div class="held-nft-image-wrapper"><img id="connected-nft-image" src=""></div></div>
+            <div id="held-nft-empty">GUEST ACCESS // NO SPECIMEN LINKED</div>
+          </div>
+          <div id='chat-log' class='chat-log'></div>
+          <div class='chat-terminal-actions'>
+            <input id='chat-input' placeholder='Send a directive...'>
+            <button class='btn' onclick="startChatStream()">SEND</button>
+          </div>
+          <div style="margin-top:20px;">
+            <div class='muted' style='font-size:11px; margin-bottom:8px;'>SELECT OPERATIVE SPECIMEN</div>
+            <div id='nft-selection-track' class='nft-selection-track'></div>
           </div>
         </div>
       </section>
-      <section id='section-2' class='section'><div class='panel'><div id='chat-log' class='chat-log'></div><div class='chat-terminal-actions'><input id='chat-input' placeholder='Send a directive...'><button class='btn' onclick="startChatStream()">SEND</button></div></div></section>
+
       <section id='section-3' class='section'><div id="game-room-container"></div></section>
       <section id='section-4' class='section'><div class='panel'><h2>LEADERBOARD</h2><div id='leaderboard-rows'></div></div></section>
+
+      <section id='section-5' class='section'>
+        <div class='panel'>
+          <h2 style='font-family:Orbitron;'>SOCIALS</h2>
+          <div style='display:grid; gap: 12px;'>
+            <a href='#' class='social-card'><div><div class='label'>X (TWITTER)</div><div class='desc'>@THEGROSSBROS</div></div><div class='btn'>OPEN</div></a>
+            <a href='#' class='social-card'><div><div class='label'>DISCORD</div><div class='desc'>COMMUNITY HUB</div></div><div class='btn'>JOIN</div></a>
+          </div>
+        </div>
+      </section>
     </main>
+
+    <footer style="padding: 20px; text-align: center; font-size: 10px; opacity: 0.6; border-top: 1px solid var(--line);">
+      <span onclick="openModal('privacy-modal')" style="cursor:pointer">PRIVACY PROTOCOL</span> | 
+      <span onclick="openModal('terms-modal')" style="cursor:pointer">TERMS OF SERVICE</span>
+    </footer>
   </div>
+
+  <div id="privacy-modal" class="modal"><div class="modal-content"><span class="modal-close" onclick="closeModal('privacy-modal')">&times;</span><h2>PRIVACY PROTOCOL</h2><p>Data processed solely for terminal integrity...</p></div></div>
+  <div id="terms-modal" class="modal"><div class="modal-content"><span class="modal-close" onclick="closeModal('terms-modal')">&times;</span><h2>TERMS OF SERVICE</h2><p>Entertainment only. No financial advice.</p></div></div>
+
   <script src="/combat.js"></script>
   <script>
-    const state = { connected: false, wallet: "", chat: [], userNfts: [] };
+    const state = { connected: false, wallet: "", chat: [], userNfts: [], selectedNft: null, appKit: null };
+    
     function switchTab(idx) {
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === idx));
       if (idx === 3 && window.CombatSystem) CombatSystem.init();
     }
+
+    async function safeFetch(url, options = {}) {
+      try {
+        const res = await fetch(url, options);
+        return res.ok ? await res.json() : null;
+      } catch (e) { return null; }
+    }
+
+    async function connectXaman() {
+      const btn = document.getElementById('wallet-btn');
+      if (state.connected) { location.reload(); return; }
+      btn.textContent = 'CONNECTING...';
+      const payload = await safeFetch('/api/xaman?action=create-payload', { method: 'POST', body: JSON.stringify({ txjson: { TransactionType: 'SignIn' } }) });
+      if (payload?.refs?.qr_png) {
+        document.getElementById('qr-image').src = payload.refs.qr_png;
+        document.getElementById('qr-overlay').style.display = 'flex';
+        startPolling(payload.uuid);
+      }
+    }
+
+    function startPolling(uuid) {
+      const interval = setInterval(async () => {
+        const status = await safeFetch('/api/xaman?action=check-payload&uuid=' + uuid);
+        if (status?.signed) {
+          clearInterval(interval);
+          document.getElementById('qr-overlay').style.display = 'none';
+          state.connected = true;
+          state.wallet = status.account;
+          document.getElementById('xaman-status').textContent = state.wallet.slice(0,6) + '...';
+          fetchUserNfts(state.wallet);
+        }
+      }, 3000);
+    }
+
+    async function fetchUserNfts(address) {
+      const res = await safeFetch(`/api/nft?owner=${address}&issuer=rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY&taxon=1&list=nfts`);
+      state.userNfts = res?.nfts || [];
+      renderNftSelection();
+    }
+
+    function renderNftSelection() {
+      const track = document.getElementById('nft-selection-track');
+      track.innerHTML = state.userNfts.map((n, i) => `<div class="nft-select-card" onclick="selectNft(${i})"><img src="https://ipfs.io/ipfs/${n.uri.replace('ipfs://','')}"></div>`).join('');
+    }
+
+    function selectNft(idx) {
+      state.selectedNft = state.userNfts[idx];
+      document.getElementById('held-nft-empty').style.display = 'none';
+      document.getElementById('connected-nft-display').style.display = 'block';
+      document.getElementById('connected-nft-image').src = `https://ipfs.io/ipfs/${state.selectedNft.uri.replace('ipfs://','')}`;
+    }
+
+    async function startChatStream() {
+      const input = document.getElementById('chat-input');
+      const text = input.value;
+      if (!text) return;
+      state.chat.push({ role: 'user', content: text });
+      input.value = '';
+      renderChatLog();
+      
+      const res = await fetch('/api/chat', { method: 'POST', body: JSON.stringify({ messages: state.chat, operative: { walletAddress: state.wallet } }) });
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let aiText = '';
+      
+      const log = document.getElementById('chat-log');
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble system';
+      log.appendChild(bubble);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') break;
+            try { aiText += JSON.parse(data).token; bubble.textContent = aiText; } catch(e){}
+          }
+        }
+        log.scrollTop = log.scrollHeight;
+      }
+      state.chat.push({ role: 'assistant', content: aiText });
+    }
+
+    function renderChatLog() {
+      document.getElementById('chat-log').innerHTML = state.chat.map(c => `<div class="bubble ${c.role}">${c.content}</div>`).join('');
+    }
+
+    async function initAppKit() {
+      if (state.appKit) return state.appKit;
+      const { createAppKit } = await import('https://esm.sh/@reown/appkit');
+      const { EthersAdapter } = await import('https://esm.sh/@reown/appkit-adapter-ethers');
+      const { mainnet } = await import('https://esm.sh/@reown/appkit/networks');
+      state.appKit = createAppKit({ adapters: [new EthersAdapter()], networks: [mainnet], projectId: 'a16d6c0cad2df1ceea121c581b95cffb' });
+      return state.appKit;
+    }
+
+    async function connectMultiChain() { (await initAppKit()).open(); }
+    function openModal(id) { document.getElementById(id).style.display = 'block'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
     async function init() {
-        const imgEl = document.getElementById("bro-of-day-image");
-        const descEl = document.getElementById("bro-of-day-description");
-        try {
-            const res = await fetch('/api/nft?issuer=rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY&taxon=1&list=nfts');
-            const data = await res.json();
-            if (data?.nfts?.length > 0) {
-                const nft = data.nfts[Math.floor(Math.random() * data.nfts.length)];
-                imgEl.src = "https://ipfs.io/ipfs/" + (nft.uri || "").replace("ipfs://", "");
-                descEl.textContent = "Operative detected. Signal stable.";
-            }
-        } catch(e) {}
+      const res = await safeFetch('/api/nft?issuer=rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY&taxon=1&list=nfts');
+      if (res?.nfts) {
+        const nft = res.nfts[Math.floor(Math.random() * res.nfts.length)];
+        document.getElementById('bro-of-day-image').src = "https://ipfs.io/ipfs/" + nft.uri.replace("ipfs://", "");
+        document.getElementById('bro-of-day-description').textContent = "Operative detected. Signal stable.";
+      }
     }
     document.addEventListener('DOMContentLoaded', init);
   </script>
