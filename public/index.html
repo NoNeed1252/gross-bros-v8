@@ -302,6 +302,50 @@ letter-spacing: 1px;
       font-weight: bold;
       cursor: pointer;
     }
+
+    /* Wallet Group Layout Styles */
+    .wallet-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    @media (max-width: 480px) {
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 12px;
+        gap: 16px;
+      }
+      .wallet-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+      }
+      .wallet-btn {
+        padding: 10px 4px;
+        font-size: 11px;
+        letter-spacing: 0;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        white-space: nowrap;
+        min-width: 0;
+        overflow: hidden;
+      }
+      .wallet-btn svg {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+      }
+      .status {
+        text-align: center;
+        margin-top: 4px;
+      }
+    }
 </style>
 </head>
 <body>
@@ -324,7 +368,16 @@ letter-spacing: 1px;
           <div class='subtitle'>Neural CRT relay // terminal interface</div>
         </div>
       </div>
-      <button id='wallet-btn' class='wallet-btn' onclick="connectXaman()">CONNECT XAMAN</button>
+      <div class="wallet-group">
+        <button id='wallet-btn' class='wallet-btn' onclick="connectXaman()">CONNECT XAMAN</button>
+        <button id='wc-btn' class='wallet-btn' onclick="connectMultiChain()">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">
+            <path d="M15.4286 9.51343C13.5352 7.73032 10.4648 7.73032 8.57143 9.51343L4.28571 13.5434C4.10714 13.7113 4 13.9463 4 14.1983V17.0003C4 17.5526 4.44772 18.0003 5 18.0003H19C19.5523 18.0003 20 17.5526 20 17.0003V14.1983C20 13.9463 19.8929 13.7113 19.7143 13.5434L15.4286 9.51343Z" fill="#3396FF"/>
+            <path d="M20.5714 8.48657L22.7143 10.5016C23.0714 10.8376 23.0714 11.3756 22.7143 11.7116L19.7143 14.5416C19.3571 14.8776 18.7857 14.8776 18.4286 14.5416L15.4286 11.7116C15.0714 11.3756 15.0714 10.8376 15.4286 10.5016L17.5714 8.48657C18.4 7.70657 19.7429 7.70657 20.5714 8.48657ZM3.42857 8.48657L1.28571 10.5016C0.928571 10.8376 0.928571 11.3756 1.28571 11.7116L4.28571 14.5416C4.64286 14.8776 5.21429 14.8776 5.57143 14.5416L8.57143 11.7116C8.92857 11.3756 8.92857 10.8376 8.57143 10.5016L6.42857 8.48657C5.6 7.70657 4.25714 7.70657 3.42857 8.48657Z" fill="#3396FF"/>
+          </svg>
+          MULTI-CHAIN
+        </button>
+      </div>
       <div id='xaman-status' class='status'>Wallet disconnected.</div>
     </header>
 
@@ -509,7 +562,8 @@ letter-spacing: 1px;
     const CONFIG = {
       ISSUER: "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY",
       RPC: "https://xrplcluster.com",
-      GATEWAY: "https://ipfs.io/ipfs/"
+      GATEWAY: "https://ipfs.io/ipfs/",
+      WC_PROJECT_ID: '778a46b970868846c2688005bc9bc83d'
     };
     
     const MOCK_NFTS = [
@@ -548,7 +602,8 @@ letter-spacing: 1px;
       userNfts: [], 
       fuseTargetUsd: 50,
       xrpPrice: 0,
-      activePayloadUuid: null
+      activePayloadUuid: null,
+      appKit: null
     };
 
     let checkInterval = null;
@@ -729,6 +784,51 @@ letter-spacing: 1px;
         btn.disabled = false;
         btn.textContent = 'CONNECT XAMAN';
       }
+    }
+
+    async function initAppKit() {
+      if (state.appKit) return state.appKit;
+      try {
+        const { createAppKit } = await import('https://esm.sh/@reown/appkit');
+        const { EthersAdapter } = await import('https://esm.sh/@reown/appkit-adapter-ethers');
+        const { mainnet, polygon, arbitrum } = await import('https://esm.sh/@reown/appkit/networks');
+
+        const networks = [mainnet, polygon, arbitrum];
+        const ethersAdapter = new EthersAdapter();
+
+        const metadata = {
+          name: 'Galactic Gross Bros',
+          description: 'Neural CRT relay // terminal interface',
+          url: window.location.origin,
+          icons: ['https://avatars.githubusercontent.com/u/179229932']
+        };
+
+        state.appKit = createAppKit({
+          adapters: [ethersAdapter],
+          networks,
+          metadata,
+          projectId: CONFIG.WC_PROJECT_ID,
+          features: { analytics: true }
+        });
+
+        state.appKit.subscribeAccount(account => {
+          if (account.isConnected && account.address) {
+            state.connected = true;
+            state.wallet = account.address;
+            setWalletUI(true, account.address);
+          }
+        });
+
+        return state.appKit;
+      } catch (e) {
+        console.error('AppKit init failed', e);
+        return null;
+      }
+    }
+
+    async function connectMultiChain() {
+      const kit = await initAppKit();
+      if (kit) kit.open();
     }
 
     function startPolling(uuid) {
