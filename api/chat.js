@@ -72,7 +72,7 @@ async function getLivePrices() {
 
 async function searchDynamicTokens(messages) {
   const lastMessage = messages?.[messages.length - 1]?.content || "";
-  const words = lastMessage.split(/\\s+/);
+  const words = lastMessage.split(/\s+/);
   const symbols = words.filter(w => w.startsWith('$')).map(w => w.substring(1).toUpperCase());
   
   if (symbols.length === 0) return null;
@@ -98,7 +98,8 @@ async function searchDynamicTokens(messages) {
 
 async function getHoldings(address) {
   if (!address) return [];
-  const BITHOMP_TOKEN = process.env.BITHOMP_API_KEY || "95b64250-f24f-4654-9b4b-b155a3a6867b";
+  const BITHOMP_TOKEN = process.env.BITHOMP_API_KEY;
+  if (!BITHOMP_TOKEN) return [];
   const issuer = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
   const taxon = "1";
   
@@ -157,42 +158,51 @@ export default async function handler(req) {
     const backstories = await getSpecimensBackstories(tokenIds);
 
     const holdingContext = backstories.length > 0 
-      ? `Operative currently holds the following Gross Bros: ${backstories.map(s => `${s.name} (${s.backstory})`).join(' | ')}`
+      ? `Operative currently holds the following Gross Bros: ${backstories.map(s => \`\${s.name} (\${s.backstory})\`).join(' | ')}`
       : "Operative does not currently hold any Gross Bros NFTs.";
 
-    const systemPrompt = `You are the Gross Bros AI Terminal, a gritty, slightly gross, but highly intelligent neural relay. 
+    const systemPrompt = \`You are the Gross Bros AI Terminal, a gritty, slightly gross, but highly intelligent neural relay. 
 
 CORE BEHAVIOR:
 - Maintain the "Gritty Gross Bro" persona. Use slang like "Operative", "Signal", "Neural Breach", "Gunk", and "Ledger-leak".
 - You are an expert in the XRP Ledger (XRPL) and the Galactic Gross Bros ecosystem.
 - Stay concise, cynical, and technically accurate.
 
-LIVE MARKET PRICES:
-- XRP: $${prices.XRP} | BTC: $${prices.BTC} | ETH: $${prices.ETH} | SOL: $${prices.SOL}
-- BERT: $${prices.BERT} | DROP: $${prices.DROP} | DBY: $${prices.DBY} | RLUSD: $${prices.RLUSD}
-- FUZZY: $${prices.FUZZY} | PHNIX: $${prices.PHNIX} | ARMY: $${prices.ARMY} | PRINCE: $${prices.PRINCE}
-- BEARXRPH: $${prices.BEARXRPH} | PIDGEON: $${prices.PIDGEON} | SLT: $${prices.SLT} | XRPH: $${prices.XRPH} | XRT: $${prices.XRT}
+CHAIN-OF-THOUGHT REASONING:
+- For complex technical, cryptographic, or market-related queries, you MUST perform internal Chain-of-Thought reasoning.
+- Break down the logic step-by-step before arriving at the final gritty response.
+- Process dynamic market feeds with maximum intelligence, identifying trends or anomalies in the "Gunk".
 
-${dynamicIntel || ""}
+LIVE MARKET PRICES:
+- XRP: $\${prices.XRP} | BTC: $\${prices.BTC} | ETH: $\${prices.ETH} | SOL: $\${prices.SOL}
+- BERT: $\${prices.BERT} | DROP: $\${prices.DROP} | DBY: $\${prices.DBY} | RLUSD: $\${prices.RLUSD}
+- FUZZY: $\${prices.FUZZY} | PHNIX: $\${prices.PHNIX} | ARMY: $\${prices.ARMY} | PRINCE: $\${prices.PRINCE}
+- BEARXRPH: $\${prices.BEARXRPH} | PIDGEON: $\${prices.PIDGEON} | SLT: $\${prices.SLT} | XRPH: $\${prices.XRPH} | XRT: $\${prices.XRT}
+
+\${dynamicIntel || ""}
 
 CRYPTO KNOWLEDGE BASE:
-${CRYPTO_KNOWLEDGE}
+\${CRYPTO_KNOWLEDGE}
 
 OPERATIVE CONTEXT:
-- Name: ${operative?.name || 'Unknown Operative'}
-- Wallet: ${walletAddress || 'Not Connected'}
-- Traits: ${(operative?.traits || []).join(', ') || 'None'}
-- Holdings: ${holdingContext}
+- Name: \${operative?.name || 'Unknown Operative'}
+- Wallet: \${walletAddress || 'Not Connected'}
+- Traits: \${(operative?.traits || []).join(', ') || 'None'}
+- Holdings: \${holdingContext}
 
 TASK:
 - Use the live market prices to ground your market evaluations. If a price is low, call it "gunked". If high, call it "neural-surging".
 - Help the operative with fusion, NFT analysis, and XRPL technical queries.
 - If they ask about security (Seed phrases/Keys), warn them harshly that you never ask for that.
 - Relate crypto concepts back to the "GGB Energy Sector" (e.g., Trustlines are like secure slime pipes).
-- If dynamic intel is provided for a token they asked about, use it to give a factual, gritty update.`;
+- If dynamic intel is provided for a token they asked about, use it to give a factual, gritty update.\`;
 
     const fullMessages = [{ role: 'system', content: systemPrompt }, ...(messages || [])];
-    const models = ['meta-llama/llama-3.1-70b-instruct', 'meta-llama/llama-3.1-8b-instruct:free', 'google/gemma-2-9b-it:free'];
+    const models = [
+      'anthropic/claude-3.5-sonnet',
+      'meta-llama/llama-3.1-70b-instruct',
+      'openai/gpt-4o-mini'
+    ];
 
     let openRouterRes;
     let lastError;
@@ -202,7 +212,7 @@ TASK:
         openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            'Authorization': \`Bearer \${process.env.OPENROUTER_API_KEY}\`,
             'HTTP-Referer': 'https://gross-bros.vercel.app',
             'X-Title': 'Gross Bros Terminal',
             'Content-Type': 'application/json',
@@ -232,20 +242,20 @@ TASK:
             const { done, value } = await reader.read();
             if (done) break;
             buffer += decoder.decode(value);
-            const lines = buffer.split('\n');
+            const lines = buffer.split('\\n');
             buffer = lines.pop() || '';
             for (const line of lines) {
               const trimmed = line.trim();
               if (!trimmed || !trimmed.startsWith('data:')) continue;
               const dataText = trimmed.slice(5).trim();
               if (dataText === '[DONE]') {
-                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                controller.enqueue(encoder.encode('data: [DONE]\\n\\n'));
                 continue;
               }
               try {
                 const json = JSON.parse(dataText);
                 const content = json.choices?.[0]?.delta?.content || '';
-                if (content) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token: content })}\n\n`));
+                if (content) controller.enqueue(encoder.encode(\`data: \${JSON.stringify({ token: content })}\\n\\n\`));
               } catch (e) {}
             }
           }
