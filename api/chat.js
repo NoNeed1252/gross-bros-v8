@@ -111,7 +111,7 @@ async function getLivePrices(mentionedSymbols = []) {
 async function getHoldings(address) {
   if (!address) return [];
   const BITHOMP_TOKEN = process.env.BITHOMP_API_KEY || "95b64250-f24f-4654-9b4b-b155a3a6867b";
-  const issuer = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
+  const issuer = "rJZERQeN5iamnZ3MBbAmtrmjV9CiqXEhqX";
   const taxon = "1";
   
   try {
