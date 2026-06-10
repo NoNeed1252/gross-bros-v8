@@ -1,13 +1,9 @@
 {
-  "builds": [
-    { "src": "server.js", "use": "@vercel/node" },
-    { "src": "api/*.js", "use": "@vercel/node" }
-  ],
   "rewrites": [
     { "source": "/api/chat", "destination": "/api/chat.js" },
     { "source": "/api/xaman", "destination": "/api/xaman.js" },
     { "source": "/api/nft", "destination": "/api/nft.js" },
-    { "source": "/api/(.*)", "destination": "/server.js" },
+    { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/server.js" }
   ]
 }
