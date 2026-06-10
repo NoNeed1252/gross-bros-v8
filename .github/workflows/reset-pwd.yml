@@ -1,6 +1,10 @@
 
 name: Reset VPS Password
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/reset-pwd.yml'
 jobs:
   reset:
     runs-on: ubuntu-latest
