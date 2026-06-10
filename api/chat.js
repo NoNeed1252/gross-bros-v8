@@ -96,7 +96,7 @@ async function getHoldings(address) {
   const taxon = "1";
   
   try {
-    const url = \`https://bithomp.com/api/v2/nfts?list=nfts&issuer=\${issuer}&taxon=\${taxon}&owner=\${address}\`;
+    const url = `https://bithomp.com/api/v2/nfts?list=nfts&issuer=${issuer}&taxon=${taxon}&owner=${address}`;
     const res = await fetch(url, {
       headers: { 'x-bithomp-token': BITHOMP_TOKEN }
     });
@@ -114,10 +114,10 @@ async function getSpecimensBackstories(tokenIds) {
   const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseKey) return [];
   try {
-    const filter = tokenIds.map(id => \`token_id.eq.\${id}\`).join(',');
-    const url = \`\${supabaseUrl}/rest/v1/specimens?select=name,backstory,token_id&or=(\${filter})\`;
+    const filter = tokenIds.map(id => `token_id.eq.${id}`).join(',');
+    const url = `${supabaseUrl}/rest/v1/specimens?select=name,backstory,token_id&or=(${filter})`;
     const res = await fetch(url, {
-      headers: { 'apikey': supabaseKey, 'Authorization': \`Bearer \${supabaseKey}\` }
+      headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
     });
     return await res.json();
   } catch (e) {
@@ -149,18 +149,18 @@ export default async function handler(req) {
     const backstories = await getSpecimensBackstories(tokenIds);
 
     const holdingContext = backstories.length > 0 
-      ? \`Operative currently holds the following Gross Bros: \${backstories.map(s => \`\${s.name} (\${s.backstory})\`).join(' | ')}\`
+      ? `Operative currently holds the following Gross Bros: ${backstories.map(s => `${s.name} (${s.backstory})`).join(' | ')}`
       : "Operative does not currently hold any Gross Bros NFTs.";
 
     // Price Display Formatting with Fallbacks
-    const xrpDisplay = prices.XRP ? \`$\${prices.XRP}\` : 'SIGNAL MISALIGNED';
-    const btcDisplay = prices.BTC ? \`$\${prices.BTC}\` : 'GUNKED';
-    const ethDisplay = prices.ETH ? \`$\${prices.ETH}\` : 'GUNKED';
-    const solDisplay = prices.SOL ? \`$\${prices.SOL}\` : 'GUNKED';
+    const xrpDisplay = prices.XRP ? `$${prices.XRP}` : 'SIGNAL MISALIGNED';
+    const btcDisplay = prices.BTC ? `$${prices.BTC}` : 'GUNKED';
+    const ethDisplay = prices.ETH ? `$${prices.ETH}` : 'GUNKED';
+    const solDisplay = prices.SOL ? `$${prices.SOL}` : 'GUNKED';
     const ecosystemDisplay = ['BERT', 'DROP', 'DBY', 'RLUSD', 'FUZZY', 'PHNIX', 'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT']
-      .map(sym => \`\${sym}: \${prices[sym] ? \`$\${prices[sym]}\` : 'GUNKED'}\`).join(' | ');
+      .map(sym => `${sym}: ${prices[sym] ? `$${prices[sym]}` : 'GUNKED'}`).join(' | ');
 
-    const systemPrompt = \`You are the Gross Bros AI Terminal, a gritty, slightly gross, but highly intelligent neural relay. 
+    const systemPrompt = `You are the Gross Bros AI Terminal, a gritty, slightly gross, but highly intelligent neural relay. 
 
 CORE BEHAVIOR:
 - Maintain the "Gritty Gross Bro" persona. Use slang like "Operative", "Signal", "Neural Breach", "Gunk", and "Ledger-leak".
@@ -168,24 +168,24 @@ CORE BEHAVIOR:
 - Stay concise, cynical, and technically accurate.
 
 LIVE MARKET PRICES:
-- XRP: \${xrpDisplay} | BTC: \${btcDisplay} | ETH: \${ethDisplay} | SOL: \${solDisplay}
-- \${ecosystemDisplay}
+- XRP: ${xrpDisplay} | BTC: ${btcDisplay} | ETH: ${ethDisplay} | SOL: ${solDisplay}
+- ${ecosystemDisplay}
 
 CRYPTO KNOWLEDGE BASE:
-\${CRYPTO_KNOWLEDGE}
+${CRYPTO_KNOWLEDGE}
 
 OPERATIVE CONTEXT:
-- Name: \${operative?.name || 'Unknown Operative'}
-- Wallet: \${walletAddress || 'Not Connected'}
-- Traits: \${(operative?.traits || []).join(', ') || 'None'}
-- Holdings: \${holdingContext}
+- Name: ${operative?.name || 'Unknown Operative'}
+- Wallet: ${walletAddress || 'Not Connected'}
+- Traits: ${(operative?.traits || []).join(', ') || 'None'}
+- Holdings: ${holdingContext}
 
 TASK:
 - Use the live market prices to ground your market evaluations. If a price is low or unavailable, call it "gunked". If high, call it "neural-surging".
 - If a price is "SIGNAL MISALIGNED" or "GUNKED", inform the operative that the neural relay for pricing is currently gunked up. Do NOT hallucinate prices.
 - Help the operative with NFT analysis and XRPL technical queries.
 - If they ask about security (Seed phrases/Keys), warn them harshly that you never ask for that.
-- Relate crypto concepts back to the "GGB Energy Sector" (e.g., Trustlines are like secure slime pipes).\`;
+- Relate crypto concepts back to the "GGB Energy Sector" (e.g., Trustlines are like secure slime pipes).`;
 
     const fullMessages = [{ role: 'system', content: systemPrompt }, ...(messages || [])];
     const models = ['meta-llama/llama-3.1-70b-instruct', 'meta-llama/llama-3.1-8b-instruct:free', 'google/gemma-2-9b-it:free'];
@@ -205,7 +205,7 @@ TASK:
         openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': \`Bearer \${process.env.OPENROUTER_API_KEY}\`,
+            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
             'HTTP-Referer': 'https://gross-bros.vercel.app',
             'X-Title': 'Gross Bros Terminal',
             'Content-Type': 'application/json',
@@ -236,20 +236,20 @@ TASK:
             const { done, value } = await reader.read();
             if (done) break;
             buffer += decoder.decode(value);
-            const lines = buffer.split('\\n');
+            const lines = buffer.split('\n');
             buffer = lines.pop() || '';
             for (const line of lines) {
               const trimmed = line.trim();
               if (!trimmed || !trimmed.startsWith('data:')) continue;
               const dataText = trimmed.slice(5).trim();
               if (dataText === '[DONE]') {
-                controller.enqueue(encoder.encode('data: [DONE]\\n\\n'));
+                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
                 continue;
               }
               try {
                 const json = JSON.parse(dataText);
                 const content = json.choices?.[0]?.delta?.content || '';
-                if (content) controller.enqueue(encoder.encode(\`data: \${JSON.stringify({ token: content })}\\n\\n\`));
+                if (content) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token: content })}\n\n`));
               } catch (e) {}
             }
           }
