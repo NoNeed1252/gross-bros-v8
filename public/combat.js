@@ -88,28 +88,27 @@ const CombatSystem = {
     renderLayout() {
         const container = document.getElementById('game-room-container');
         if (!container) return;
-        container.innerHTML = \`
-            <div class="panel" style="border-color: var(--cyan); display: flex; flex-direction: column; align-items: center; position: relative; overflow: hidden; padding: 10px; max-width: 320px; margin: 0 auto;">
-                <div style="width: 100%; display: flex; justify-content: space-between; font-family: Orbitron; font-size: 12px; margin-bottom: 10px;">
-                    <div>SCORE: <span id="game-score">0</span></div>
-                    <div>WAVE: <span id="game-wave">1</span></div>
-                    <div>HI: <span id="game-hi">\${this.state.highScore}</span></div>
-                </div>
-                <div id="canvas-wrapper" style="position: relative; width: 300px; height: 400px; background: #000; border: 2px solid rgba(0,255,200,0.2); border-radius: 8px; overflow: hidden;">
-                    <canvas id="game-room-canvas" width="300" height="400" style="width: 100%; height: 100%; display: block;"></canvas>
-                    <div id="game-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); z-index: 10;">
-                        <h2 id="overlay-title" style="font-family: Orbitron; color: var(--cyan); margin-bottom: 20px;">READY?</h2>
-                        <button class="btn" onclick="CombatSystem.startGame()" style="padding: 15px 40px; font-size: 18px;">START</button>
-                    </div>
-                </div>
-                <div class="mobile-controls" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; max-width: 300px; margin-top: 15px;">
-                    <button class="btn" id="ctrl-left" style="height: 60px; font-size: 24px; touch-action: manipulation;">←</button>
-                    <button class="btn" id="ctrl-fire" style="height: 60px; font-size: 20px; border-color: #ff3b6b; color: #ff3b6b; touch-action: manipulation;">FIRE</button>
-                    <button class="btn" id="ctrl-right" style="height: 60px; font-size: 24px; touch-action: manipulation;">→</button>
-                </div>
-                <div style="margin-top: 10px; font-size: 10px; opacity: 0.5;">ARROWS + SPACE FOR DESKTOP</div>
-            </div>
-        \`;
+        container.innerHTML = 
+            '<div class="panel" style="border-color: var(--cyan); display: flex; flex-direction: column; align-items: center; position: relative; overflow: hidden; padding: 10px; max-width: 320px; margin: 0 auto;">' +
+                '<div style="width: 100%; display: flex; justify-content: space-between; font-family: Orbitron; font-size: 12px; margin-bottom: 10px;">' +
+                    '<div>SCORE: <span id="game-score">0</span></div>' +
+                    '<div>WAVE: <span id="game-wave">1</span></div>' +
+                    '<div>HI: <span id="game-hi">' + this.state.highScore + '</span></div>' +
+                '</div>' +
+                '<div id="canvas-wrapper" style="position: relative; width: 300px; height: 400px; background: #000; border: 2px solid rgba(0,255,200,0.2); border-radius: 8px; overflow: hidden;">' +
+                    '<canvas id="game-room-canvas" width="300" height="400" style="width: 100%; height: 100%; display: block;"></canvas>' +
+                    '<div id="game-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); z-index: 10;">' +
+                        '<h2 id="overlay-title" style="font-family: Orbitron; color: var(--cyan); margin-bottom: 20px;">READY?</h2>' +
+                        '<button class="btn" onclick="CombatSystem.startGame()" style="padding: 15px 40px; font-size: 18px;">START</button>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="mobile-controls" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; max-width: 300px; margin-top: 15px;">' +
+                    '<button class="btn" id="ctrl-left" style="height: 60px; font-size: 24px; touch-action: manipulation;">←</button>' +
+                    '<button class="btn" id="ctrl-fire" style="height: 60px; font-size: 20px; border-color: #ff3b6b; color: #ff3b6b; touch-action: manipulation;">FIRE</button>' +
+                    '<button class="btn" id="ctrl-right" style="height: 60px; font-size: 24px; touch-action: manipulation;">→</button>' +
+                '</div>' +
+                '<div style="margin-top: 10px; font-size: 10px; opacity: 0.5;">ARROWS + SPACE FOR DESKTOP</div>' +
+            '</div>';
     },
 
     setupCanvas() {
