@@ -66,10 +66,11 @@
     .ticker {
       border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
       overflow: hidden; white-space: nowrap; background: linear-gradient(90deg, rgba(0,255,200,.08), rgba(0,255,200,.03));
+      height: 34px; display: flex; align-items: center;
     }
     .ticker-track {
-      display: inline-flex; align-items: center; gap: 4rem; padding: .65rem 1rem;
-      animation: ticker 25s linear infinite; will-change: transform;
+      display: inline-flex; align-items: center; gap: 4rem; padding: 0 1rem;
+      animation: ticker 30s linear infinite; will-change: transform;
     }
     .ticker-item { color: rgba(0,255,200,.9); font-size: 13px; white-space: nowrap; letter-spacing: 1px; }
     @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
@@ -689,7 +690,8 @@ letter-spacing: 1px;
       xrpPrice: 0,
       activePayloadUuid: null,
       appKit: null,
-      alphaOperative: false
+      alphaOperative: false,
+      tickerItems: []
     };
 
     let checkInterval = null;
@@ -801,33 +803,49 @@ letter-spacing: 1px;
 
     async function updateTicker() {
       try {
-        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd');
-        const data = await res.json();
-        if (data?.ripple?.usd) {
-          state.xrpPrice = data.ripple.usd;
+        const [pricesRes, dexRes] = await Promise.all([
+          fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple,bitcoin,ethereum,solana&vs_currencies=usd'),
+          fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools')
+        ]);
+        
+        const prices = await pricesRes.json();
+        const dexData = await dexRes.json();
+
+        if (prices?.ripple?.usd) {
+          state.xrpPrice = prices.ripple.usd;
           const rateEl = document.getElementById('fuse-token-rate');
           if (rateEl) rateEl.textContent = state.xrpPrice.toFixed(4) + ' USD';
           calculateFusePrice();
         }
+
+        const items = [
+          `XRP: $${prices?.ripple?.usd || 'GUNKED'}`,
+          `BTC: $${prices?.bitcoin?.usd || 'GUNKED'}`,
+          `ETH: $${prices?.ethereum?.usd || 'GUNKED'}`,
+          `SOL: $${prices?.solana?.usd || 'GUNKED'}`
+        ];
+
+        if (dexData?.data) {
+          ['ATM', 'BERT', 'DROP'].forEach(sym => {
+            const pool = dexData.data.find(p => p.attributes?.name?.toUpperCase().includes(sym));
+            if (pool) items.push(`${sym}: $${parseFloat(pool.attributes.base_token_price_usd).toFixed(8)}`);
+          });
+        }
+        
+        items.push('XRP-7 VOLATILE ENERGY: ACTIVE', 'NEURAL LINK STABLE', 'FUSION ENGINE CHARGED');
+        state.tickerItems = items;
+        renderTicker();
       } catch (e) { 
         console.error('Ticker error', e); 
-        const res = await safeFetch('/api/ticker');
-        if (res?.xrp_price) {
-          state.xrpPrice = res.xrp_price;
-          const rateEl = document.getElementById('fuse-token-rate');
-          if (rateEl) rateEl.textContent = state.xrpPrice.toFixed(4) + ' USD';
-          calculateFusePrice();
-        }
       }
     }
 
-    function toggleFuseUnlock() {
-      // Fusion is currently disabled
-      state.fuseUnlocked = false;
-      const badge = document.getElementById('fuse-lock-badge');
-      badge.textContent = 'FUSION MODULE OFFLINE';
-      badge.style.borderColor = '#ff3b6b';
-      badge.style.color = '#ff3b6b';
+    function renderTicker() {
+      const track = document.getElementById('warning-ticker-track');
+      if (!track) return;
+      // Double the items for seamless looping
+      const content = state.tickerItems.concat(state.tickerItems).map(i => `<span class="ticker-item">${i}</span>`).join(' &bull; ');
+      track.innerHTML = content;
     }
 
     async function connectXaman() {
@@ -1189,9 +1207,9 @@ letter-spacing: 1px;
     function renderChatLog() {
       const log = document.getElementById('chat-log');
       log.innerHTML = state.chat.map(e => `
-        <div class="bubble \${e.role === 'user' ? 'user' : 'system'}">
-          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">\${e.role.toUpperCase()}</div>
-          \${e.content}
+        <div class="bubble ${e.role === 'user' ? 'user' : 'system'}">
+          <div style="font-size: 9px; opacity: 0.6; margin-bottom: 4px;">${e.role.toUpperCase()}</div>
+          ${e.content}
         </div>
       `).join('');
       log.scrollTop = log.scrollHeight;
@@ -1219,11 +1237,11 @@ letter-spacing: 1px;
         if (data && data.leaderboard && data.leaderboard.length > 0) {
           rowsEl.innerHTML = data.leaderboard.map((player, idx) => `
             <div class='leader-row'>
-              <div>#\${idx + 1}</div>
-              <div style="color: var(--cyan);">\${player.name}</div>
-              <div>\${player.chatXp}</div>
-              <div>\${player.tradeScore}</div>
-              <strong style="color: #fff;">\${player.totalScore}</strong>
+              <div>#${idx + 1}</div>
+              <div style="color: var(--cyan);">${player.name}</div>
+              <div>${player.chatXp}</div>
+              <div>${player.tradeScore}</div>
+              <strong style="color: #fff;">${player.totalScore}</strong>
             </div>
           `).join('');
         } else {
@@ -1238,40 +1256,9 @@ letter-spacing: 1px;
     function openModal(id) { document.getElementById(id).style.display = 'block'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    // Ticker and Weekly Lore Logic
-    function getRotationSeed(hours) {
-      const now = new Date();
-      return Math.floor(now.getTime() / (hours * 3600 * 1000));
-    }
-
-    function getWeeklySeed() {
-      const now = new Date();
-      const day = now.getUTCDay();
-      const diff = now.getUTCDate() - day;
-      const lastSunday = new Date(now.setUTCDate(diff));
-      return lastSunday.getUTCFullYear() * 100 + (lastSunday.getUTCMonth() + 1) * 10 + lastSunday.getUTCDate();
-    }
-
-    const TICKER_ITEMS = ['XRP-7 VOLATILE ENERGY: ACTIVE', 'MUTATED STRAIN DETECTED', 'NEURAL LINK ESTABLISHED', 'FUSION ENGINE CHARGED', 'XRPL ROOT SEQUENCE STABLE'];
-
-    function updateLiveTransmissions() {
-      const ticker = document.getElementById('warning-ticker-track');
-      if (!ticker) return;
-      
-      const seed = getRotationSeed(6);
-      const items = [];
-      for(let i=0; i<3; i++) {
-        items.push(TICKER_ITEMS[(seed + i) % TICKER_ITEMS.length]);
-      }
-      
-      ticker.innerHTML = items.concat(items).map(i => `<span class="ticker-item">\${i}</span>`).join(' &bull; ');
-    }
-
     async function init() {
       document.body.classList.add('loading-state');
 
-      updateLiveTransmissions();
-      
       setTimeout(() => {
         document.body.classList.remove('loading-state');
         const statusEl = document.getElementById("bro-of-day-status");
@@ -1300,7 +1287,7 @@ letter-spacing: 1px;
         startPolling(uuid);
       }
 
-      setInterval(updateTicker, 30000);      setInterval(updateLiveTransmissions, 60000);
+      setInterval(updateTicker, 30000);
 
       const chatInput = document.getElementById('chat-input');
       if (chatInput) {
