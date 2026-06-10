@@ -91,7 +91,7 @@
     <div class='ticker'><div id='warning-ticker-track' class='ticker-track'></div></div>
     <nav class='tabs'>
       <div class='tab active' onclick="switchTab(0)">CONSOLE</div>
-      <div class='tab' onclick="switchTab(1)">LORE</div>
+      <div class='tab' onclick="switchTab(1)">STORYLINE</div>
       <div class='tab' onclick="switchTab(2)">CHAT</div>
       <div class='tab' onclick="switchTab(3)">GAME ROOM</div>
       <div class='tab' onclick="switchTab(4)">SCORE</div>
@@ -112,7 +112,24 @@
           </div>
         </div>
       </section>
-      <section id='section-1' class='section'><div class='panel'><h2>LORE</h2><p>The XRP-7 breach was only the beginning...</p></div></section>
+      <section id='section-1' class='section'>
+        <div class='panel'>
+          <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
+          <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
+          <div style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
+            <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger. When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
+            <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
+            <p id="chapter-1-header" style='margin-top: 20px; font-family:Orbitron,sans-serif; letter-spacing:0.2em; color:var(--cyan);'>CHAPTER 1: THE NEURAL AWAKENING</p>
+            <p>Before the breach, the Consolidated Core Extraction syndicate didn't just run the rigs on XRP-7 - they owned the blood in your veins. Every breath of recycled air was leased. Every drop of water was docked from your daily ledger. They kept the crew trapped in a loop of artificial debt, paying in corporate credits that only worked at CCE depots. You lived to mine, and you mined to pay off a debt that never went down. The suits in high orbit controlled the money, and by controlling the money, they controlled every beating heart on the rock.</p>
+            <p>Then the drills hit the living core. The blue static rupture didn't just mutate our flesh - it scrambled CCE's system of control. When the quarantine protocols sealed us in the deep dark to rot, the crew didn't die. We fused with the raw digital essence of the XRP Ledger itself. The old debt-shackles shattered, and the Galactic Gross Bros were born.</p>
+            <p>We became something they couldn't control, couldn't delete, and couldn't tax. But the fight isn't finished. CCE is sending automated liquidation sweeps to scrub us from the database and reclaim their lost assets. We aren't just fighting to defend our sector. We are fighting to tear down their financial stranglehold, to hijack their networks, and to break the ledger of their control - so every miner, every deckhand, and every soul still trapped under the corporate heel can break free.</p>
+            <div style="border-top: 1px dashed var(--cyan); margin-top: 25px; padding-top: 15px; font-size: 0.75rem; color: #888; font-family: 'Share Tech Mono', monospace; line-height: 1.4;">
+                [!] SYSTEM STATUS: ACTIVE TRANSMISSION PROTOCOL<br>
+                [!] UPDATE CADENCE: MINI-LOGS APPENDED WEEKLY (SUNDAYS AT 12:00 EDT). DATA ACCRUES IN THE ARCHIVE UNTIL CHAPTER IS COMPILED, AT WHICH POINT PREPARATION FOR THE NEXT CHAPTER BEGINS.
+            </div>
+          </div>
+        </div>
+      </section>
       <section id='section-2' class='section'><div class='panel'><div id='chat-log' class='chat-log'></div><div class='chat-terminal-actions'><input id='chat-input' placeholder='Send a directive...'><button class='btn' onclick="startChatStream()">SEND</button></div></div></section>
       <section id='section-3' class='section'><div id="game-room-container"></div></section>
       <section id='section-4' class='section'><div class='panel'><h2>LEADERBOARD</h2><div id='leaderboard-rows'></div></div></section>
