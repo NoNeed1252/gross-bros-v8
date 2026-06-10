@@ -536,7 +536,7 @@ letter-spacing: 1px;
             <div class='panel' style='background:rgba(0,255,200,0.02); border:1px solid rgba(0,255,200,0.15);'>
               <div class='muted' style='letter-spacing:.2em;text-transform:uppercase;font-size:11px;'>AUTOMATED OPERATIONS</div>
               <h3 style='font-family:Orbitron,sans-serif; margin:10px 0 14px; color:#fff;'>TRADING BOT CONTROLS</h3>
-              <p style='font-size:13px; line-height:1.6; opacity:0.8;'>Manage automated market operations on XRPL-native assets, meme tokens, and NFTs directly on your VPS node.</p>
+              <p style='font-size:13px; line-height:1.6; opacity:0.8;'>Manage automated market operations on XRPL-native assets directly on your VPS node.</p>
               
               <div style='display:grid; gap:10px; margin-top:16px;'>
                 <div class='row' style='justify-content:space-between; align-items:center;'>
@@ -545,7 +545,7 @@ letter-spacing: 1px;
                 </div>
                 <div class='row' style='justify-content:space-between; align-items:center;'>
                   <span style='font-size:13px;'>ACTIVE PAIR:</span>
-                  <span style='font-size:13px; font-family:Share Tech Mono,monospace;'>XRP / DROP</span>
+                  <span style='font-size:13px; font-family:Share Tech Mono,monospace;'>XRP / RLUSD</span>
                 </div>
                 <div class='row' style='justify-content:space-between; align-items:center;'>
                   <span style='font-size:13px;'>ALGORITHM:</span>
@@ -619,7 +619,7 @@ letter-spacing: 1px;
     <div class="modal-content">
       <span class="modal-close" onclick="closeModal('privacy-modal')">&times;</span>
       <h2 style="font-family:Orbitron, sans-serif; letter-spacing: 4px; color: var(--cyan);">PRIVACY PROTOCOL</h2>
-      <p>By accessing the Galactic Gross Bros (GGB) neural relay, you acknowledge that your interaction data, including XRPL wallet addresses (connected via Xaman), token balances (DROP, BERT, DBY, RLUSD), and terminal chat transmissions, are processed solely for the purpose of maintaining signal integrity and the terminal entertainment experience. We explicitly disclaim all liability for any data breaches, neural link interruptions, or technical failures on the XRP Ledger. Your digital markers, private keys, and wallet metadata remain your own responsibility; we do not store private keys. Signal integrity is our priority, but absolute security in the XRP-7 zone is not guaranteed. NO WARRANTIES PROVIDED.</p>
+      <p>By accessing the Galactic Gross Bros (GGB) neural relay, you acknowledge that your interaction data, including XRPL wallet addresses (connected via Xaman), token balances (RLUSD), and terminal chat transmissions, are processed solely for the purpose of maintaining signal integrity and the terminal entertainment experience. We explicitly disclaim all liability for any data breaches, neural link interruptions, or technical failures on the XRP Ledger. Your digital markers, private keys, and wallet metadata remain your own responsibility; we do not store private keys. Signal integrity is our priority, but absolute security in the XRP-7 zone is not guaranteed. NO WARRANTIES PROVIDED.</p>
     </div>
   </div>
 
@@ -629,7 +629,7 @@ letter-spacing: 1px;
       <h2 style="font-family:Orbitron, sans-serif; letter-spacing: 4px; color: var(--cyan);">TERMS OF NEURAL SERVICE</h2>
       <p>
         1. <strong>ENTERTAINMENT ONLY:</strong> Galactic Gross Bros (GGB) is a platform for entertainment purposes ONLY. We provide no financial or legal advice. All AI interactions and "Fusion Lab" outcomes are for narrative and entertainment purposes only.<br><br>
-        2. <strong>NO FINANCIAL ADVICE:</strong> Nothing transmitted through this relay constitutes financial, investment, or legal advice. GGB creators are not financial advisors. The mention of tokens like DROP, BERT, DBY, or RLUSD is purely within the context of the GGB ecosystem mechanics.<br><br>
+        2. <strong>NO FINANCIAL ADVICE:</strong> Nothing transmitted through this relay constitutes financial, investment, or legal advice. GGB creators are not financial advisors. The mention of tokens like RLUSD is purely within the context of the GGB ecosystem mechanics.<br><br>
         3. <strong>ASSET RISK:</strong> XRPL tokens and GGB NFTs are volatile digital assets. They are provided "AS-IS" with zero warranties of value, liquidity, or future utility. You assume 100% risk for all ledger transactions.<br><br>
         4. <strong>FULL LIABILITY WAIVER:</strong> The GGB team, developers, and operatives explicitly disclaim all financial and legal liability for any losses, glitches, smart contract events, or ledger-side failures. All "Fusions" and neural transmissions are final, permanent, and non-refundable.<br><br>
         5. <strong>PROTOCOL ACCEPTANCE:</strong> By proceeding, you accept the hazardous and volatile nature of the XRP-7 energy sector. Use at your own risk, Operative.
@@ -1114,7 +1114,7 @@ letter-spacing: 1px;
       if (start) {
         statusEl.textContent = 'ACTIVE';
         statusEl.style.color = '#39ff14';
-        alert("Trading bot initiated on VPS node. Target: XRP / DROP.");
+        alert("Trading bot initiated on VPS node. Target: XRP / RLUSD.");
       } else {
         statusEl.textContent = 'OFFLINE';
         statusEl.style.color = '#ff3b6b';
@@ -1247,7 +1247,7 @@ letter-spacing: 1px;
       return lastSunday.getUTCFullYear() * 100 + (lastSunday.getUTCMonth() + 1) * 10 + lastSunday.getUTCDate();
     }
 
-    const TICKER_ITEMS = ['XRP-7 VOLATILE ENERGY: ACTIVE', 'MUTATED STRAIN DETECTED', 'NEURAL LINK ESTABLISHED', 'BERT ENGINE CRITICAL', 'DROP FLOW SECURED', 'FUSION ENGINE CHARGED', 'XRPL ROOT SEQUENCE STABLE'];
+    const TICKER_ITEMS = ['XRP-7 VOLATILE ENERGY: ACTIVE', 'MUTATED STRAIN DETECTED', 'NEURAL LINK ESTABLISHED', 'FUSION ENGINE CHARGED', 'XRPL ROOT SEQUENCE STABLE'];
 
     function updateLiveTransmissions() {
       const ticker = document.getElementById('warning-ticker-track');
