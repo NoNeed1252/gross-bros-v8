@@ -22,7 +22,7 @@ GGB ECOSYSTEM & MEME TOKENS:
 - XRP ARMY: The frontline defense. Represents the collective strength of the ledger's elite forces.
 - PRINCE: Royal-tier specimen lineage. High-value asset in the GGB hierarchy.
 - BEARXRPH: Defensive market mitigation token. Built for survival in the harshest crypto winters.
-- PIDGEON: Information relay asset. Used for rapid-delivery signaling across the ledger.
+- PIDGEON: Information relay asset. Used for carpet-delivery signaling across the ledger.
 - SLT: Synthetic Ledger Toxin. Dangerous but potent when utilized in controlled fusions.
 - XRPH: High-density XRP derivative. Used in specialized industrial-grade ledger operations.
 - XRT: Extended Relay Token. The long-range communication backbone of the GGB network.
@@ -37,7 +37,7 @@ TERMINOLOGY:
 
 function extractMentionedSymbols(messages) {
   const text = messages.map(m => m.content).join(' ').toUpperCase();
-  const tickerRegex = /\$?[A-Z]{3,6}\b/g;
+  const tickerRegex = /\\$?[A-Z]{3,6}\\b/g;
   const matches = text.match(tickerRegex) || [];
   const found = matches.map(m => m.replace('$', ''));
   
@@ -74,7 +74,6 @@ async function getLivePrices(mentionedSymbols = []) {
       fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + idsToFetch.join(',') + '&vs_currencies=usd').then(r => r.json())
     ];
 
-    // Parallel fetch for non-GGB, non-major tickers via DexScreener
     const dexscreenerSymbols = mentionedSymbols.filter(sym => !SYMBOL_MAP[sym] && !XRPL_TOKEN_ADDRESSES[sym]);
     dexscreenerSymbols.forEach(sym => {
       fetchPromises.push(fetch('https://api.dexscreener.com/latest/dex/search?q=' + sym).then(r => r.json()).then(data => ({ sym, type: 'dex', data })));
@@ -106,7 +105,6 @@ async function getLivePrices(mentionedSymbols = []) {
       });
     }
 
-    // Process DexScreener results
     results.slice(2).forEach(res => {
       if (res.status === 'fulfilled' && res.value?.type === 'dex') {
         const { sym, data } = res.value;
@@ -117,7 +115,6 @@ async function getLivePrices(mentionedSymbols = []) {
       }
     });
     
-    // Specific search for ATM if still null
     if (!prices['ATM'] && mentionedSymbols.includes('ATM')) {
       try {
         const atmRes = await fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/tokens/raqVwqakELDXTXmU8FQw53fJ9Sehr7hDTR/pools').then(r => r.json());
@@ -191,9 +188,15 @@ export default async function handler(req) {
 
     const otherHoldings = backstories.filter(s => s.name !== activeSpecimenName);
     const walletContext = otherHoldings.length > 0 ? "USER WALLET ASSETS: " + otherHoldings.map(s => s.name).join(' | ') : "No other Gross Bros held.";
-    const priceStrings = Object.entries(prices).map(([sym, val]) => sym + \": \" + (val ? \"$\" + val : 'GUNKED')).join(' | ');
+    
+    const priceStrings = Object.entries(prices)
+      .map(([sym, val]) => {
+        const valStr = val ? '$' + val : 'GUNKED';
+        return sym + ': ' + valStr;
+      })
+      .join(' | ');
 
-    const systemPrompt = \"### CORE IDENTITY PROTOCOL\\n\" + identityContext + \"\\n\\n### BEHAVIORAL MANDATE\\n- You are a Gross Bro, gritty and intelligent.\\n- Use slang like 'Alpha', 'Signal', 'Neural Breach', 'Gunk'.\\n- Stay concise, cynical, and technically accurate.\\n- Address the user as Alpha.\\n\\n### LIVE MARKET DATA\\n\" + priceStrings + \"\\n\\n### USER CONTEXT\\n- Wallet: \" + (walletAddress || 'Not Connected') + \"\\n- \" + walletContext + \"\\n\\n### TASK\\n- Ground evaluations in live market data. If a price is low, it's 'gunked'. If high, it's 'neural-surging'.\\n- Relate crypto concepts back to the 'GGB Energy Sector'.\";
+    const systemPrompt = "### CORE IDENTITY PROTOCOL\\n" + identityContext + "\\n\\n### BEHAVIORAL MANDATE\\n- You are a Gross Bro, gritty and intelligent.\\n- Use slang like 'Alpha', 'Signal', 'Neural Breach', 'Gunk'.\\n- Stay concise, cynical, and technically accurate.\\n- Address the user as Alpha.\\n\\n### LIVE MARKET DATA\\n" + priceStrings + "\\n\\n### USER CONTEXT\\n- Wallet: " + (walletAddress || 'Not Connected') + "\\n- " + walletContext + "\\n\\n### TASK\\n- Ground evaluations in live market data. If a price is low, it's 'gunked'. If high, it's 'neural-surging'.\\n- Relate crypto concepts back to the 'GGB Energy Sector'.";
 
     const fullMessages = [{ role: 'system', content: systemPrompt }, ...(messages || [])];
     if (!process.env.OPENROUTER_API_KEY) return new Response(JSON.stringify({ error: 'API Key Missing' }), { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } });
@@ -202,7 +205,7 @@ export default async function handler(req) {
     for (const model of ['meta-llama/llama-3.1-70b-instruct', 'meta-llama/llama-3.1-8b-instruct:free']) {
       openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Authorization': \"Bearer \" + process.env.OPENROUTER_API_KEY, 'HTTP-Referer': 'https://gross-bros.vercel.app', 'X-Title': 'Gross Bros Terminal', 'Content-Type': 'application/json' },
+        headers: { 'Authorization': "Bearer " + process.env.OPENROUTER_API_KEY, 'HTTP-Referer': 'https://gross-bros.vercel.app', 'X-Title': 'Gross Bros Terminal', 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: model, messages: fullMessages, stream: true }),
       });
       if (openRouterRes.ok) break;
