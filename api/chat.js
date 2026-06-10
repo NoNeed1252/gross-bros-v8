@@ -55,6 +55,12 @@ const SYMBOL_MAP = {
   'BCH': 'bitcoin-cash', 'AVAX': 'avalanche-2', 'SUI': 'sui', 'APT': 'aptos'
 };
 
+const XRPL_TOKEN_ADDRESSES = {
+  'ATM': 'raqVwqakELDXTXmU8FQw53fJ9Sehr7hDTR',
+  'BERT': 'rNoNeed1252BERTaddressHERE...', // Placeholder for other assets if needed
+  'DROP': 'rNoNeed1252DROPaddressHERE...'
+};
+
 async function getLivePrices(mentionedSymbols = []) {
   const prices = {};
   mentionedSymbols.forEach(sym => { prices[sym] = null; });
@@ -78,11 +84,27 @@ async function getLivePrices(mentionedSymbols = []) {
     if (dexRes.status === 'fulfilled' && dexRes.value?.data) {
       const pools = dexRes.value.data;
       mentionedSymbols.forEach(sym => {
-        const pool = pools.find(p => p.attributes?.name?.toUpperCase().includes(sym.toUpperCase()));
-        if (pool && !prices[sym]) prices[sym] = parseFloat(pool.attributes.base_token_price_usd).toFixed(10);
+        const pool = pools.find(p => {
+          const nameMatch = p.attributes?.name?.toUpperCase().includes(sym.toUpperCase());
+          const addressMatch = XRPL_TOKEN_ADDRESSES[sym] && p.attributes?.address?.toLowerCase().includes(XRPL_TOKEN_ADDRESSES[sym].toLowerCase());
+          return nameMatch || addressMatch;
+        });
+        if (pool && !prices[sym]) {
+          prices[sym] = parseFloat(pool.attributes.base_token_price_usd).toFixed(10);
+        }
       });
     }
     
+    // Specific search for ATM if still null
+    if (!prices['ATM'] && mentionedSymbols.includes('ATM')) {
+      try {
+        const atmRes = await fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/tokens/raqVwqakELDXTXmU8FQw53fJ9Sehr7hDTR/pools').then(r => r.json());
+        if (atmRes?.data?.[0]?.attributes?.base_token_price_usd) {
+          prices['ATM'] = parseFloat(atmRes.data[0].attributes.base_token_price_usd).toFixed(10);
+        }
+      } catch (e) {}
+    }
+
     if (!prices.XRP || !prices.BTC) {
       const fb = await Promise.allSettled([
         fetch('https://api.coinbase.com/v2/prices/XRP-USD/spot').then(r => r.json()),
