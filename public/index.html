@@ -101,7 +101,7 @@
         <div class='dot'></div>
         <div class='title'>GGB_CORE_v8.9.5</div>
       </div>
-      <div id='wallet-status' style="font-size:12px; opacity:0.6;">[ ALPHA_AUTH_PENDING ]</div>
+      <div id='wallet-status' style="font-size:12px; opacity:0.6;">[ ALPHA_AUTH_STABLE ]</div>
     </header>
 
     <nav class='tabs'>
@@ -116,14 +116,14 @@
       <section id='section-0' class='section active'>
         <div class="panel">
           <h2 style="font-family:Orbitron;">SYSTEM_OVERVIEW</h2>
-          <p>Welcome, Alpha. Neural relay is 98% stable. Mutation cycles are within expected parameters.</p>
+          <p>Welcome, Alpha. Neural relay is 100% stable. Mutation cycles are within expected parameters.</p>
         </div>
       </section>
 
       <section id='section-1' class='section'>
         <div class="panel">
           <h2 style="font-family:Orbitron;">TRANSMISSIONS</h2>
-          <p>[REDACTED] The XRP-7 incident was not an accident. It was a catalyst.</p>
+          <p>[REDACTED] The XRP-7 incident was not an accident. It was a catalyst for the Alpha protocol.</p>
         </div>
       </section>
 
@@ -137,7 +137,7 @@
             </div>
             <div class="stat-box">
               <div class="stat-label">STABILITY</div>
-              <div class="stat-value">94.2%</div>
+              <div class="stat-value">99.8%</div>
             </div>
             <div class="stat-box">
               <div class="stat-label">SPECIMENS</div>
@@ -155,14 +155,14 @@
       <section id='section-3' class='section'>
         <div class="panel">
           <h2 style="font-family:Orbitron;">FUSION_LAB</h2>
-          <p>Biometric lock active. Alpha authorization required for specimen merging.</p>
+          <p>Biometric lock active. Alpha authorization confirmed for specimen merging.</p>
         </div>
       </section>
 
       <section id='section-4' class='section'>
         <div class="panel">
           <h2 style="font-family:Orbitron;">COMM_CHANNELS</h2>
-          <p>Direct frequency open on X-Secure and Discord decrypts.</p>
+          <p>Direct frequency open on X-Secure and Discord decrypts. Signals restricted to Alpha class.</p>
         </div>
       </section>
 
@@ -181,7 +181,7 @@
     function switchTab(idx) {
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === idx));
-      if (idx === 2) CombatSystem.init();
+      if (idx === 2 && window.CombatSystem) CombatSystem.init();
     }
     document.addEventListener('DOMContentLoaded', () => {
       const hi = localStorage.getItem('neon_cascade_hi') || 0;
