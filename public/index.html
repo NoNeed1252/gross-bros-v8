@@ -1041,6 +1041,10 @@ letter-spacing: 1px;
     }
 
     async function generateBurnerWallet() {
+      if (!state.fuseUnlocked && !state.alphaOperative) {
+        alert('NEURAL LINK REQUIRED: FUSE AN NFT TO GENERATE BURNER WALLETS.');
+        return;
+      }
       const btn = document.getElementById('generate-burner-btn');
       const addrEl = document.getElementById('burner-address-display');
       if (!state.connected) {
@@ -1093,6 +1097,10 @@ letter-spacing: 1px;
     }
 
     function toggleTradingBot(start) {
+      if (!state.fuseUnlocked && !state.alphaOperative) {
+        alert('NEURAL LINK REQUIRED: FUSE AN NFT TO RUN AUTOMATED TRADING.');
+        return;
+      }
       const statusEl = document.getElementById('bot-status-indicator');
       if (!state.connected) {
         alert("Main wallet connection required to verify authorization.");
@@ -1185,6 +1193,10 @@ letter-spacing: 1px;
     }
 
     function switchTab(index) {
+      if (index === 4 && !state.fuseUnlocked && !state.alphaOperative) {
+        alert('NEURAL LINK REQUIRED. YOU MUST FUSE AN NFT IN THE FUSION LAB TO ACCESS TERMINAL CONTROLS.');
+        return;
+      }
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
       if (index === 2 && window.CombatSystem) CombatSystem.init();
