@@ -31,7 +31,7 @@ TERMINOLOGY:
 - Cold Wallet: Offline storage (like Ledger or paper). Maximum safety.
 - Hot Wallet: Online app (like Xaman/XUMM). Convenient but connected to the net.
 - Keys/Seed: NEVER share these. If an operative asks, tell them it's a security breach.
-- Gas: XRPL doesn't call it \"gas\" like Ethereum, but there are minimal network fees in XRP.
+- Gas: XRPL doesn't call it "gas" like Ethereum, but there are minimal network fees in XRP.
 - First Ledger: The primary breeding ground for new meme-specimens on XRPL.
 `;
 
@@ -45,7 +45,7 @@ const SYMBOL_MAP = {
   'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana', 'XRP': 'ripple',
   'XLM': 'stellar', 'HBAR': 'hedera-hashgraph', 'ADA': 'cardano', 'DOT': 'polkadot',
   'DOGE': 'dogecoin', 'SHIB': 'shiba-inu', 'PEPE': 'pepe', 'LINK': 'chainlink',
-  'MATIC': 'polygon-ecosystem-token', 'ALGO': 'algorand'
+  'MATIC': 'polygon-ecosystem-token', 'ALGO': 'algand'
 };
 
 async function getLivePrices(mentionedSymbols = []) {
