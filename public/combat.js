@@ -62,7 +62,6 @@ const CombatSystem = {
             this.state.audioCtx.suspend();
         }
 
-        // Update Launcher Stats
         const hiEl = document.getElementById('launcher-hi-score');
         if (hiEl) hiEl.textContent = this.state.highScore;
 
@@ -94,6 +93,7 @@ const CombatSystem = {
     },
 
     renderGameUI(container) {
+        const hi = this.state.highScore;
         container.innerHTML = `
             <style>
                 #nc-game-wrap {
@@ -129,7 +129,7 @@ const CombatSystem = {
             <div id="nc-game-wrap">
                 <div class="nc-stats">
                     <div>SCORE: <span id="nc-score">0</span></div>
-                    <div>HI: <span id="nc-hi">${this.state.highScore}</span></div>
+                    <div>HI: <span id="nc-hi">${hi}</span></div>
                 </div>
                 <div id="nc-board"></div>
                 <div style="font-size:10px; opacity:0.5; text-align:center;">MATCH 3 SPECIMENS TO STABILIZE CORE</div>
@@ -244,7 +244,7 @@ const CombatSystem = {
                 }
             }
         }
-        return Array.from(new Set(matches.map(m => `${m.r},${m.c}`)))
+        return Array.from(new Set(matches.map(m => \`\${m.r},\${m.c}\`)))
             .map(s => { const [r,c] = s.split(',').map(Number); return {r, c}; });
     },
 
@@ -256,7 +256,7 @@ const CombatSystem = {
         }
 
         matches.forEach(m => {
-            const el = this.boardEl.querySelector(`[data-r="${m.r}"][data-c="${m.c}"]`);
+            const el = this.boardEl.querySelector(\`[data-r="\${m.r}"][data-c="\${m.c}"]\`);
             if (el) el.classList.add('match');
         });
 
@@ -266,7 +266,6 @@ const CombatSystem = {
 
         matches.forEach(m => { this.state.grid[m.r][m.c] = -1; });
 
-        // Collapse
         for (let c = 0; c < 8; c++) {
             let empty = 7;
             for (let r = 7; r >= 0; r--) {
