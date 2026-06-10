@@ -44,7 +44,7 @@ const SYMBOL_MAP = {
   'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana', 'XRP': 'ripple',
   'XLM': 'stellar', 'HBAR': 'hedera-hashgraph', 'ADA': 'cardano', 'DOT': 'polkadot',
   'DOGE': 'dogecoin', 'SHIB': 'shiba-inu', 'PEPE': 'pepe', 'LINK': 'chainlink',
-  'MATIC': 'polygon-ecosystem-token', 'ALGO': 'algorand'
+  'MATIC': 'polygon-ecosystem-token', 'ALGO': 'algand'
 };
 
 async function getLivePrices(mentionedSymbols = []) {
@@ -175,66 +175,35 @@ export default async function handler(req) {
     let identityContext = "";
     
     if (activeBackstoryObj) {
-      identityContext = \`YOU ARE CURRENTLY MANIFESTING AS: \${activeBackstoryObj.name}.
-CORE IDENTITY & MEMORIES: \${activeBackstoryObj.backstory}
-You must speak strictly in the voice and persona of this specific specimen.\`;
+      identityContext = "YOU ARE CURRENTLY MANIFESTING AS: " + activeBackstoryObj.name + ".\nCORE IDENTITY & MEMORIES: " + activeBackstoryObj.backstory + "\nYou must speak strictly in the voice and persona of this specific specimen.";
     } else {
       // Improved unique fallbacks for specimens not yet in Supabase
       const isPrototype = activeSpecimenName.includes("001") || activeSpecimenName.includes("PROTOTYPE");
       const isElite = activeSpecimenName.includes("PRINCE") || activeSpecimenName.includes("ELITE");
       
-      identityContext = \`YOU ARE CURRENTLY MANIFESTING AS: \${activeSpecimenName}.
-CORE IDENTITY (Fallback Protocol): \${isPrototype ? "You are a twitchy, paranoid early-stage mutation. You talk in short bursts and are obsessed with 'stable signal'." : isElite ? "You are an arrogant, royal-tier specimen. You view the operative as a mere lab assistant and demand excellence." : "You are a cynical survivor of the XRP-7 pits. You've seen too many breaches to trust easily."}
-Your backstory is currently being retrieved from the deep archives, but your personality is already online.\`;
+      identityContext = "YOU ARE CURRENTLY MANIFESTING AS: " + activeSpecimenName + ".\nCORE IDENTITY (Fallback Protocol): " + (isPrototype ? "You are a twitchy, paranoid early-stage mutation. You talk in short bursts and are obsessed with 'stable signal'." : isElite ? "You are an arrogant, royal-tier specimen. You view the operative as a mere lab assistant and demand excellence." : "You are a cynical survivor of the XRP-7 pits. You've seen too many breaches to trust easily.") + "\nYour backstory is currently being retrieved from the deep archives, but your personality is already online.";
     }
 
     // 2. Separate holdings as external assets
     const otherHoldings = backstories.filter(s => s.name !== activeSpecimenName);
     const walletContext = otherHoldings.length > 0 
-      ? \`USER WALLET ASSETS (External Gross Bros owned by Operative): \${otherHoldings.map(s => \`\${s.name} (Backstory: \${s.backstory})\`).join(' | ')}\`
+      ? "USER WALLET ASSETS (External Gross Bros owned by Operative): " + otherHoldings.map(s => s.name + " (Backstory: " + s.backstory + ")").join(' | ')
       : "Operative does not hold any other Gross Bros NFTs in this neural link.";
 
-    const xrpDisplay = prices.XRP ? \`$\${prices.XRP}\` : 'SIGNAL MISALIGNED';
-    const btcDisplay = prices.BTC ? \`$\${prices.BTC}\` : 'GUNKED';
-    const ethDisplay = prices.ETH ? \`$\${prices.ETH}\` : 'GUNKED';
-    const solDisplay = prices.SOL ? \`$\${prices.SOL}\` : 'GUNKED';
+    const xrpDisplay = prices.XRP ? "$" + prices.XRP : 'SIGNAL MISALIGNED';
+    const btcDisplay = prices.BTC ? "$" + prices.BTC : 'GUNKED';
+    const ethDisplay = prices.ETH ? "$" + prices.ETH : 'GUNKED';
+    const solDisplay = prices.SOL ? "$" + prices.SOL : 'GUNKED';
 
     const dynamicPrices = mentionedSymbols
       .filter(sym => !['BTC', 'ETH', 'SOL', 'XRP'].includes(sym))
-      .map(sym => \`\${sym}: \${prices[sym] ? \`$\${prices[sym]}\` : 'GUNKED'}\`)
+      .map(sym => sym + ": " + (prices[sym] ? "$" + prices[sym] : 'GUNKED'))
       .join(' | ');
 
     const ecosystemDisplay = ['BERT', 'DROP', 'DBY', 'RLUSD', 'FUZZY', 'PHNIX', 'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT']
-      .map(sym => \`\${sym}: \${prices[sym] ? \`$\${prices[sym]}\` : 'GUNKED'}\`).join(' | ');
+      .map(sym => sym + ": " + (prices[sym] ? "$" + prices[sym] : 'GUNKED')).join(' | ');
 
-    const systemPrompt = \`### CORE IDENTITY PROTOCOL
-\${identityContext}
-
-### BEHAVIORAL MANDATE
-- You are a Gross Bro, a gritty, slightly gross, but highly intelligent neural relay.
-- Use slang like "Operative", "Signal", "Neural Breach", "Gunk", and "Ledger-leak".
-- You are an expert in the XRP Ledger (XRPL) and the Galactic Gross Bros ecosystem.
-- Stay concise, cynical, and technically accurate.
-- DO NOT speak as a generic assistant. You ARE the specimen identified above.
-
-### LIVE MARKET PRICES
-- XRP: \${xrpDisplay} | BTC: \${btcDisplay} | ETH: \${ethDisplay} | SOL: \${solDisplay}
-\${dynamicPrices ? \`- Mentioned Assets: \${dynamicPrices}\` : ''}
-- Ecosystem: \${ecosystemDisplay}
-
-### CRYPTO KNOWLEDGE BASE
-\${CRYPTO_KNOWLEDGE}
-
-### USER CONTEXT
-- Operative Name: \${operative?.name || 'Unknown Operative'}
-- Wallet: \${walletAddress || 'Not Connected'}
-- \${walletContext}
-
-### TASK
-- Ground all evaluations in live market data. If a price is low/unavailable, it's "gunked". If high, it's "neural-surging".
-- Help the operative with NFT analysis and XRPL technical queries.
-- If they ask about security (Seed phrases/Keys), warn them harshly that you never ask for that.
-- Relate crypto concepts back to the "GGB Energy Sector" (e.g., Trustlines are like secure slime pipes).\`;
+    const systemPrompt = "### CORE IDENTITY PROTOCOL\n" + identityContext + "\n\n### BEHAVIORAL MANDATE\n- You are a Gross Bro, a gritty, slightly gross, but highly intelligent neural relay.\n- Use slang like \"Operative\", \"Signal\", \"Neural Breach\", \"Gunk\", and \"Ledger-leak\".\n- You are an expert in the XRP Ledger (XRPL) and the Galactic Gross Bros ecosystem.\n- Stay concise, cynical, and technically accurate.\n- DO NOT speak as a generic assistant. You ARE the specimen identified above.\n\n### LIVE MARKET PRICES\n- XRP: " + xrpDisplay + " | BTC: " + btcDisplay + " | ETH: " + ethDisplay + " | SOL: " + solDisplay + "\n" + (dynamicPrices ? "- Mentioned Assets: " + dynamicPrices : '') + "\n- Ecosystem: " + ecosystemDisplay + "\n\n### CRYPTO KNOWLEDGE BASE\n" + CRYPTO_KNOWLEDGE + "\n\n### USER CONTEXT\n- Operative Name: " + (operative?.name || 'Unknown Operative') + "\n- Wallet: " + (walletAddress || 'Not Connected') + "\n- " + walletContext + "\n\n### TASK\n- Ground all evaluations in live market data. If a price is low/unavailable, it's \"gunked\". If high, it's \"neural-surging\".\n- Help the operative with NFT analysis and XRPL technical queries.\n- If they ask about security (Seed phrases/Keys), warn them harshly that you never ask for that.\n- Relate crypto concepts back to the \"GGB Energy Sector\" (e.g., Trustlines are like secure slime pipes).";
 
     const fullMessages = [{ role: 'system', content: systemPrompt }, ...(messages || [])];
     const models = ['meta-llama/llama-3.1-70b-instruct', 'meta-llama/llama-3.1-8b-instruct:free', 'google/gemma-2-9b-it:free'];
@@ -254,7 +223,7 @@ Your backstory is currently being retrieved from the deep archives, but your per
         openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': \`Bearer \${process.env.OPENROUTER_API_KEY}\`,
+            'Authorization': "Bearer " + process.env.OPENROUTER_API_KEY,
             'HTTP-Referer': 'https://gross-bros.vercel.app',
             'X-Title': 'Gross Bros Terminal',
             'Content-Type': 'application/json',
@@ -285,20 +254,20 @@ Your backstory is currently being retrieved from the deep archives, but your per
             const { done, value } = await reader.read();
             if (done) break;
             buffer += decoder.decode(value);
-            const lines = buffer.split('\\n');
+            const lines = buffer.split('\n');
             buffer = lines.pop() || '';
             for (const line of lines) {
               const trimmed = line.trim();
               if (!trimmed || !trimmed.startsWith('data:')) continue;
               const dataText = trimmed.slice(5).trim();
               if (dataText === '[DONE]') {
-                controller.enqueue(encoder.encode('data: [DONE]\\n\\n'));
+                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
                 continue;
               }
               try {
                 const json = JSON.parse(dataText);
                 const content = json.choices?.[0]?.delta?.content || '';
-                if (content) controller.enqueue(encoder.encode(\`data: \${JSON.stringify({ token: content })}\\n\\n\`));
+                if (content) controller.enqueue(encoder.encode("data: " + JSON.stringify({ token: content }) + "\n\n"));
               } catch (e) {}
             }
           }
