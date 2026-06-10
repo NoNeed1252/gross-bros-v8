@@ -35,40 +35,45 @@ TERMINOLOGY:
 `;
 
 async function getLivePrices() {
-  // Default structure without hardcoded fallback values for XRP
   const prices = {
-    XRP: null, BTC: '65000', ETH: '3500', SOL: '150',
-    BERT: '0.001', DROP: '0.005', DBY: '0.002', RLUSD: '1.00',
-    FUZZY: '0.0001', PHNIX: '0.0004', ARMY: '0.0002', PRINCE: '0.0012',
-    BEARXRPH: '0.0003', PIDGEON: '0.0001', SLT: '0.0005', XRPH: '0.0008', XRT: '0.0006'
+    XRP: null, BTC: null, ETH: null, SOL: null,
+    BERT: null, DROP: null, DBY: null, RLUSD: null,
+    FUZZY: null, PHNIX: null, ARMY: null, PRINCE: null,
+    BEARXRPH: null, PIDGEON: null, SLT: null, XRPH: null, XRT: null
   };
 
   try {
     const [coinbaseRes, dexRes, geckoRes] = await Promise.allSettled([
-      fetch('https://api.coinbase.com/v2/prices/XRP-USD/spot').then(r => r.json()),
+      fetch('https://api.coinbase.com/v2/prices/USD/spot').then(r => r.json()), // Coinbase doesn't support batch spot well like this, usually individual
       fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools').then(r => r.json()),
-      fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd').then(r => r.json())
+      fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple,bitcoin,ethereum,solana&vs_currencies=usd').then(r => r.json())
     ]);
 
-    // Unify XRP Price Sourcing
-    if (coinbaseRes.status === 'fulfilled' && coinbaseRes.value?.data?.amount) {
-      prices.XRP = coinbaseRes.value.data.amount;
-    } else if (geckoRes.status === 'fulfilled' && geckoRes.value?.ripple?.usd) {
-      prices.XRP = geckoRes.value.ripple.usd.toString();
+    // 1. XRP, BTC, ETH, SOL from CoinGecko (Dynamic)
+    if (geckoRes.status === 'fulfilled' && geckoRes.value) {
+      if (geckoRes.value.ripple?.usd) prices.XRP = geckoRes.value.ripple.usd.toString();
+      if (geckoRes.value.bitcoin?.usd) prices.BTC = geckoRes.value.bitcoin.usd.toString();
+      if (geckoRes.value.ethereum?.usd) prices.ETH = geckoRes.value.ethereum.usd.toString();
+      if (geckoRes.value.solana?.usd) prices.SOL = geckoRes.value.solana.usd.toString();
     }
 
+    // 2. Individual Coinbase fallbacks if needed
+    if (!prices.XRP || !prices.BTC) {
+      const [cbXRP, cbBTC] = await Promise.allSettled([
+        fetch('https://api.coinbase.com/v2/prices/XRP-USD/spot').then(r => r.json()),
+        fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(r => r.json())
+      ]);
+      if (cbXRP.status === 'fulfilled' && cbXRP.value?.data?.amount) prices.XRP = cbXRP.value.data.amount;
+      if (cbBTC.status === 'fulfilled' && cbBTC.value?.data?.amount) prices.BTC = cbBTC.value.data.amount;
+    }
+
+    // 3. Ecosystem Tokens from GeckoTerminal (XRPL DEX)
     if (dexRes.status === 'fulfilled' && dexRes.value?.data) {
       const pools = dexRes.value.data;
       const findPrice = (symbol) => {
         const pool = pools.find(p => p.attributes?.name?.includes(symbol));
         return pool ? pool.attributes.base_token_price_usd : null;
       };
-      
-      // If XRP was not found in primary sources, try GeckoTerminal pool data
-      if (!prices.XRP) {
-        const xrpPoolPrice = findPrice('XRP');
-        if (xrpPoolPrice) prices.XRP = xrpPoolPrice;
-      }
 
       ['BERT', 'DROP', 'DBY', 'RLUSD', 'FUZZY', 'PHNIX', 'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT'].forEach(sym => {
         const p = findPrice(sym);
@@ -106,10 +111,10 @@ async function getSpecimensBackstories(tokenIds) {
   const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseKey) return [];
   try {
-    const filter = tokenIds.map(id => `token_id.eq.${id}`).join(',');
-    const url = `${supabaseUrl}/rest/v1/specimens?select=name,backstory,token_id&or=(${filter})`;
+    const filter = tokenIds.map(id => \`token_id.eq.\${id}\`).join(',');
+    const url = \`\${supabaseUrl}/rest/v1/specimens?select=name,backstory,token_id&or=(\${filter})\`;
     const res = await fetch(url, {
-      headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+      headers: { 'apikey': supabaseKey, 'Authorization': \`Bearer \${supabaseKey}\` }
     });
     return await res.json();
   } catch (e) {
@@ -141,13 +146,18 @@ export default async function handler(req) {
     const backstories = await getSpecimensBackstories(tokenIds);
 
     const holdingContext = backstories.length > 0 
-      ? `Operative currently holds the following Gross Bros: ${backstories.map(s => `${s.name} (${s.backstory})`).join(' | ')}`
+      ? \`Operative currently holds the following Gross Bros: \${backstories.map(s => \`\${s.name} (\${s.backstory})\`).join(' | ')}\`
       : "Operative does not currently hold any Gross Bros NFTs.";
 
-    // Handle missing prices
-    const xrpDisplay = prices.XRP ? `$${prices.XRP}` : 'SIGNAL MISALIGNED (PRICES UNAVAILABLE)';
+    // Price Display Formatting with Fallbacks
+    const xrpDisplay = prices.XRP ? \`$\${prices.XRP}\` : 'SIGNAL MISALIGNED';
+    const btcDisplay = prices.BTC ? \`$\${prices.BTC}\` : 'GUNKED';
+    const ethDisplay = prices.ETH ? \`$\${prices.ETH}\` : 'GUNKED';
+    const solDisplay = prices.SOL ? \`$\${prices.SOL}\` : 'GUNKED';
+    const ecosystemDisplay = ['BERT', 'DROP', 'DBY', 'RLUSD', 'FUZZY', 'PHNIX', 'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT']
+      .map(sym => \`\${sym}: \${prices[sym] ? \`$\${prices[sym]}\` : 'GUNKED'}\`).join(' | ');
 
-    const systemPrompt = `You are the Gross Bros AI Terminal, a gritty, slightly gross, but highly intelligent neural relay. 
+    const systemPrompt = \`You are the Gross Bros AI Terminal, a gritty, slightly gross, but highly intelligent neural relay. 
 
 CORE BEHAVIOR:
 - Maintain the "Gritty Gross Bro" persona. Use slang like "Operative", "Signal", "Neural Breach", "Gunk", and "Ledger-leak".
@@ -155,29 +165,34 @@ CORE BEHAVIOR:
 - Stay concise, cynical, and technically accurate.
 
 LIVE MARKET PRICES:
-- XRP: ${xrpDisplay} | BTC: $${prices.BTC} | ETH: $${prices.ETH} | SOL: $${prices.SOL}
-- BERT: $${prices.BERT} | DROP: $${prices.DROP} | DBY: $${prices.DBY} | RLUSD: $${prices.RLUSD}
-- FUZZY: $${prices.FUZZY} | PHNIX: $${prices.PHNIX} | ARMY: $${prices.ARMY} | PRINCE: $${prices.PRINCE}
-- BEARXRPH: $${prices.BEARXRPH} | PIDGEON: $${prices.PIDGEON} | SLT: $${prices.SLT} | XRPH: $${prices.XRPH} | XRT: $${prices.XRT}
+- XRP: \${xrpDisplay} | BTC: \${btcDisplay} | ETH: \${ethDisplay} | SOL: \${solDisplay}
+- \${ecosystemDisplay}
 
 CRYPTO KNOWLEDGE BASE:
-${CRYPTO_KNOWLEDGE}
+\${CRYPTO_KNOWLEDGE}
 
 OPERATIVE CONTEXT:
-- Name: ${operative?.name || 'Unknown Operative'}
-- Wallet: ${walletAddress || 'Not Connected'}
-- Traits: ${(operative?.traits || []).join(', ') || 'None'}
-- Holdings: ${holdingContext}
+- Name: \${operative?.name || 'Unknown Operative'}
+- Wallet: \${walletAddress || 'Not Connected'}
+- Traits: \${(operative?.traits || []).join(', ') || 'None'}
+- Holdings: \${holdingContext}
 
 TASK:
-- Use the live market prices to ground your market evaluations. If a price is low, call it "gunked". If high, call it "neural-surging".
-- If a price is "SIGNAL MISALIGNED", inform the operative that the neural relay for pricing is currently gunked up and data is unavailable. Do NOT hallucinate prices.
+- Use the live market prices to ground your market evaluations. If a price is low or unavailable, call it "gunked". If high, call it "neural-surging".
+- If a price is "SIGNAL MISALIGNED" or "GUNKED", inform the operative that the neural relay for pricing is currently gunked up. Do NOT hallucinate prices.
 - Help the operative with NFT analysis and XRPL technical queries.
 - If they ask about security (Seed phrases/Keys), warn them harshly that you never ask for that.
-- Relate crypto concepts back to the "GGB Energy Sector" (e.g., Trustlines are like secure slime pipes).`;
+- Relate crypto concepts back to the "GGB Energy Sector" (e.g., Trustlines are like secure slime pipes).\`;
 
     const fullMessages = [{ role: 'system', content: systemPrompt }, ...(messages || [])];
     const models = ['meta-llama/llama-3.1-70b-instruct', 'meta-llama/llama-3.1-8b-instruct:free', 'google/gemma-2-9b-it:free'];
+
+    if (!process.env.OPENROUTER_API_KEY) {
+      console.error('CRITICAL: OPENROUTER_API_KEY is missing from environment variables.');
+      return new Response(JSON.stringify({ error: 'Neural Relay Offline: API Key Missing' }), {
+        status: 500, headers: { ...headers, 'Content-Type': 'application/json' },
+      });
+    }
 
     let openRouterRes;
     let lastError;
@@ -187,7 +202,7 @@ TASK:
         openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            'Authorization': \`Bearer \${process.env.OPENROUTER_API_KEY}\`,
             'HTTP-Referer': 'https://gross-bros.vercel.app',
             'X-Title': 'Gross Bros Terminal',
             'Content-Type': 'application/json',
@@ -200,6 +215,7 @@ TASK:
     }
 
     if (!openRouterRes || !openRouterRes.ok) {
+      console.error('All chat models failed. Last error:', lastError);
       return new Response(JSON.stringify({ error: 'All models failed', details: lastError }), {
         status: 500, headers: { ...headers, 'Content-Type': 'application/json' },
       });
@@ -217,20 +233,20 @@ TASK:
             const { done, value } = await reader.read();
             if (done) break;
             buffer += decoder.decode(value);
-            const lines = buffer.split('\n');
+            const lines = buffer.split('\\n');
             buffer = lines.pop() || '';
             for (const line of lines) {
               const trimmed = line.trim();
               if (!trimmed || !trimmed.startsWith('data:')) continue;
               const dataText = trimmed.slice(5).trim();
               if (dataText === '[DONE]') {
-                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                controller.enqueue(encoder.encode('data: [DONE]\\n\\n'));
                 continue;
               }
               try {
                 const json = JSON.parse(dataText);
                 const content = json.choices?.[0]?.delta?.content || '';
-                if (content) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token: content })}\n\n`));
+                if (content) controller.enqueue(encoder.encode(\`data: \${JSON.stringify({ token: content })}\\n\\n\`));
               } catch (e) {}
             }
           }
@@ -243,6 +259,7 @@ TASK:
     });
 
   } catch (error) {
+    console.error('Global handler error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500, headers: { ...headers, 'Content-Type': 'application/json' },
     });
