@@ -1,310 +1,324 @@
-const CombatSystem = {
-    state: {
-        active: false,
-        score: 0,
-        highScore: localStorage.getItem('ggb_high_score') || 0,
-        wave: 1,
-        player: { x: 145, y: 350, w: 30, h: 30, speed: 5 },
-        bullets: [],
-        enemies: [],
-        enemyBullets: [],
-        particles: [],
-        keys: {},
-        lastFire: 0,
-        shake: 0,
-        gameOver: false,
-        playerImage: null,
-        enemyImage: null
-    },
+/**
+ * NEON CASCADE: MATCH-3 ENGINE
+ * Replaces old shooter with modern Match-3 logic.
+ * Features: 8x8 Grid, Drag-to-Swap, Cascading, Synth Audio, Alpha Narrative.
+ */
 
-    sprites: {
-        player: [
-            [0,0,0,0,0,4,4,0,0,0,0,0],
-            [0,0,0,0,1,4,4,1,0,0,0,0],
-            [0,0,1,1,2,2,1,1,0,0,0],
-            [0,0,1,1,2,3,3,2,1,1,0,0],
-            [0,1,1,2,3,4,4,3,2,1,1,0],
-            [0,1,2,2,4,4,4,4,2,2,1,0],
-            [1,1,2,2,2,2,2,2,2,2,1,1],
-            [1,2,1,1,1,2,2,1,1,1,2,1],
-            [1,2,1,0,1,1,1,1,0,1,2,1],
-            [1,1,0,0,1,3,3,1,0,0,1,1],
-            [1,0,0,0,3,4,4,3,0,0,0,1],
-            [4,0,0,0,4,0,0,4,0,0,0,4]
-        ],
-        enemySpore: [
-            [0,0,0,1,1,1,1,0,0,0],
-            [0,1,1,3,3,3,3,1,1,0],
-            [0,1,3,4,4,4,4,3,1,0],
-            [1,3,4,2,2,2,2,4,3,1],
-            [1,3,4,2,3,3,2,4,3,1],
-            [1,3,4,2,2,2,2,4,3,1],
-            [0,1,3,4,4,4,4,3,1,0],
-            [0,1,1,3,3,3,3,1,1,0],
-            [0,0,1,1,0,0,1,1,0,0],
-            [0,1,1,0,0,0,0,1,1,0]
-        ],
-        enemyAcid: [
-            [0,0,1,0,0,0,0,1,0,0],
-            [0,1,1,1,0,0,1,1,1,0],
-            [1,1,3,3,1,1,3,3,1,1],
-            [1,3,4,4,3,3,4,4,3,1],
-            [1,3,4,1,1,1,1,4,3,1],
-            [1,1,1,1,1,1,1,1,1,1],
-            [0,1,3,3,3,3,3,3,1,0],
-            [0,0,1,4,4,4,4,1,0,0],
-            [0,1,1,0,0,0,0,1,1,0],
-            [1,1,0,0,0,0,0,0,1,1]
+const CombatSystem = {
+    config: {
+        gridSize: 8,
+        tileSize: 36,
+        gap: 2,
+        types: [
+            { id: 42,  name: 'Specimen #042', color: '#00ffc8', icon: '🕶️', label: 'VOID' },
+            { id: 118, name: 'Specimen #118', color: '#39ff14', icon: '🧐', label: 'MONO' },
+            { id: 256, name: 'Specimen #256', color: '#ff3b6b', icon: '😎', label: 'AVIATOR' },
+            { id: 522, name: 'Specimen #522', color: '#ccff00', icon: '🥽', label: 'VISOR' },
+            { id: 889, name: 'Specimen #889', color: '#7c3aed', icon: '👤', label: 'SHADOW' }
         ]
     },
 
-    colors: {
-        player: { 1: '#00ffc8', 2: '#061a15', 3: '#39ff14', 4: '#ff3b6b' },
-        enemySpore: { 1: '#39ff14', 2: '#0c3d18', 3: '#ccff00', 4: '#ff3b6b' },
-        enemyAcid: { 1: '#ffaa00', 2: '#3d2800', 3: '#ccff00', 4: '#ff3b6b' }
+    state: {
+        grid: [],
+        score: 0,
+        highScore: localStorage.getItem('neon_cascade_hi') || 0,
+        isProcessing: false,
+        selectedTile: null,
+        audioCtx: null
     },
 
     init() {
-        if (this.animationId) cancelAnimationFrame(this.animationId);
-        this.lastTimestamp = 0;
-        this.state.active = false;
-        this.state.gameOver = false;
-        this.state.score = 0;
-        this.state.wave = 1;
-        this.state.bullets = [];
-        this.state.enemies = [];
-        this.state.enemyBullets = [];
-        this.state.particles = [];
-        
         this.renderLayout();
-        this.setupCanvas();
-        this.setupControls();
-        this.initWave();
-        
-        this.loopBound = this.loop.bind(this);
-        this.animationId = requestAnimationFrame(this.loopBound);
+        this.setupAudio();
+        this.resetGame();
+        console.log("NEON CASCADE: Neural Link Established. Welcome, Alpha.");
+    },
+
+    setupAudio() {
+        if (!this.state.audioCtx) {
+            this.state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    },
+
+    playSynth(freq, type, duration, vol = 0.1) {
+        if (!this.state.audioCtx) return;
+        const osc = this.state.audioCtx.createOscillator();
+        const gain = this.state.audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.state.audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, this.state.audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.state.audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(this.state.audioCtx.destination);
+        osc.start();
+        osc.stop(this.state.audioCtx.currentTime + duration);
     },
 
     renderLayout() {
         const container = document.getElementById('game-room-container');
         if (!container) return;
+
         container.innerHTML = `
-            <div class="panel" style="border-color: var(--cyan); display: flex; flex-direction: column; align-items: center; position: relative; overflow: hidden; padding: 10px; max-width: 320px; margin: 0 auto;">
-                <div style="width: 100%; display: flex; justify-content: space-between; font-family: Orbitron; font-size: 12px; margin-bottom: 10px;">
-                    <div>SCORE: <span id="game-score">0</span></div>
-                    <div>WAVE: <span id="game-wave">1</span></div>
-                    <div>HI: <span id="game-hi">\${this.state.highScore}</span></div>
+            <style>
+                #neon-cascade-ui {
+                    max-width: 320px;
+                    margin: 0 auto;
+                    font-family: 'Share Tech Mono', monospace;
+                    color: var(--cyan);
+                    user-select: none;
+                }
+                .stats-bar {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 10px;
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 12px;
+                    text-transform: uppercase;
+                }
+                #game-board {
+                    display: grid;
+                    grid-template-columns: repeat(8, 1fr);
+                    grid-template-rows: repeat(8, 1fr);
+                    gap: 2px;
+                    background: rgba(0, 255, 200, 0.1);
+                    border: 2px solid var(--cyan);
+                    border-radius: 8px;
+                    padding: 4px;
+                    aspect-ratio: 1/1;
+                    position: relative;
+                    overflow: hidden;
+                }
+                .tile {
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.6);
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s;
+                    position: relative;
+                    font-size: 20px;
+                }
+                .tile:active { transform: scale(0.9); }
+                .tile.selected {
+                    background: rgba(0, 255, 200, 0.2);
+                    box-shadow: inset 0 0 10px var(--cyan);
+                    z-index: 2;
+                }
+                .tile.match-anim {
+                    animation: tile-pop 0.4s forwards;
+                }
+                @keyframes tile-pop {
+                    0% { transform: scale(1); opacity: 1; }
+                    50% { transform: scale(1.4); filter: brightness(2); }
+                    100% { transform: scale(0); opacity: 0; }
+                }
+                .cascade-anim {
+                    animation: cascade-down 0.3s ease-in;
+                }
+                @keyframes cascade-down {
+                    from { transform: translateY(-100%); }
+                    to { transform: translateY(0); }
+                }
+                .narrative-box {
+                    margin-top: 15px;
+                    font-size: 11px;
+                    background: rgba(0,0,0,0.4);
+                    padding: 10px;
+                    border: 1px dashed var(--line);
+                    line-height: 1.4;
+                }
+            </style>
+            <div id="neon-cascade-ui">
+                <div class="stats-bar">
+                    <div>ALPHA_CORE: <span id="nc-score">0</span></div>
+                    <div>HI_SCORE: <span id="nc-hi">\${this.state.highScore}</span></div>
                 </div>
-                <div id="canvas-wrapper" style="position: relative; width: 300px; height: 400px; background: #000; border: 2px solid rgba(0,255,200,0.2); border-radius: 8px; overflow: hidden;">
-                    <canvas id="game-room-canvas" width="300" height="400" style="width: 100%; height: 100%; display: block;"></canvas>
-                    <div id="game-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); z-index: 10;">
-                        <h2 id="overlay-title" style="font-family: Orbitron; color: var(--cyan); margin-bottom: 20px;">READY?</h2>
-                        <button class="btn" onclick="CombatSystem.startGame()" style="padding: 15px 40px; font-size: 18px;">START</button>
-                    </div>
+                <div id="game-board"></div>
+                <div class="narrative-box">
+                    [!] <span style="color:#fff">SYSTEM:</span> CASCADE PROTOCOL ENGAGED.<br>
+                    [!] <span style="color:#fff">ALPHA:</span> MATCH GGB SPECIMENS TO PURGE THE BUFFER.
                 </div>
-                <div class="mobile-controls" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; max-width: 300px; margin-top: 15px;">
-                    <button class="btn" id="ctrl-left" style="height: 60px; font-size: 24px; touch-action: manipulation;">←</button>
-                    <button class="btn" id="ctrl-fire" style="height: 60px; font-size: 20px; border-color: #ff3b6b; color: #ff3b6b; touch-action: manipulation;">FIRE</button>
-                    <button class="btn" id="ctrl-right" style="height: 60px; font-size: 24px; touch-action: manipulation;">→</button>
-                </div>
-                <div style="margin-top: 10px; font-size: 10px; opacity: 0.5;">ARROWS + SPACE FOR DESKTOP</div>
+                <button class="btn" onclick="CombatSystem.resetGame()" style="width:100%; margin-top:10px;">REBOOT CASCADE</button>
             </div>
         `;
+        this.boardEl = document.getElementById('game-board');
     },
 
-    setupCanvas() {
-        this.canvas = document.getElementById('game-room-canvas');
-        if (this.canvas) this.ctx = this.canvas.getContext('2d');
-    },
-
-    setupControls() {
-        window.onkeydown = (e) => { this.state.keys[e.code] = true; };
-        window.onkeyup = (e) => { this.state.keys[e.code] = false; };
-        const bindBtn = (id, key) => {
-            const btn = document.getElementById(id);
-            if (!btn) return;
-            btn.addEventListener('touchstart', (e) => { e.preventDefault(); this.state.keys[key] = true; }, {passive: false});
-            btn.addEventListener('touchend', (e) => { e.preventDefault(); this.state.keys[key] = false; }, {passive: false});
-            btn.addEventListener('mousedown', () => { this.state.keys[key] = true; });
-            btn.addEventListener('mouseup', () => { this.state.keys[key] = false; });
-            btn.addEventListener('mouseleave', () => { this.state.keys[key] = false; });
-        };
-        bindBtn('ctrl-left', 'ArrowLeft');
-        bindBtn('ctrl-right', 'ArrowRight');
-        bindBtn('ctrl-fire', 'Space');
-    },
-
-    startGame() {
-        if (this.animationId) cancelAnimationFrame(this.animationId);
-        this.lastTimestamp = 0;
-        this.state.active = true;
-        this.state.gameOver = false;
+    resetGame() {
         this.state.score = 0;
-        this.state.wave = 1;
-        this.state.bullets = [];
-        this.state.enemyBullets = [];
-        this.state.particles = [];
-        this.state.player.x = 150 - this.state.player.w/2;
-        this.initWave();
-        const overlay = document.getElementById('game-overlay');
-        if (overlay) overlay.style.display = 'none';
-        const scoreEl = document.getElementById('game-score');
-        if (scoreEl) scoreEl.textContent = '0';
-        const waveEl = document.getElementById('game-wave');
-        if (waveEl) waveEl.textContent = '1';
-        this.animationId = requestAnimationFrame(this.loopBound);
+        this.state.isProcessing = false;
+        this.state.selectedTile = null;
+        this.updateScore(0);
+        this.createBoard();
     },
 
-    initWave() {
-        this.state.enemies = [];
-        const rows = 3, cols = 5, padding = 10, width = 30, height = 30;
-        for (let r = 0; r < rows; r++) {
-            for (let c = 0; c < cols; c++) {
-                const type = (r % 2 === 0) ? 'enemySpore' : 'enemyAcid';
-                this.state.enemies.push({
-                    x: c * (width + padding) + 50, y: r * (height + padding) + 50,
-                    w: width, h: height, type: type, hp: 1, direction: 1,
-                    speed: 1 + (this.state.wave * 0.2)
-                });
-            }
-        }
-    },
-
-    spawnExplosion(x, y, color) {
-        for (let i = 0; i < 15; i++) {
-            this.state.particles.push({
-                x, y, vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5,
-                life: 1.0, color: color || 'var(--cyan)'
-            });
-        }
-        this.state.shake = 10;
-    },
-
-    loop(timestamp) {
-        if (!this.lastTimestamp) this.lastTimestamp = timestamp;
-        let dt = (timestamp - this.lastTimestamp) / 16.67;
-        dt = Math.min(dt, 2.0);
-        this.lastTimestamp = timestamp;
-        this.update(dt);
-        this.draw();
-        this.animationId = requestAnimationFrame(this.loopBound);
-    },
-
-    update(dt = 1) {
-        if (!this.state.active || this.state.gameOver) return;
-        if (this.state.keys['ArrowLeft'] && this.state.player.x > 0) this.state.player.x -= this.state.player.speed * dt;
-        if (this.state.keys['ArrowRight'] && this.state.player.x < 300 - this.state.player.w) this.state.player.x += this.state.player.speed * dt;
-        const now = Date.now();
-        if ((this.state.keys['Space'] || this.state.keys['KeyF']) && now - this.state.lastFire > 250) {
-            this.state.bullets.push({ x: this.state.player.x + this.state.player.w / 2 - 2, y: this.state.player.y, w: 4, h: 10, speed: 7 });
-            this.state.lastFire = now;
-        }
-        this.state.bullets = this.state.bullets.filter(b => { b.y -= b.speed * dt; return b.y > -20; });
-        this.state.enemyBullets = this.state.enemyBullets.filter(b => { b.y += b.speed * dt; return b.y < 420; });
-        let edgeHit = false;
-        this.state.enemies.forEach(e => {
-            e.x += e.direction * e.speed * dt;
-            if (e.x <= 0 || e.x >= 300 - e.w) edgeHit = true;
-            if (Math.random() < (0.005 * this.state.wave * dt)) {
-                this.state.enemyBullets.push({ x: e.x + e.w/2, y: e.y + e.h, w: 4, h: 10, speed: 3 + this.state.wave/2 });
-            }
-        });
-        if (edgeHit) {
-            this.state.enemies.forEach(e => {
-                e.direction *= -1;
-                e.y += 10;
-                if (e.y > 350) this.endGame();
-            });
-        }
-        this.state.bullets.forEach((b, bi) => {
-            this.state.enemies.forEach((e, ei) => {
-                if (b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) {
-                    this.state.bullets.splice(bi, 1);
-                    this.state.enemies.splice(ei, 1);
-                    this.state.score += 100;
-                    const scoreEl = document.getElementById('game-score');
-                    if (scoreEl) scoreEl.textContent = this.state.score;
-                    const splashColor = (e.type === 'enemySpore') ? '#39ff14' : '#ffaa00';
-                    this.spawnExplosion(e.x + e.w/2, e.y + e.h/2, splashColor);
-                    if (this.state.enemies.length === 0) {
-                        this.state.wave++;
-                        const waveEl = document.getElementById('game-wave');
-                        if (waveEl) waveEl.textContent = this.state.wave;
-                        this.initWave();
-                    }
+    createBoard() {
+        let validBoard = false;
+        while (!validBoard) {
+            this.state.grid = [];
+            for (let r = 0; r < 8; r++) {
+                this.state.grid[r] = [];
+                for (let c = 0; c < 8; c++) {
+                    this.state.grid[r][c] = Math.floor(Math.random() * this.config.types.length);
                 }
-            });
-        });
-        this.state.enemyBullets.forEach((b, bi) => {
-            const p = this.state.player;
-            if (b.x < p.x + p.w && b.x + b.w > p.x && b.y < p.y + p.h && b.y + b.h > p.y) this.endGame();
-        });
-        this.state.particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= 0.02 * dt; });
-        this.state.particles = this.state.particles.filter(p => p.life > 0);
-        if (this.state.shake > 0) this.state.shake--;
+            }
+            // Check for initial matches, rebuild if any exist (to start clean)
+            if (!this.findMatches().length) validBoard = true;
+        }
+        this.renderBoard();
     },
 
-    endGame() {
-        this.state.active = false;
-        this.state.gameOver = true;
-        this.spawnExplosion(this.state.player.x + 15, this.state.player.y + 15, 'var(--cyan)');
+    renderBoard() {
+        if (!this.boardEl) return;
+        this.boardEl.innerHTML = '';
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const typeIdx = this.state.grid[r][c];
+                const type = this.config.types[typeIdx];
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                tile.dataset.r = r;
+                tile.dataset.c = c;
+                tile.style.color = type.color;
+                tile.innerHTML = type.icon;
+                tile.onclick = (e) => this.handleTileClick(r, c, tile);
+                this.boardEl.appendChild(tile);
+            }
+        }
+    },
+
+    handleTileClick(r, c, el) {
+        if (this.state.isProcessing) return;
+        this.playSynth(440, 'square', 0.05, 0.05);
+
+        if (!this.state.selectedTile) {
+            this.state.selectedTile = { r, c, el };
+            el.classList.add('selected');
+        } else {
+            const first = this.state.selectedTile;
+            const dist = Math.abs(first.r - r) + Math.abs(first.c - c);
+
+            if (dist === 1) {
+                this.swapTiles(first.r, first.c, r, c);
+            } else {
+                first.el.classList.remove('selected');
+                this.state.selectedTile = { r, c, el };
+                el.classList.add('selected');
+            }
+        }
+    },
+
+    async swapTiles(r1, c1, r2, c2) {
+        this.state.isProcessing = true;
+        if (this.state.selectedTile) this.state.selectedTile.el.classList.remove('selected');
+        this.state.selectedTile = null;
+
+        // Perform swap logic
+        const temp = this.state.grid[r1][c1];
+        this.state.grid[r1][c1] = this.state.grid[r2][c2];
+        this.state.grid[r2][c2] = temp;
+
+        this.renderBoard();
+
+        const matches = this.findMatches();
+        if (matches.length > 0) {
+            this.playSynth(523.25, 'sine', 0.1, 0.1); // C5
+            await this.processMatches();
+        } else {
+            // Revert swap if no match
+            this.playSynth(220, 'sawtooth', 0.1, 0.1);
+            await new Promise(r => setTimeout(r, 250));
+            const temp2 = this.state.grid[r1][c1];
+            this.state.grid[r1][c1] = this.state.grid[r2][c2];
+            this.state.grid[r2][c2] = temp2;
+            this.renderBoard();
+            this.state.isProcessing = false;
+        }
+    },
+
+    findMatches() {
+        const matches = [];
+        // Horizontal
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 6; c++) {
+                const t = this.state.grid[r][c];
+                if (t === this.state.grid[r][c+1] && t === this.state.grid[r][c+2]) {
+                    matches.push({r, c}, {r, c:c+1}, {r, c:c+2});
+                }
+            }
+        }
+        // Vertical
+        for (let c = 0; c < 8; c++) {
+            for (let r = 0; r < 6; r++) {
+                const t = this.state.grid[r][c];
+                if (t === this.state.grid[r+1][c] && t === this.state.grid[r+2][c]) {
+                    matches.push({r, c}, {r:r+1, c}, {r:r+2, c});
+                }
+            }
+        }
+        // Deduplicate
+        return Array.from(new Set(matches.map(m => \`\${m.r},\${m.c}\`)))
+                    .map(s => { const [r,c] = s.split(',').map(Number); return {r, c}; });
+    },
+
+    async processMatches() {
+        const matches = this.findMatches();
+        if (matches.length === 0) {
+            this.state.isProcessing = false;
+            return;
+        }
+
+        // Mark tiles for animation
+        matches.forEach(m => {
+            const el = this.boardEl.querySelector(\`[data-r="\${m.r}"][data-c="\${m.c}"]\`);
+            if (el) el.classList.add('match-anim');
+        });
+
+        this.updateScore(matches.length * 10);
+        this.playSynth(880, 'sine', 0.2, 0.1);
+
+        await new Promise(r => setTimeout(r, 400));
+
+        // Remove matched tiles
+        matches.forEach(m => { this.state.grid[m.r][m.c] = -1; });
+
+        // Collapse columns
+        for (let c = 0; c < 8; c++) {
+            let emptySpot = 7;
+            for (let r = 7; r >= 0; r--) {
+                if (this.state.grid[r][c] !== -1) {
+                    this.state.grid[emptySpot][c] = this.state.grid[r][c];
+                    if (emptySpot !== r) this.state.grid[r][c] = -1;
+                    emptySpot--;
+                }
+            }
+            // Fill new ones
+            for (let r = emptySpot; r >= 0; r--) {
+                this.state.grid[r][c] = Math.floor(Math.random() * this.config.types.length);
+            }
+        }
+
+        this.renderBoard();
+        // Check for chain reactions
+        await new Promise(r => setTimeout(r, 100));
+        await this.processMatches();
+    },
+
+    updateScore(points) {
+        this.state.score += points;
+        const scoreEl = document.getElementById('nc-score');
+        if (scoreEl) scoreEl.textContent = this.state.score;
+
         if (this.state.score > this.state.highScore) {
             this.state.highScore = this.state.score;
-            localStorage.setItem('ggb_high_score', this.state.highScore);
-            const hiEl = document.getElementById('game-hi');
+            localStorage.setItem('neon_cascade_hi', this.state.highScore);
+            const hiEl = document.getElementById('nc-hi');
             if (hiEl) hiEl.textContent = this.state.highScore;
         }
-        const overlay = document.getElementById('game-overlay');
-        const title = document.getElementById('overlay-title');
-        if (overlay) {
-            overlay.style.display = 'flex';
-            if (title) { title.textContent = 'LINK SEVERED'; title.style.color = '#ff3b6b'; }
-        }
-    },
-
-    drawPixelArt(ctx, x, y, w, h, matrix, colors) {
-        const rows = matrix.length, cols = matrix[0].length, pxW = w / cols, pxH = h / rows;
-        for (let r = 0; r < rows; r++) {
-            for (let c = 0; c < cols; c++) {
-                const val = matrix[r][c];
-                if (val > 0) {
-                    ctx.fillStyle = colors[val] || '#fff';
-                    ctx.fillRect(x + c * pxW - 0.2, y + r * pxH - 0.2, pxW + 0.4, pxH + 0.4);
-                }
-            }
-        }
-    },
-
-    draw() {
-        if (!this.ctx) return;
-        const ctx = this.ctx;
-        ctx.save();
-        if (this.state.shake > 0) ctx.translate((Math.random()-0.5)*this.state.shake, (Math.random()-0.5)*this.state.shake);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-        ctx.fillRect(0, 0, 300, 400);
-        ctx.strokeStyle = 'rgba(0,255,200,0.03)';
-        for(let i=0; i<300; i+=20) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,400); ctx.stroke(); }
-        for(let i=0; i<400; i+=20) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(300,i); ctx.stroke(); }
-        this.drawPixelArt(ctx, this.state.player.x, this.state.player.y, this.state.player.w, this.state.player.h, this.sprites.player, this.colors.player);
-        this.state.enemies.forEach(e => this.drawPixelArt(ctx, e.x, e.y, e.w, e.h, this.sprites[e.type], this.colors[e.type]));
-        ctx.save();
-        if (window.devicePixelRatio < 2) ctx.shadowBlur = 6;
-        ctx.shadowColor = 'var(--cyan)'; ctx.fillStyle = 'var(--cyan)';
-        this.state.bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
-        ctx.shadowColor = '#ff3b6b'; ctx.fillStyle = '#ff3b6b';
-        this.state.enemyBullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
-        ctx.restore();
-        this.state.particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 2, 2); });
-        ctx.globalAlpha = 1.0;
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.12)';
-        ctx.lineWidth = 1;
-        const step = window.devicePixelRatio > 1 ? 8 : 4;
-        for (let y = 0; y < 400; y += step) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(300, y); ctx.stroke(); }
-        const flicker = Math.random() * 0.03 + 0.97;
-        ctx.fillStyle = 'rgba(0, 255, 200, 0.02)'; ctx.globalAlpha = flicker;
-        ctx.fillRect(0, 0, 300, 400);
-        ctx.globalAlpha = 1.0;
-        ctx.restore();
     }
 };
+
 window.CombatSystem = CombatSystem;
