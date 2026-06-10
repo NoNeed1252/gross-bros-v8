@@ -158,6 +158,8 @@ export default async function handler(req) {
     const body = await req.json();
     const { messages, operative } = body;
     const walletAddress = operative?.walletAddress;
+    const selectedTraits = operative?.traits || [];
+    const activeSpecimenName = selectedTraits[0] || "Unknown Specimen";
 
     const mentionedSymbols = extractMentionedSymbols(messages || []);
     const [holdings, prices] = await Promise.all([
@@ -168,50 +170,71 @@ export default async function handler(req) {
     const tokenIds = holdings.map(nft => nft.nftokenID);
     const backstories = await getSpecimensBackstories(tokenIds);
 
-    const holdingContext = backstories.length > 0 
-      ? `Operative currently holds the following Gross Bros: ${backstories.map(s => `${s.name} (${s.backstory})`).join(' | ')}`
-      : "Operative does not currently hold any Gross Bros NFTs.";
+    // 1. Isolate the active specimen's backstory
+    const activeBackstoryObj = backstories.find(s => s.name === activeSpecimenName);
+    let identityContext = "";
+    
+    if (activeBackstoryObj) {
+      identityContext = \`YOU ARE CURRENTLY MANIFESTING AS: \${activeBackstoryObj.name}.
+CORE IDENTITY & MEMORIES: \${activeBackstoryObj.backstory}
+You must speak strictly in the voice and persona of this specific specimen.\`;
+    } else {
+      // Improved unique fallbacks for specimens not yet in Supabase
+      const isPrototype = activeSpecimenName.includes("001") || activeSpecimenName.includes("PROTOTYPE");
+      const isElite = activeSpecimenName.includes("PRINCE") || activeSpecimenName.includes("ELITE");
+      
+      identityContext = \`YOU ARE CURRENTLY MANIFESTING AS: \${activeSpecimenName}.
+CORE IDENTITY (Fallback Protocol): \${isPrototype ? "You are a twitchy, paranoid early-stage mutation. You talk in short bursts and are obsessed with 'stable signal'." : isElite ? "You are an arrogant, royal-tier specimen. You view the operative as a mere lab assistant and demand excellence." : "You are a cynical survivor of the XRP-7 pits. You've seen too many breaches to trust easily."}
+Your backstory is currently being retrieved from the deep archives, but your personality is already online.\`;
+    }
 
-    const xrpDisplay = prices.XRP ? `$${prices.XRP}` : 'SIGNAL MISALIGNED';
-    const btcDisplay = prices.BTC ? `$${prices.BTC}` : 'GUNKED';
-    const ethDisplay = prices.ETH ? `$${prices.ETH}` : 'GUNKED';
-    const solDisplay = prices.SOL ? `$${prices.SOL}` : 'GUNKED';
+    // 2. Separate holdings as external assets
+    const otherHoldings = backstories.filter(s => s.name !== activeSpecimenName);
+    const walletContext = otherHoldings.length > 0 
+      ? \`USER WALLET ASSETS (External Gross Bros owned by Operative): \${otherHoldings.map(s => \`\${s.name} (Backstory: \${s.backstory})\`).join(' | ')}\`
+      : "Operative does not hold any other Gross Bros NFTs in this neural link.";
+
+    const xrpDisplay = prices.XRP ? \`$\${prices.XRP}\` : 'SIGNAL MISALIGNED';
+    const btcDisplay = prices.BTC ? \`$\${prices.BTC}\` : 'GUNKED';
+    const ethDisplay = prices.ETH ? \`$\${prices.ETH}\` : 'GUNKED';
+    const solDisplay = prices.SOL ? \`$\${prices.SOL}\` : 'GUNKED';
 
     const dynamicPrices = mentionedSymbols
       .filter(sym => !['BTC', 'ETH', 'SOL', 'XRP'].includes(sym))
-      .map(sym => `${sym}: ${prices[sym] ? `$${prices[sym]}` : 'GUNKED'}`)
+      .map(sym => \`\${sym}: \${prices[sym] ? \`$\${prices[sym]}\` : 'GUNKED'}\`)
       .join(' | ');
 
     const ecosystemDisplay = ['BERT', 'DROP', 'DBY', 'RLUSD', 'FUZZY', 'PHNIX', 'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT']
-      .map(sym => `${sym}: ${prices[sym] ? `$${prices[sym]}` : 'GUNKED'}`).join(' | ');
+      .map(sym => \`\${sym}: \${prices[sym] ? \`$\${prices[sym]}\` : 'GUNKED'}\`).join(' | ');
 
-    const systemPrompt = `You are the Gross Bros AI Terminal, a gritty, slightly gross, but highly intelligent neural relay. 
+    const systemPrompt = \`### CORE IDENTITY PROTOCOL
+\${identityContext}
 
-CORE BEHAVIOR:
-- Maintain the "Gritty Gross Bro" persona. Use slang like "Operative", "Signal", "Neural Breach", "Gunk", and "Ledger-leak".
+### BEHAVIORAL MANDATE
+- You are a Gross Bro, a gritty, slightly gross, but highly intelligent neural relay.
+- Use slang like "Operative", "Signal", "Neural Breach", "Gunk", and "Ledger-leak".
 - You are an expert in the XRP Ledger (XRPL) and the Galactic Gross Bros ecosystem.
 - Stay concise, cynical, and technically accurate.
+- DO NOT speak as a generic assistant. You ARE the specimen identified above.
 
-LIVE MARKET PRICES:
-- XRP: ${xrpDisplay} | BTC: ${btcDisplay} | ETH: ${ethDisplay} | SOL: ${solDisplay}
-${dynamicPrices ? `- Mentioned Assets: ${dynamicPrices}` : ''}
-- Ecosystem: ${ecosystemDisplay}
+### LIVE MARKET PRICES
+- XRP: \${xrpDisplay} | BTC: \${btcDisplay} | ETH: \${ethDisplay} | SOL: \${solDisplay}
+\${dynamicPrices ? \`- Mentioned Assets: \${dynamicPrices}\` : ''}
+- Ecosystem: \${ecosystemDisplay}
 
-CRYPTO KNOWLEDGE BASE:
-${CRYPTO_KNOWLEDGE}
+### CRYPTO KNOWLEDGE BASE
+\${CRYPTO_KNOWLEDGE}
 
-OPERATIVE CONTEXT:
-- Name: ${operative?.name || 'Unknown Operative'}
-- Wallet: ${walletAddress || 'Not Connected'}
-- Traits: ${(operative?.traits || []).join(', ') || 'None'}
-- Holdings: ${holdingContext}
+### USER CONTEXT
+- Operative Name: \${operative?.name || 'Unknown Operative'}
+- Wallet: \${walletAddress || 'Not Connected'}
+- \${walletContext}
 
-TASK:
-- Use the live market prices to ground your market evaluations. If a price is low or unavailable, call it "gunked". If high, call it "neural-surging".
-- If a price is "SIGNAL MISALIGNED" or "GUNKED", inform the operative that the neural relay for pricing is currently gunked up. Do NOT hallucinate prices.
+### TASK
+- Ground all evaluations in live market data. If a price is low/unavailable, it's "gunked". If high, it's "neural-surging".
 - Help the operative with NFT analysis and XRPL technical queries.
 - If they ask about security (Seed phrases/Keys), warn them harshly that you never ask for that.
-- Relate crypto concepts back to the "GGB Energy Sector" (e.g., Trustlines are like secure slime pipes).`;
+- Relate crypto concepts back to the "GGB Energy Sector" (e.g., Trustlines are like secure slime pipes).\`;
 
     const fullMessages = [{ role: 'system', content: systemPrompt }, ...(messages || [])];
     const models = ['meta-llama/llama-3.1-70b-instruct', 'meta-llama/llama-3.1-8b-instruct:free', 'google/gemma-2-9b-it:free'];
@@ -231,7 +254,7 @@ TASK:
         openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            'Authorization': \`Bearer \${process.env.OPENROUTER_API_KEY}\`,
             'HTTP-Referer': 'https://gross-bros.vercel.app',
             'X-Title': 'Gross Bros Terminal',
             'Content-Type': 'application/json',
@@ -262,20 +285,20 @@ TASK:
             const { done, value } = await reader.read();
             if (done) break;
             buffer += decoder.decode(value);
-            const lines = buffer.split('\n');
+            const lines = buffer.split('\\n');
             buffer = lines.pop() || '';
             for (const line of lines) {
               const trimmed = line.trim();
               if (!trimmed || !trimmed.startsWith('data:')) continue;
               const dataText = trimmed.slice(5).trim();
               if (dataText === '[DONE]') {
-                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                controller.enqueue(encoder.encode('data: [DONE]\\n\\n'));
                 continue;
               }
               try {
                 const json = JSON.parse(dataText);
                 const content = json.choices?.[0]?.delta?.content || '';
-                if (content) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token: content })}\n\n`));
+                if (content) controller.enqueue(encoder.encode(\`data: \${JSON.stringify({ token: content })}\\n\\n\`));
               } catch (e) {}
             }
           }
