@@ -2,7 +2,7 @@
  * Guardian Discord Integration
  * Lightweight handler for Discord communications
  */
-const { Client, GatewayIntentBits, WebhookClient } = require('discord.js');
+import { Client, GatewayIntentBits, WebhookClient } from 'discord.js';
 
 class GuardianDiscord {
     constructor(token, webhookUrl) {
@@ -44,4 +44,4 @@ class GuardianDiscord {
     }
 }
 
-module.exports = GuardianDiscord;
+export default GuardianDiscord;
