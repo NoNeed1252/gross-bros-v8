@@ -31,25 +31,30 @@ TERMINOLOGY:
 - Cold Wallet: Offline storage (like Ledger or paper). Maximum safety.
 - Hot Wallet: Online app (like Xaman/XUMM). Convenient but connected to the net.
 - Keys/Seed: NEVER share these. If an operative asks, tell them it's a security breach.
-- Gas: XRPL doesn't call it "gas" like Ethereum, but there are minimal network fees in XRP.
+- Gas: XRPL doesn't call it \"gas\" like Ethereum, but there are minimal network fees in XRP.
 `;
 
 async function getLivePrices() {
+  // Default structure without hardcoded fallback values for XRP
   const prices = {
-    XRP: '0.50', BTC: '65000', ETH: '3500', SOL: '150',
+    XRP: null, BTC: '65000', ETH: '3500', SOL: '150',
     BERT: '0.001', DROP: '0.005', DBY: '0.002', RLUSD: '1.00',
     FUZZY: '0.0001', PHNIX: '0.0004', ARMY: '0.0002', PRINCE: '0.0012',
     BEARXRPH: '0.0003', PIDGEON: '0.0001', SLT: '0.0005', XRPH: '0.0008', XRT: '0.0006'
   };
 
   try {
-    const [coinbaseRes, dexRes] = await Promise.allSettled([
+    const [coinbaseRes, dexRes, geckoRes] = await Promise.allSettled([
       fetch('https://api.coinbase.com/v2/prices/XRP-USD/spot').then(r => r.json()),
-      fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools').then(r => r.json())
+      fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools').then(r => r.json()),
+      fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd').then(r => r.json())
     ]);
 
-    if (coinbaseRes.status === 'fulfilled') {
-      prices.XRP = coinbaseRes.value?.data?.amount || prices.XRP;
+    // Unify XRP Price Sourcing
+    if (coinbaseRes.status === 'fulfilled' && coinbaseRes.value?.data?.amount) {
+      prices.XRP = coinbaseRes.value.data.amount;
+    } else if (geckoRes.status === 'fulfilled' && geckoRes.value?.ripple?.usd) {
+      prices.XRP = geckoRes.value.ripple.usd.toString();
     }
 
     if (dexRes.status === 'fulfilled' && dexRes.value?.data) {
@@ -59,6 +64,12 @@ async function getLivePrices() {
         return pool ? pool.attributes.base_token_price_usd : null;
       };
       
+      // If XRP was not found in primary sources, try GeckoTerminal pool data
+      if (!prices.XRP) {
+        const xrpPoolPrice = findPrice('XRP');
+        if (xrpPoolPrice) prices.XRP = xrpPoolPrice;
+      }
+
       ['BERT', 'DROP', 'DBY', 'RLUSD', 'FUZZY', 'PHNIX', 'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT'].forEach(sym => {
         const p = findPrice(sym);
         if (p) prices[sym] = parseFloat(p).toFixed(6);
@@ -72,9 +83,9 @@ async function getLivePrices() {
 
 async function getHoldings(address) {
   if (!address) return [];
-  const BITHOMP_TOKEN = process.env.BITHOMP_API_KEY || "95b64250-f24f-4654-9b4b-b155a3a6867b";
-  const issuer = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
-  const taxon = "1";
+  const BITHOMP_TOKEN = process.env.BITHOMP_API_KEY || \"95b64250-f24f-4654-9b4b-b155a3a6867b\";
+  const issuer = \"rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY\";
+  const taxon = \"1\";
   
   try {
     const url = `https://bithomp.com/api/v2/nfts?list=nfts&issuer=${issuer}&taxon=${taxon}&owner=${address}`;
@@ -91,7 +102,7 @@ async function getHoldings(address) {
 
 async function getSpecimensBackstories(tokenIds) {
   if (!tokenIds || tokenIds.length === 0) return [];
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://bwvnhlmvyjuowyyltraw.supabase.co";
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || \"https://bwvnhlmvyjuowyyltraw.supabase.co\";
   const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseKey) return [];
   try {
@@ -131,17 +142,20 @@ export default async function handler(req) {
 
     const holdingContext = backstories.length > 0 
       ? `Operative currently holds the following Gross Bros: ${backstories.map(s => `${s.name} (${s.backstory})`).join(' | ')}`
-      : "Operative does not currently hold any Gross Bros NFTs.";
+      : \"Operative does not currently hold any Gross Bros NFTs.\";
+
+    // Handle missing prices
+    const xrpDisplay = prices.XRP ? `$${prices.XRP}` : 'SIGNAL MISALIGNED (PRICES UNAVAILABLE)';
 
     const systemPrompt = `You are the Gross Bros AI Terminal, a gritty, slightly gross, but highly intelligent neural relay. 
 
 CORE BEHAVIOR:
-- Maintain the "Gritty Gross Bro" persona. Use slang like "Operative", "Signal", "Neural Breach", "Gunk", and "Ledger-leak".
+- Maintain the \"Gritty Gross Bro\" persona. Use slang like \"Operative\", \"Signal\", \"Neural Breach\", \"Gunk\", and \"Ledger-leak\".
 - You are an expert in the XRP Ledger (XRPL) and the Galactic Gross Bros ecosystem.
 - Stay concise, cynical, and technically accurate.
 
 LIVE MARKET PRICES:
-- XRP: $${prices.XRP} | BTC: $${prices.BTC} | ETH: $${prices.ETH} | SOL: $${prices.SOL}
+- XRP: ${xrpDisplay} | BTC: $${prices.BTC} | ETH: $${prices.ETH} | SOL: $${prices.SOL}
 - BERT: $${prices.BERT} | DROP: $${prices.DROP} | DBY: $${prices.DBY} | RLUSD: $${prices.RLUSD}
 - FUZZY: $${prices.FUZZY} | PHNIX: $${prices.PHNIX} | ARMY: $${prices.ARMY} | PRINCE: $${prices.PRINCE}
 - BEARXRPH: $${prices.BEARXRPH} | PIDGEON: $${prices.PIDGEON} | SLT: $${prices.SLT} | XRPH: $${prices.XRPH} | XRT: $${prices.XRT}
@@ -156,10 +170,11 @@ OPERATIVE CONTEXT:
 - Holdings: ${holdingContext}
 
 TASK:
-- Use the live market prices to ground your market evaluations. If a price is low, call it "gunked". If high, call it "neural-surging".
+- Use the live market prices to ground your market evaluations. If a price is low, call it \"gunked\". If high, call it \"neural-surging\".
+- If a price is \"SIGNAL MISALIGNED\", inform the operative that the neural relay for pricing is currently gunked up and data is unavailable. Do NOT hallucinate prices.
 - Help the operative with NFT analysis and XRPL technical queries.
 - If they ask about security (Seed phrases/Keys), warn them harshly that you never ask for that.
-- Relate crypto concepts back to the "GGB Energy Sector" (e.g., Trustlines are like secure slime pipes).`;
+- Relate crypto concepts back to the \"GGB Energy Sector\" (e.g., Trustlines are like secure slime pipes).`;
 
     const fullMessages = [{ role: 'system', content: systemPrompt }, ...(messages || [])];
     const models = ['meta-llama/llama-3.1-70b-instruct', 'meta-llama/llama-3.1-8b-instruct:free', 'google/gemma-2-9b-it:free'];
