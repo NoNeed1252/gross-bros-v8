@@ -13,9 +13,9 @@ jobs:
       - name: SSH and Sync
         uses: appleboy/ssh-action@master
         with:
-          host: 216.250.127.169
-          username: root
-          password: vAUL03juyPr1hu
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
           script: |
             echo "Starting sync process..."
             if [ -d "/root/gross-bros-v8" ]; then
