@@ -574,7 +574,7 @@ letter-spacing: 1px;
     
     async function safeFetch(url, options = {}) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
       try {
         const res = await fetch(url, { ...options, signal: controller.signal });
         clearTimeout(timeoutId);
@@ -952,7 +952,7 @@ letter-spacing: 1px;
 
       try {
         const res = await fetch('/api/chat', {
-          method:_POST',
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             messages: state.chat,
@@ -1104,8 +1104,7 @@ letter-spacing: 1px;
         startPolling(uuid);
       }
 
-      setInterval(updateTicker, 30000);
-      setInterval(updateLiveTransmissions, 60000);
+      setInterval(updateTicker, 30000);      setInterval(updateLiveTransmissions, 60000);
 
       const chatInput = document.getElementById('chat-input');
       if (chatInput) {
