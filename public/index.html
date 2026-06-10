@@ -3,7 +3,7 @@
 <head>
   <meta charset='UTF-8'>
   <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-  <title>GUARDIAN BROADCAST OS v8.9.5 STABLE</title>
+  <title>GUARDIAN BROADCAST OS v8.9.6 STABLE</title>
   <link rel='preconnect' href='https://fonts.googleapis.com'>
   <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
   <link href='https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap' rel='stylesheet'>
@@ -380,7 +380,7 @@ letter-spacing: 1px;
       <div class='brand'>
         <div class='dot'></div>
         <div>
-          <div class='title'>GUARDIAN BROADCAST OS v8.9.5 STABLE</div>
+          <div class='title'>GUARDIAN BROADCAST OS v8.9.6 STABLE</div>
           <div class='subtitle'>Neural CRT relay // terminal interface</div>
         </div>
       </div>
@@ -468,7 +468,22 @@ letter-spacing: 1px;
       </section>
 
       <section id='section-2' class='section'>
-        <div id="game-room-container"></div>
+        <div id="game-room-container" class="social-links">
+          <a href="#" onclick="switchTab(4); return false;" class="social-card">
+            <div>
+              <div class="label">NEURAL COMBAT</div>
+              <div class="desc">CORE DECK // ACCESS TERMINAL</div>
+            </div>
+            <div class="btn">LAUNCH</div>
+          </a>
+          <div class="social-card" style="opacity: 0.5; cursor: not-allowed;">
+            <div>
+              <div class="label">XRP-7 MINER</div>
+              <div class="desc">PROXIMITY ALERT // COMING SOON</div>
+            </div>
+            <div class="btn" style="border-color: #888; color: #888;">LOCKED</div>
+          </div>
+        </div>
       </section>
 
       <section id='section-3' class='section'>
@@ -536,7 +551,7 @@ letter-spacing: 1px;
             <div class='panel' style='background:rgba(0,255,200,0.02); border:1px solid rgba(0,255,200,0.15);'>
               <div class='muted' style='letter-spacing:.2em;text-transform:uppercase;font-size:11px;'>AUTOMATED OPERATIONS</div>
               <h3 style='font-family:Orbitron,sans-serif; margin:10px 0 14px; color:#fff;'>TRADING BOT CONTROLS</h3>
-              <p style='font-size:13px; line-height:1.6; opacity:0.8;'>Manage automated market operations on XRPL-native assets, meme tokens, and NFTs directly on your VPS node.</p>
+              <p style='font-size:13px; line-height:1.6; opacity:0.8;'>Manage automated market operations on XRPL-native assets and NFTs directly on your VPS node.</p>
               
               <div style='display:grid; gap:10px; margin-top:16px;'>
                 <div class='row' style='justify-content:space-between; align-items:center;'>
@@ -545,7 +560,7 @@ letter-spacing: 1px;
                 </div>
                 <div class='row' style='justify-content:space-between; align-items:center;'>
                   <span style='font-size:13px;'>ACTIVE PAIR:</span>
-                  <span style='font-size:13px; font-family:Share Tech Mono,monospace;'>XRP / DROP</span>
+                  <span style='font-size:13px; font-family:Share Tech Mono,monospace;'>XRP / MULTI</span>
                 </div>
                 <div class='row' style='justify-content:space-between; align-items:center;'>
                   <span style='font-size:13px;'>ALGORITHM:</span>
@@ -1047,6 +1062,10 @@ letter-spacing: 1px;
         alert("Please connect your Xaman wallet first to link the burner.");
         return;
       }
+      if (!state.fuseUnlocked) {
+        alert("CRITICAL ERROR: NEURAL LINK REQUIRED. Complete fusion first.");
+        return;
+      }
       btn.disabled = true;
       btn.textContent = 'GENERATING...';
       try {
@@ -1098,6 +1117,10 @@ letter-spacing: 1px;
         alert("Main wallet connection required to verify authorization.");
         return;
       }
+      if (!state.fuseUnlocked) {
+        alert("CRITICAL ERROR: NEURAL LINK REQUIRED. Complete fusion first.");
+        return;
+      }
       const savedBurner = localStorage.getItem('ggb_burner_address_' + state.wallet);
       if (!savedBurner) {
         alert("Generate a burner wallet first to run automated trading.");
@@ -1106,7 +1129,7 @@ letter-spacing: 1px;
       if (start) {
         statusEl.textContent = 'ACTIVE';
         statusEl.style.color = '#39ff14';
-        alert("Trading bot initiated on VPS node. Target: XRP / DROP.");
+        alert("Trading bot initiated on VPS node. Target: Multi-Asset Operations.");
       } else {
         statusEl.textContent = 'OFFLINE';
         statusEl.style.color = '#ff3b6b';
@@ -1185,6 +1208,10 @@ letter-spacing: 1px;
     }
 
     function switchTab(index) {
+      if ((index === 4) && !state.fuseUnlocked) {
+        alert("CRITICAL ERROR: NEURAL LINK REQUIRED. Access to the secure terminal is locked until fusion is complete.");
+        return;
+      }
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
       if (index === 2 && window.CombatSystem) CombatSystem.init();
