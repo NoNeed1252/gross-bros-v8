@@ -1,14 +1,8 @@
-var CombatSystem = {
+const CombatSystem = {
     state: {
         active: false,
         score: 0,
-        highScore: (() => {
-            try {
-                return localStorage.getItem('ggb_high_score') || 0;
-            } catch (e) {
-                return 0;
-            }
-        })(),
+        highScore: localStorage.getItem('ggb_high_score') || 0,
         wave: 1,
         player: { x: 150, y: 350, w: 30, h: 30, speed: 5 },
         bullets: [],
@@ -91,53 +85,21 @@ var CombatSystem = {
     },
 
     init() {
-        console.log("Combat system initializing...");
+        console.log("Game Room system initializing...");
+        this.state.active = false;
+        this.state.gameOver = false;
+        this.state.score = 0;
+        this.state.wave = 1;
+        this.state.bullets = [];
+        this.state.enemies = [];
+        this.state.enemyBullets = [];
+        this.state.particles = [];
         
-        // Render UI layout only if it doesn't already exist on DOM to prevent destructive wipes
-        const canvasExists = document.getElementById('combat-canvas');
-        if (!canvasExists) {
-            this.renderLayout();
-            this.setupCanvas();
-            this.setupControls();
-        } else {
-            this.setupCanvas();
-        }
-
-        // State persistence check: do not wipe active game state when switching back to tab
-        if (this.state.active && !this.state.gameOver) {
-            console.log("Resuming active combat relay...");
-            const overlay = document.getElementById('game-overlay');
-            if (overlay) overlay.style.display = 'none';
-            
-            // Sync current stats to refreshed DOM
-            const scoreEl = document.getElementById('game-score');
-            if (scoreEl) scoreEl.textContent = this.state.score;
-            const waveEl = document.getElementById('game-wave');
-            if (waveEl) waveEl.textContent = this.state.wave;
-            const hiEl = document.getElementById('game-hi');
-            if (hiEl) hiEl.textContent = this.state.highScore;
-        } else {
-            // Clean slate initialization
-            this.state.active = false;
-            this.state.gameOver = false;
-            this.state.score = 0;
-            this.state.wave = 1;
-            this.state.bullets = [];
-            this.state.enemies = [];
-            this.state.enemyBullets = [];
-            this.state.particles = [];
-            this.initWave();
-            
-            const overlay = document.getElementById('game-overlay');
-            if (overlay) {
-                overlay.style.display = 'flex';
-                const title = document.getElementById('overlay-title');
-                if (title) {
-                    title.textContent = 'READY?';
-                    title.style.color = 'var(--cyan)';
-                }
-            }
-        }
+        this.renderLayout();
+        this.setupCanvas();
+        this.loadAssets();
+        this.setupControls();
+        this.initWave();
         
         if (!this.loopBound) {
             this.loopBound = this.loop.bind(this);
@@ -245,11 +207,6 @@ var CombatSystem = {
         const width = 30;
         const height = 30;
         
-        const wave = this.state.wave;
-        const enemySpeed = (wave <= 10) 
-            ? 0.7 + (wave * 0.05) 
-            : 1.2 + ((wave - 10) * 0.25);
-
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
                 const type = (r % 2 === 0) ? 'enemySpore' : 'enemyAcid';
@@ -261,7 +218,7 @@ var CombatSystem = {
                     type: type,
                     hp: 1,
                     direction: 1,
-                    speed: enemySpeed
+                    speed: 1 + (this.state.wave * 0.2)
                 });
             }
         }
@@ -280,21 +237,25 @@ var CombatSystem = {
         this.state.shake = 10;
     },
 
-    loop() {
-        this.update();
+    loop(timestamp) {
+        if (!this.lastTimestamp) this.lastTimestamp = timestamp;
+        const dt = (timestamp - this.lastTimestamp) / 16.67; // Normalize to 60fps
+        this.lastTimestamp = timestamp;
+
+        this.update(dt);
         this.draw();
         requestAnimationFrame(this.loopBound);
     },
 
-    update() {
+    update(dt = 1) {
         if (!this.state.active || this.state.gameOver) return;
 
         // Player Movement
         if (this.state.keys['ArrowLeft'] && this.state.player.x > 0) {
-            this.state.player.x -= this.state.player.speed;
+            this.state.player.x -= this.state.player.speed * dt;
         }
         if (this.state.keys['ArrowRight'] && this.state.player.x < 300 - this.state.player.w) {
-            this.state.player.x += this.state.player.speed;
+            this.state.player.x += this.state.player.speed * dt;
         }
 
         // Firing
@@ -303,42 +264,33 @@ var CombatSystem = {
             this.state.bullets.push({
                 x: this.state.player.x + this.state.player.w / 2 - 2,
                 y: this.state.player.y,
-                w: 4, h: 10, speed: 8
+                w: 4, h: 10, speed: 7
             });
             this.state.lastFire = now;
         }
 
         // Update Bullets
         this.state.bullets = this.state.bullets.filter(b => {
-            b.y -= b.speed;
+            b.y -= b.speed * dt;
             return b.y > -20;
         });
 
         this.state.enemyBullets = this.state.enemyBullets.filter(b => {
-            b.y += b.speed;
+            b.y += b.speed * dt;
             return b.y < 420;
         });
 
         // Update Enemies
         let edgeHit = false;
-        const wave = this.state.wave;
-        const fireChance = (wave <= 10)
-            ? 0.003 + (wave * 0.0002)
-            : 0.005 + ((wave - 10) * 0.0015);
-        
-        const bulletSpeed = (wave <= 10)
-            ? 2.5 + (wave * 0.1)
-            : 3.5 + ((wave - 10) * 0.5);
-
         this.state.enemies.forEach(e => {
-            e.x += e.direction * e.speed;
+            e.x += e.direction * e.speed * dt;
             if (e.x <= 0 || e.x >= 300 - e.w) edgeHit = true;
             
-            if (Math.random() < fireChance) {
+            if (Math.random() < 0.005 * this.state.wave) {
                 this.state.enemyBullets.push({
                     x: e.x + e.w/2,
                     y: e.y + e.h,
-                    w: 4, h: 10, speed: bulletSpeed
+                    w: 4, h: 10, speed: 3 + this.state.wave/2
                 });
             }
         });
@@ -384,9 +336,9 @@ var CombatSystem = {
 
         // Update Particles
         this.state.particles.forEach(p => {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.life -= 0.02;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.life -= 0.02 * dt;
         });
         this.state.particles = this.state.particles.filter(p => p.life > 0);
 
@@ -400,11 +352,7 @@ var CombatSystem = {
         
         if (this.state.score > this.state.highScore) {
             this.state.highScore = this.state.score;
-            try {
-                localStorage.setItem('ggb_high_score', this.state.highScore);
-            } catch (e) {
-                console.error("Failed to save high score:", e);
-            }
+            localStorage.setItem('ggb_high_score', this.state.highScore);
             const hiEl = document.getElementById('game-hi');
             if (hiEl) hiEl.textContent = this.state.highScore;
         }
@@ -479,7 +427,7 @@ var CombatSystem = {
 
         // Glowing Vector-Style Bullets
         ctx.save();
-        ctx.shadowBlur = 6;
+        if (window.devicePixelRatio < 2) ctx.shadowBlur = 6;
         ctx.shadowColor = 'var(--cyan)';
         ctx.fillStyle = 'var(--cyan)';
         this.state.bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
@@ -500,7 +448,8 @@ var CombatSystem = {
         // Neural Scanline Interlacing drawn directly on Canvas
         ctx.strokeStyle = 'rgba(0, 0, 0, 0.12)';
         ctx.lineWidth = 1;
-        for (let y = 0; y < 400; y += 4) {
+        const step = window.devicePixelRatio > 1 ? 8 : 4;
+        for (let y = 0; y < 400; y += step) {
             ctx.beginPath();
             ctx.moveTo(0, y);
             ctx.lineTo(300, y);
