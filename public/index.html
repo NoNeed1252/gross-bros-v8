@@ -91,7 +91,6 @@
       background: #0a0a0a;
     }
 
-    /* Standardized Panels */
     .panel { background: #06110f; border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
   </style>
 </head>
@@ -114,7 +113,6 @@
     </nav>
 
     <main class='content'>
-      <!-- CONSOLE -->
       <section id='section-0' class='section active'>
         <div class="panel">
           <h2 style="font-family:Orbitron;">SYSTEM_OVERVIEW</h2>
@@ -122,7 +120,6 @@
         </div>
       </section>
 
-      <!-- STORYLINE -->
       <section id='section-1' class='section'>
         <div class="panel">
           <h2 style="font-family:Orbitron;">TRANSMISSIONS</h2>
@@ -130,7 +127,6 @@
         </div>
       </section>
 
-      <!-- GAME ROOM -->
       <section id='section-2' class='section'>
         <div class="launcher-card">
           <div class="launcher-title">NEON CASCADE</div>
@@ -156,7 +152,6 @@
         </div>
       </section>
 
-      <!-- FUSION LAB -->
       <section id='section-3' class='section'>
         <div class="panel">
           <h2 style="font-family:Orbitron;">FUSION_LAB</h2>
@@ -164,7 +159,6 @@
         </div>
       </section>
 
-      <!-- SOCIALS -->
       <section id='section-4' class='section'>
         <div class="panel">
           <h2 style="font-family:Orbitron;">COMM_CHANNELS</h2>
@@ -172,7 +166,6 @@
         </div>
       </section>
 
-      <!-- GAME OVERLAY -->
       <div id="game-overlay">
         <div class="overlay-header">
           <div style="font-family:Orbitron; font-size:12px; color:var(--pink);">[ NEURAL_LINK_ACTIVE ]</div>
@@ -190,10 +183,10 @@
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === idx));
       if (idx === 2) CombatSystem.init();
     }
-    // Initialize Launcher Data
     document.addEventListener('DOMContentLoaded', () => {
       const hi = localStorage.getItem('neon_cascade_hi') || 0;
-      document.getElementById('launcher-hi-score').textContent = hi;
+      const hiEl = document.getElementById('launcher-hi-score');
+      if (hiEl) hiEl.textContent = hi;
     });
   </script>
 </body>
