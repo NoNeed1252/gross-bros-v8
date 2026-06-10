@@ -1,5 +1,5 @@
 /**
- * NEON CASCADE: MATCH-3 ENGINE (OVERLAY EDITION)
+ * NEON CASCADE: MATCH-3 ENGINE (ALPHA OVERLAY EDITION)
  * Stable Release for Alpha Operative.
  */
 
@@ -29,7 +29,7 @@ const CombatSystem = {
         const hi = localStorage.getItem('neon_cascade_hi') || 0;
         const hiEl = document.getElementById('launcher-hi-score');
         if (hiEl) hiEl.textContent = hi;
-        console.log("NEON_CASCADE: Launcher standby. Ready, Alpha.");
+        console.log("NEON_CASCADE: Alpha launcher standby. Ready for link.");
     },
 
     launch() {
@@ -47,7 +47,7 @@ const CombatSystem = {
         this.setupAudio();
         this.resetGame();
         
-        console.log("NEON_CASCADE: Neural link established. Signal locked.");
+        console.log("NEON_CASCADE: Neural link established. Signal locked for Alpha.");
     },
 
     terminate() {
@@ -65,7 +65,7 @@ const CombatSystem = {
         const hiEl = document.getElementById('launcher-hi-score');
         if (hiEl) hiEl.textContent = this.state.highScore;
 
-        console.log("NEON_CASCADE: Neural link severed. System idling.");
+        console.log("NEON_CASCADE: Neural link severed. Alpha status saved.");
     },
 
     setupAudio() {
@@ -93,7 +93,6 @@ const CombatSystem = {
     },
 
     renderGameUI(container) {
-        const hi = this.state.highScore;
         container.innerHTML = `
             <style>
                 #nc-game-wrap {
@@ -129,10 +128,10 @@ const CombatSystem = {
             <div id="nc-game-wrap">
                 <div class="nc-stats">
                     <div>SCORE: <span id="nc-score">0</span></div>
-                    <div>HI: <span id="nc-hi">${hi}</span></div>
+                    <div>HI: <span id="nc-hi">` + this.state.highScore + `</span></div>
                 </div>
                 <div id="nc-board"></div>
-                <div style="font-size:10px; opacity:0.5; text-align:center;">MATCH 3 SPECIMENS TO STABILIZE CORE</div>
+                <div style="font-size:10px; opacity:0.5; text-align:center;">STABILIZE CORE // ALPHA DIRECTIVE</div>
             </div>
         `;
         this.boardEl = document.getElementById('nc-board');
@@ -244,7 +243,7 @@ const CombatSystem = {
                 }
             }
         }
-        return Array.from(new Set(matches.map(m => \`\${m.r},\${m.c}\`)))
+        return Array.from(new Set(matches.map(m => ` + "`" + `${m.r},${m.c}` + "`" + `)))
             .map(s => { const [r,c] = s.split(',').map(Number); return {r, c}; });
     },
 
@@ -256,7 +255,7 @@ const CombatSystem = {
         }
 
         matches.forEach(m => {
-            const el = this.boardEl.querySelector(\`[data-r="\${m.r}"][data-c="\${m.c}"]\`);
+            const el = this.boardEl.querySelector(` + "`" + `[data-r="${m.r}"][data-c="${m.c}"]` + "`" + `);
             if (el) el.classList.add('match');
         });
 
