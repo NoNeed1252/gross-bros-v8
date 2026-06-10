@@ -403,10 +403,10 @@ letter-spacing: 1px;
 
     <nav class='tabs'>
       <div class='tab active' onclick="switchTab(0)">CONSOLE</div>
-      <div class='tab' onclick="switchTab(1)">TERMINAL</div>
-      <div class='tab' onclick="switchTab(2)">STORYLINE</div>
+      <div class='tab' onclick="switchTab(1)">STORYLINE</div>
+      <div class='tab' onclick="switchTab(2)">GAME ROOM</div>
       <div class='tab' onclick="switchTab(3)">FUSION LAB</div>
-      <div class='tab' onclick="switchTab(4)">GAME ROOM</div>
+      <div class='tab' onclick="switchTab(4)">TERMINAL</div>
       <div class='tab' onclick="switchTab(5)">LEADERBOARD</div>
       <div class='tab' onclick="switchTab(6)">SOCIALS</div>
     </nav>
@@ -419,11 +419,11 @@ letter-spacing: 1px;
             <h1 id="status-msg" style='font-family:Orbitron,sans-serif;font-size:clamp(28px,5vw,62px);margin:10px 0 0;'>BRO OF THE DAY</h1>
             <p style='line-height:1.8;color:#ddfff9;opacity:.86;max-width:58ch'>Daily rotation pulled from the full issuer collection, with one NFT selected every 24 hours.</p>
             <div class='row'>
-              <button class='btn' onclick="switchTab(2)">READ TRANSMISSIONS</button>
+              <button class='btn' onclick="switchTab(1)">READ TRANSMISSIONS</button>
               <button class='btn' onclick="window.open('https://xrp.cafe/collection/galactic-gross-bros', '_blank')">BUY A BRO</button>
             </div>
             <div class='row' style='margin-top: 16px;'>
-              <button class='btn' onclick="switchTab(1)">LAUNCH TERMINAL</button>
+              <button class='btn' onclick="switchTab(4)">LAUNCH TERMINAL</button>
               <button class='btn' onclick="switchTab(3)">CHAT IN FUSION LAB</button>
             </div>
           </div>
@@ -443,6 +443,71 @@ letter-spacing: 1px;
       </section>
 
       <section id='section-1' class='section'>
+        <div class='panel'>
+          <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
+          <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
+          
+          <div class="lore-box">
+            <h3 style="font-family:Orbitron, sans-serif; font-size: 18px; color: var(--cyan); margin-top: 0;">PROLOGUE: THE XRP-7 INCIDENT</h3>
+            <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger. When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
+            <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
+          </div>
+
+          <div class="lore-box">
+            <h3 id="chapter-1-header" style="font-family:Orbitron, sans-serif; font-size: 18px; color: var(--cyan); margin-top: 0;">CHAPTER 1: THE NEURAL AWAKENING</h3>
+            <p>Before the breach, the Consolidated Core Extraction syndicate didn't just run the rigs on XRP-7 - they owned the blood in your veins. Every breath of recycled air was leased. Every drop of water was docked from your daily ledger. They kept the crew trapped in a loop of artificial debt, paying in corporate credits that only worked at CCE depots. You lived to mine, and you mined to pay off a debt that never went down. The suits in high orbit controlled the money, and by controlling the money, they controlled every beating heart on the rock.</p>
+            <p>Then the drills hit the living core. The blue static rupture didn't just mutate our flesh - it scrambled CCE's system of control. When the quarantine protocols sealed us in the deep dark to rot, the crew didn't die. We fused with the raw digital essence of the XRP Ledger itself. The old debt-shackles shattered, and the Galactic Gross Bros were born.</p>
+            <p>We became something they couldn't control, couldn't delete, and couldn't tax. But the fight isn't finished. CCE is sending automated liquidation sweeps to scrub us from the database and reclaim their lost assets. We aren't just fighting to defend our sector. We are fighting to tear down their financial stranglehold, to hijack their networks, and to break the ledger of their control - so every miner, every deckhand, and every soul still trapped under the corporate heel can break free.</p>
+          </div>
+
+          <div style="border-top: 1px dashed var(--cyan); margin-top: 25px; padding-top: 15px; font-size: 0.75rem; color: #888; font-family: 'Share Tech Mono', monospace; line-height: 1.4;">
+              [!] SYSTEM STATUS: ACTIVE TRANSMISSION PROTOCOL<br>
+              [!] UPDATE CADENCE: MINI-LOGS APPENDED WEEKLY (SUNDAYS AT 12:00 EDT). DATA ACCRUES IN THE ARCHIVE UNTIL CHAPTER IS COMPILED, AT WHICH POINT PREPARATION FOR THE NEXT CHAPTER BEGINS.
+          </div>
+        </div>
+      </section>
+
+      <section id='section-2' class='section'>
+        <div id="game-room-container"></div>
+      </section>
+
+      <section id='section-3' class='section'>
+        <div class='panel fuse-panel'>
+          <div class='fuse-head'>
+            <div>
+              <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Fusion Lab</div>
+              <div class='muted' style='text-align:center; letter-spacing:0.5em; font-size:10px; margin-bottom:8px; opacity: 0.7;'>IN-WORLD COMMS TERMINAL</div><h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:0 0 24px; text-align:center; text-shadow: 0 0 10px rgba(0,255,200,0.3);'>CHAT TERMINAL</h2>
+            </div>
+            <div id='fuse-lock-badge' class='fuse-badge' style='border-color: #ff3b6b; color: #ff3b6b;'>FUSION MODULE OFFLINE</div>
+          </div>
+          
+          <div id='held-nft-display' class='held-nft-panel'>
+            <div id="connected-nft-display" style="display:none; align-items:center; gap:16px; width:100%;">
+               <div class="held-nft-image-wrapper"><img id="connected-nft-image" src="" alt=""></div>
+            </div>
+            <div id="held-nft-empty" class="held-nft-empty" style="opacity:0.8; font-size:12px; letter-spacing:0.2em;">GUEST ACCESS</div>
+          </div>
+
+          <div id='chat-terminal' class='chat-terminal'>
+            <div id='chat-log' class='chat-log'></div>
+            <div class='chat-terminal-actions'>
+              <input id='chat-input' placeholder='Send a directive...'>
+              <button id='chat-send-btn' class='btn' onclick="startChatStream()">Send</button>
+            </div>
+          </div>
+          <div class='fuse-grid' style="display: none;">
+            <div class='fuse-readout'><span>Token</span><select id='fuse-token-select' onchange='state.fuseToken = this.value; calculateFusePrice();'><option value='XRP'>XRP</option><option value='RLUSD'>RLUSD</option></select></div>
+            <div class='fuse-readout'><span>Rate</span><strong id='fuse-token-rate'>--</strong></div>
+            <div class='fuse-readout'><span>Status</span><strong id='fuse-payment-status'>Awaiting</strong></div>
+          </div>
+          <div class='nft-selection-section'>
+            <div class='muted'>Available NFTs</div>
+            <div id='nft-selection-track' class='nft-selection-track'></div>
+          </div>
+        </div>
+      </section>
+
+      <section id='section-4' class='section'>
         <div class='panel'>
           <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Neural Terminal Interface</div>
           <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>SECURE TERMINAL</h2>
@@ -502,71 +567,6 @@ letter-spacing: 1px;
         </div>
       </section>
 
-      <section id='section-2' class='section'>
-        <div class='panel'>
-          <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
-          <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
-          
-          <div class="lore-box">
-            <h3 style="font-family:Orbitron, sans-serif; font-size: 18px; color: var(--cyan); margin-top: 0;">PROLOGUE: THE XRP-7 INCIDENT</h3>
-            <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger. When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
-            <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
-          </div>
-
-          <div class="lore-box">
-            <h3 id="chapter-1-header" style="font-family:Orbitron, sans-serif; font-size: 18px; color: var(--cyan); margin-top: 0;">CHAPTER 1: THE NEURAL AWAKENING</h3>
-            <p>Before the breach, the Consolidated Core Extraction syndicate didn't just run the rigs on XRP-7 - they owned the blood in your veins. Every breath of recycled air was leased. Every drop of water was docked from your daily ledger. They kept the crew trapped in a loop of artificial debt, paying in corporate credits that only worked at CCE depots. You lived to mine, and you mined to pay off a debt that never went down. The suits in high orbit controlled the money, and by controlling the money, they controlled every beating heart on the rock.</p>
-            <p>Then the drills hit the living core. The blue static rupture didn't just mutate our flesh - it scrambled CCE's system of control. When the quarantine protocols sealed us in the deep dark to rot, the crew didn't die. We fused with the raw digital essence of the XRP Ledger itself. The old debt-shackles shattered, and the Galactic Gross Bros were born.</p>
-            <p>We became something they couldn't control, couldn't delete, and couldn't tax. But the fight isn't finished. CCE is sending automated liquidation sweeps to scrub us from the database and reclaim their lost assets. We aren't just fighting to defend our sector. We are fighting to tear down their financial stranglehold, to hijack their networks, and to break the ledger of their control - so every miner, every deckhand, and every soul still trapped under the corporate heel can break free.</p>
-          </div>
-
-          <div style="border-top: 1px dashed var(--cyan); margin-top: 25px; padding-top: 15px; font-size: 0.75rem; color: #888; font-family: 'Share Tech Mono', monospace; line-height: 1.4;">
-              [!] SYSTEM STATUS: ACTIVE TRANSMISSION PROTOCOL<br>
-              [!] UPDATE CADENCE: MINI-LOGS APPENDED WEEKLY (SUNDAYS AT 12:00 EDT). DATA ACCRUES IN THE ARCHIVE UNTIL CHAPTER IS COMPILED, AT WHICH POINT PREPARATION FOR THE NEXT CHAPTER BEGINS.
-          </div>
-        </div>
-      </section>
-
-      <section id='section-3' class='section'>
-        <div class='panel fuse-panel'>
-          <div class='fuse-head'>
-            <div>
-              <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Fusion Lab</div>
-              <div class='muted' style='text-align:center; letter-spacing:0.5em; font-size:10px; margin-bottom:8px; opacity: 0.7;'>IN-WORLD COMMS TERMINAL</div><h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:0 0 24px; text-align:center; text-shadow: 0 0 10px rgba(0,255,200,0.3);'>CHAT TERMINAL</h2>
-            </div>
-            <div id='fuse-lock-badge' class='fuse-badge' style='border-color: #ff3b6b; color: #ff3b6b;'>FUSION MODULE OFFLINE</div>
-          </div>
-          
-          <div id='held-nft-display' class='held-nft-panel'>
-            <div id="connected-nft-display" style="display:none; align-items:center; gap:16px; width:100%;">
-               <div class="held-nft-image-wrapper"><img id="connected-nft-image" src="" alt=""></div>
-            </div>
-            <div id="held-nft-empty" class="held-nft-empty" style="opacity:0.8; font-size:12px; letter-spacing:0.2em;">GUEST ACCESS</div>
-          </div>
-
-          <div id='chat-terminal' class='chat-terminal'>
-            <div id='chat-log' class='chat-log'></div>
-            <div class='chat-terminal-actions'>
-              <input id='chat-input' placeholder='Send a directive...'>
-              <button id='chat-send-btn' class='btn' onclick="startChatStream()">Send</button>
-            </div>
-          </div>
-          <div class='fuse-grid' style="display: none;">
-            <div class='fuse-readout'><span>Token</span><select id='fuse-token-select' onchange='state.fuseToken = this.value; calculateFusePrice();'><option value='XRP'>XRP</option><option value='RLUSD'>RLUSD</option></select></div>
-            <div class='fuse-readout'><span>Rate</span><strong id='fuse-token-rate'>--</strong></div>
-            <div class='fuse-readout'><span>Status</span><strong id='fuse-payment-status'>Awaiting</strong></div>
-          </div>
-          <div class='nft-selection-section'>
-            <div class='muted'>Available NFTs</div>
-            <div id='nft-selection-track' class='nft-selection-track'></div>
-          </div>
-        </div>
-      </section>
-
-      <section id='section-4' class='section'>
-        <div id="game-room-container"></div>
-      </section>
-      
       <section id='section-5' class='section'>
         <div class='panel'>
           <h2 style='font-family:Orbitron,sans-serif;'>LEADERBOARD</h2>
@@ -649,7 +649,7 @@ letter-spacing: 1px;
     const MOCK_NFTS = [
       { name: "TEST SPECIMEN #001", image: "https://ipfs.io/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ" },
       { name: "TEST SPECIMEN #042", image: "https://ipfs.io/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" },
-      { name: "TEST SPECIMEN #088", image: "https://ipfs.io/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" }
+      { name: "TEST SPECIMEN #088", image: "https://ipfs.io/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" }
     ];
     
     async function safeFetch(url, options = {}) {
@@ -1187,7 +1187,7 @@ letter-spacing: 1px;
     function switchTab(index) {
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
       document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === index));
-      if (index === 4 && window.CombatSystem) CombatSystem.init();
+      if (index === 2 && window.CombatSystem) CombatSystem.init();
       if (index === 5) fetchLeaderboard();
     }
 
