@@ -44,8 +44,8 @@
       background: #050505; box-shadow: 0 30px 70px -20px rgba(0,0,0,.95), 0 0 100px -20px var(--cyan);
       display: flex; flex-direction: column;
     }
-    @media (max-width: 640px) {
-      .shell { margin: 8px auto; min-height: calc(100vh - 16px); border-width: 0; }
+    @media (max-width: 1024px), (max-height: 600px) {
+      .shell { margin: 0 auto; min-height: 100vh; border-width: 0; border-radius: 0; }
     }
     .topbar {
       background: #0a0a0a; border-bottom: 1px solid var(--line);
