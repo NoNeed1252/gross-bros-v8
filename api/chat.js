@@ -43,8 +43,7 @@ async function getLivePrices() {
   };
 
   try {
-    const [coinbaseRes, dexRes, geckoRes] = await Promise.allSettled([
-      fetch('https://api.coinbase.com/v2/prices/USD/spot').then(r => r.json()), // Coinbase doesn't support batch spot well like this, usually individual
+    const [dexRes, geckoRes] = await Promise.allSettled([
       fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools').then(r => r.json()),
       fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple,bitcoin,ethereum,solana&vs_currencies=usd').then(r => r.json())
     ]);
@@ -59,12 +58,16 @@ async function getLivePrices() {
 
     // 2. Individual Coinbase fallbacks if needed
     if (!prices.XRP || !prices.BTC) {
-      const [cbXRP, cbBTC] = await Promise.allSettled([
-        fetch('https://api.coinbase.com/v2/prices/XRP-USD/spot').then(r => r.json()),
-        fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(r => r.json())
-      ]);
-      if (cbXRP.status === 'fulfilled' && cbXRP.value?.data?.amount) prices.XRP = cbXRP.value.data.amount;
-      if (cbBTC.status === 'fulfilled' && cbBTC.value?.data?.amount) prices.BTC = cbBTC.value.data.amount;
+      const fallbackPromises = [];
+      if (!prices.XRP) fallbackPromises.push(fetch('https://api.coinbase.com/v2/prices/XRP-USD/spot').then(r => r.json()).then(data => ({ sym: 'XRP', val: data?.data?.amount })));
+      if (!prices.BTC) fallbackPromises.push(fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(r => r.json()).then(data => ({ sym: 'BTC', val: data?.data?.amount })));
+      
+      const results = await Promise.allSettled(fallbackPromises);
+      results.forEach(res => {
+        if (res.status === 'fulfilled' && res.value.val) {
+          prices[res.value.sym] = res.value.val;
+        }
+      });
     }
 
     // 3. Ecosystem Tokens from GeckoTerminal (XRPL DEX)
@@ -93,7 +96,7 @@ async function getHoldings(address) {
   const taxon = "1";
   
   try {
-    const url = `https://bithomp.com/api/v2/nfts?list=nfts&issuer=${issuer}&taxon=${taxon}&owner=${address}`;
+    const url = \`https://bithomp.com/api/v2/nfts?list=nfts&issuer=\${issuer}&taxon=\${taxon}&owner=\${address}\`;
     const res = await fetch(url, {
       headers: { 'x-bithomp-token': BITHOMP_TOKEN }
     });
