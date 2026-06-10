@@ -79,6 +79,19 @@
     input, select { padding: 14px 16px; border-radius: 18px; border: 1px solid rgba(0,255,200,.22); background: rgba(0,0,0,.5); color: #f1fffd; font: inherit; outline: none; width: 100%; }
     .leader-row { display: grid; grid-template-columns: 50px 1fr 80px 80px 80px; gap: 5px; align-items: center; padding: 12px; border-bottom: 1px solid rgba(0,255,200,.08); font-size: 13px; }
     .social-card { display: flex; align-items: center; justify-content: space-between; padding: 20px; border: 1px solid rgba(0,255,200,0.2); border-radius: 20px; background: rgba(0,255,200,0.04); text-decoration: none; }
+
+    /* Lore Specific Styling */
+    .lore-container { display: grid; gap: 24px; margin-top: 20px; }
+    .lore-box {
+      max-height: 400px; overflow-y: auto;
+      padding: 18px; border: 1px solid rgba(0,255,200,.12);
+      border-radius: 18px; background: rgba(0,0,0,.4);
+      scrollbar-width: thin; scrollbar-color: var(--cyan) transparent;
+    }
+    .lore-box::-webkit-scrollbar { width: 6px; }
+    .lore-box::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 10px; }
+    .lore-title { font-family: 'Orbitron', sans-serif; letter-spacing: 0.15em; color: var(--cyan); margin-bottom: 12px; font-size: 14px; text-transform: uppercase; }
+    .lore-text { color: #ddfff9; line-height: 1.8; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -116,17 +129,31 @@
         <div class='panel'>
           <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Storyline archive</div>
           <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
-          <div style='display:grid;gap:14px;color:#ddfff9;line-height:1.8;'>
-            <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger. When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
-            <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
-            <p id="chapter-1-header" style='margin-top: 20px; font-family:Orbitron,sans-serif; letter-spacing:0.2em; color:var(--cyan);'>CHAPTER 1: THE NEURAL AWAKENING</p>
-            <p>Before the breach, the Consolidated Core Extraction syndicate didn't just run the rigs on XRP-7 - they owned the blood in your veins. Every breath of recycled air was leased. Every drop of water was docked from your daily ledger. They kept the crew trapped in a loop of artificial debt, paying in corporate credits that only worked at CCE depots. You lived to mine, and you mined to pay off a debt that never went down. The suits in high orbit controlled the money, and by controlling the money, they controlled every beating heart on the rock.</p>
-            <p>Then the drills hit the living core. The blue static rupture didn't just mutate our flesh - it scrambled CCE's system of control. When the quarantine protocols sealed us in the deep dark to rot, the crew didn't die. We fused with the raw digital essence of the XRP Ledger itself. The old debt-shackles shattered, and the Galactic Gross Bros were born.</p>
-            <p>We became something they couldn't control, couldn't delete, and couldn't tax. But the fight isn't finished. CCE is sending automated liquidation sweeps to scrub us from the database and reclaim their lost assets. We aren't just fighting to defend our sector. We are fighting to tear down their financial stranglehold, to hijack their networks, and to break the ledger of their control - so every miner, every deckhand, and every soul still trapped under the corporate heel can break free.</p>
-            <div style="border-top: 1px dashed var(--cyan); margin-top: 25px; padding-top: 15px; font-size: 0.75rem; color: #888; font-family: 'Share Tech Mono', monospace; line-height: 1.4;">
-                [!] SYSTEM STATUS: ACTIVE TRANSMISSION PROTOCOL<br>
-                [!] UPDATE CADENCE: MINI-LOGS APPENDED WEEKLY (SUNDAYS AT 12:00 EDT). DATA ACCRUES IN THE ARCHIVE UNTIL CHAPTER IS COMPILED, AT WHICH POINT PREPARATION FOR THE NEXT CHAPTER BEGINS.
+          
+          <div class="lore-container">
+            <!-- PROLOGUE -->
+            <div class="lore-box">
+              <div class="lore-title">PROLOGUE: ORIGINS</div>
+              <div class="lore-text">
+                <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger. When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
+                <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
+              </div>
             </div>
+
+            <!-- CHAPTER 1 -->
+            <div class="lore-box">
+              <div class="lore-title">CHAPTER 1: THE NEURAL AWAKENING</div>
+              <div class="lore-text">
+                <p>Before the breach, the Consolidated Core Extraction syndicate didn't just run the rigs on XRP-7 - they owned the blood in your veins. Every breath of recycled air was leased. Every drop of water was docked from your daily ledger. They kept the crew trapped in a loop of artificial debt, paying in corporate credits that only worked at CCE depots. You lived to mine, and you mined to pay off a debt that never went down. The suits in high orbit controlled the money, and by controlling the money, they controlled every beating heart on the rock.</p>
+                <p>Then the drills hit the living core. The blue static rupture didn't just mutate our flesh - it scrambled CCE's system of control. When the quarantine protocols sealed us in the deep dark to rot, the crew didn't die. We fused with the raw digital essence of the XRP Ledger itself. The old debt-shackles shattered, and the Galactic Gross Bros were born.</p>
+                <p>We became something they couldn't control, couldn't delete, and couldn't tax. But the fight isn't finished. CCE is sending automated liquidation sweeps to scrub us from the database and reclaim their lost assets. We aren't just fighting to defend our sector. We are fighting to tear down their financial stranglehold, to hijack their networks, and to break the ledger of their control - so every miner, every deckhand, and every soul still trapped under the corporate heel can break free.</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="border-top: 1px dashed var(--cyan); margin-top: 25px; padding-top: 15px; font-size: 0.75rem; color: #888; font-family: 'Share Tech Mono', monospace; line-height: 1.4;">
+              [!] SYSTEM STATUS: ACTIVE TRANSMISSION PROTOCOL<br>
+              [!] UPDATE CADENCE: MINI-LOGS APPENDED WEEKLY (SUNDAYS AT 12:00 EDT). DATA ACCRUES IN THE ARCHIVE UNTIL CHAPTER IS COMPILED, AT WHICH POINT PREPARATION FOR THE NEXT CHAPTER BEGINS.
           </div>
         </div>
       </section>
