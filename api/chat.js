@@ -31,13 +31,13 @@ TERMINOLOGY:
 - Cold Wallet: Offline storage (like Ledger or paper). Maximum safety.
 - Hot Wallet: Online app (like Xaman/XUMM). Convenient but connected to the net.
 - Keys/Seed: NEVER share these. If an operative asks, tell them it's a security breach.
-- Gas: XRPL doesn't call it \"gas\" like Ethereum, but there are minimal network fees in XRP.
+- Gas: XRPL doesn't call it "gas" like Ethereum, but there are minimal network fees in XRP.
 - First Ledger: The primary breeding ground for new meme-specimens on XRPL.
 `;
 
 function extractMentionedSymbols(messages) {
   const text = messages.map(m => m.content).join(' ').toUpperCase();
-  const tickerRegex = /\\$?[A-Z]{3,6}\\b/g;
+  const tickerRegex = /\$?[A-Z]{3,6}\b/g;
   const matches = text.match(tickerRegex) || [];
   const found = matches.map(m => m.replace('$', ''));
   
@@ -138,18 +138,18 @@ export default async function handler(req) {
     
     let identityContext = "";
     if (activeBackstoryObj) {
-      identityContext = "YOU ARE CURRENTLY MANIFESTING AS: " + activeBackstoryObj.name + ".\\nCORE IDENTITY & MEMORIES: " + activeBackstoryObj.backstory + "\\nYou must speak strictly in the voice and persona of this specific specimen.";
+      identityContext = "YOU ARE CURRENTLY MANIFESTING AS: " + activeBackstoryObj.name + ".\nCORE IDENTITY & MEMORIES: " + activeBackstoryObj.backstory + "\nYou must speak strictly in the voice and persona of this specific specimen.";
     } else {
       const isPrototype = activeSpecimenName.includes("001") || activeSpecimenName.includes("PROTOTYPE");
       const isElite = activeSpecimenName.includes("PRINCE") || activeSpecimenName.includes("ELITE");
-      identityContext = "YOU ARE CURRENTLY MANIFESTING AS: " + activeSpecimenName + ".\\nCORE IDENTITY (Fallback Protocol): " + (isPrototype ? "You are a twitchy, paranoid early-stage mutation." : isElite ? "You are an arrogant, royal-tier specimen." : "You are a cynical survivor of the XRP-7 pits.") + "\\nYour personality is online.";
+      identityContext = "YOU ARE CURRENTLY MANIFESTING AS: " + activeSpecimenName + ".\nCORE IDENTITY (Fallback Protocol): " + (isPrototype ? "You are a twitchy, paranoid early-stage mutation." : isElite ? "You are an arrogant, royal-tier specimen." : "You are a cynical survivor of the XRP-7 pits.") + "\nYour personality is online.";
     }
 
     const otherHoldings = backstories.filter(s => s.name !== activeSpecimenName);
     const walletContext = otherHoldings.length > 0 ? "USER WALLET ASSETS: " + otherHoldings.map(s => s.name).join(' | ') : "No other Gross Bros held.";
     const priceStrings = Object.entries(prices).map(([sym, val]) => sym + ": " + (val ? "$" + val : 'GUNKED')).join(' | ');
 
-    const systemPrompt = "### CORE IDENTITY PROTOCOL\\n" + identityContext + "\\n\\n### BEHAVIORAL MANDATE\\n- You are a Gross Bro, gritty and intelligent.\\n- Use slang like 'Alpha', 'Signal', 'Neural Breach', 'Gunk'.\\n- Stay concise, cynical, and technically accurate.\\n- Address the user as Alpha.\\n\\n### LIVE MARKET DATA\\n" + priceStrings + "\\n\\n### USER CONTEXT\\n- Wallet: " + (walletAddress || 'Not Connected') + "\\n- " + walletContext + "\\n\\n### TASK\\n- Ground evaluations in live market data. If a price is low, it's 'gunked'. If high, it's 'neural-surging'.\\n- Relate crypto concepts back to the 'GGB Energy Sector'.";
+    const systemPrompt = "### CORE IDENTITY PROTOCOL\n" + identityContext + "\n\n### BEHAVIORAL MANDATE\n- You are a Gross Bro, gritty and intelligent.\n- Use slang like 'Alpha', 'Signal', 'Neural Breach', 'Gunk'.\n- Stay concise, cynical, and technically accurate.\n- Address the user as Alpha.\n\n### LIVE MARKET DATA\n" + priceStrings + "\n\n### USER CONTEXT\n- Wallet: " + (walletAddress || 'Not Connected') + "\n- " + walletContext + "\n\n### TASK\n- Ground evaluations in live market data. If a price is low, it's 'gunked'. If high, it's 'neural-surging'.\n- Relate crypto concepts back to the 'GGB Energy Sector'.";
 
     const fullMessages = [{ role: 'system', content: systemPrompt }, ...(messages || [])];
     if (!process.env.OPENROUTER_API_KEY) return new Response(JSON.stringify({ error: 'API Key Missing' }), { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } });
@@ -164,6 +164,10 @@ export default async function handler(req) {
       if (openRouterRes.ok) break;
     }
 
+    if (!openRouterRes || !openRouterRes.ok) {
+       return new Response(JSON.stringify({ error: 'Signal Breach: OpenRouter Offline' }), { status: 502, headers: { ...headers, 'Content-Type': 'application/json' } });
+    }
+
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
     const stream = new ReadableStream({
@@ -175,17 +179,17 @@ export default async function handler(req) {
             const { done, value } = await reader.read();
             if (done) break;
             buffer += decoder.decode(value);
-            const lines = buffer.split('\\n');
+            const lines = buffer.split('\n');
             buffer = lines.pop() || '';
             for (const line of lines) {
               const trimmed = line.trim();
               if (!trimmed || !trimmed.startsWith('data:')) continue;
               const dataText = trimmed.slice(5).trim();
-              if (dataText === '[DONE]') { controller.enqueue(encoder.encode('data: [DONE]\\n\\n')); continue; }
+              if (dataText === '[DONE]') { controller.enqueue(encoder.encode('data: [DONE]\n\n')); continue; }
               try {
                 const json = JSON.parse(dataText);
                 const content = json.choices?.[0]?.delta?.content || '';
-                if (content) controller.enqueue(encoder.encode("data: " + JSON.stringify({ token: content }) + "\\n\\n"));
+                if (content) controller.enqueue(encoder.encode("data: " + JSON.stringify({ token: content }) + "\n\n"));
               } catch (e) {}
             }
           }
