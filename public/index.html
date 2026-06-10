@@ -185,7 +185,7 @@
     }
     
     .chat-terminal-actions {
-      display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
+      display: grid; grid-template-columns: minmax(0, 1fr) auto;
       gap: 10px; align-items: stretch; margin-top: 24px;
     }
     @media (max-width: 720px) {
@@ -447,7 +447,7 @@ letter-spacing: 1px;
               <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>Fusion Lab</div>
               <div class='muted' style='text-align:center; letter-spacing:0.5em; font-size:10px; margin-bottom:8px; opacity: 0.7;'>IN-WORLD COMMS TERMINAL</div><h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:0 0 24px; text-align:center; text-shadow: 0 0 10px rgba(0,255,200,0.3);'>CHAT TERMINAL</h2>
             </div>
-            <div id='fuse-lock-badge' class='fuse-badge' style='border-color: var(--cyan); color: var(--cyan);'>ACTIVE</div>
+            <div id='fuse-lock-badge' class='fuse-badge' style='border-color: #ff3b6b; color: #ff3b6b;'>FUSION MODULE OFFLINE</div>
           </div>
           
           <div id='held-nft-display' class='held-nft-panel'>
@@ -462,16 +462,9 @@ letter-spacing: 1px;
             <div class='chat-terminal-actions'>
               <input id='chat-input' placeholder='Send a directive...'>
               <button id='chat-send-btn' class='btn' onclick="startChatStream()">Send</button>
-              <div class='fuse-button-box'>
-                <button id='fuse-button' class='btn' onclick="toggleFuseUnlock()">Fuse</button>
-                <div class='fuse-price'>
-                  <span>Live $50 USD</span>
-                  <strong id='fuse-token-amount'>--</strong>
-                </div>
-              </div>
             </div>
           </div>
-          <div class='fuse-grid'>
+          <div class='fuse-grid' style="display: none;">
             <div class='fuse-readout'><span>Token</span><select id='fuse-token-select' onchange='state.fuseToken = this.value; calculateFusePrice();'><option value='XRP'>XRP</option><option value='RLUSD'>RLUSD</option></select></div>
             <div class='fuse-readout'><span>Rate</span><strong id='fuse-token-rate'>--</strong></div>
             <div class='fuse-readout'><span>Status</span><strong id='fuse-payment-status'>Awaiting</strong></div>
@@ -596,7 +589,7 @@ letter-spacing: 1px;
       connected: false, 
       wallet: "", 
       chat: [], 
-      fuseUnlocked: true, 
+      fuseUnlocked: false, 
       fuseToken: "XRP", 
       selectedNft: null, 
       userNfts: [], 
@@ -703,6 +696,7 @@ letter-spacing: 1px;
 
     function calculateFusePrice() {
       const amountEl = document.getElementById("fuse-token-amount");
+      if (!amountEl) return;
       if (state.fuseToken === 'RLUSD') {
         amountEl.textContent = state.fuseTargetUsd + ' RLUSD';
       } else if (state.xrpPrice > 0) {
@@ -718,7 +712,8 @@ letter-spacing: 1px;
         const data = await res.json();
         if (data?.ripple?.usd) {
           state.xrpPrice = data.ripple.usd;
-          document.getElementById('fuse-token-rate').textContent = state.xrpPrice.toFixed(4) + ' USD';
+          const rateEl = document.getElementById('fuse-token-rate');
+          if (rateEl) rateEl.textContent = state.xrpPrice.toFixed(4) + ' USD';
           calculateFusePrice();
         }
       } catch (e) { 
@@ -726,18 +721,20 @@ letter-spacing: 1px;
         const res = await safeFetch('/api/ticker');
         if (res?.xrp_price) {
           state.xrpPrice = res.xrp_price;
-          document.getElementById('fuse-token-rate').textContent = state.xrpPrice.toFixed(4) + ' USD';
+          const rateEl = document.getElementById('fuse-token-rate');
+          if (rateEl) rateEl.textContent = state.xrpPrice.toFixed(4) + ' USD';
           calculateFusePrice();
         }
       }
     }
 
     function toggleFuseUnlock() {
-      state.fuseUnlocked = !state.fuseUnlocked;
+      // Fusion is currently disabled
+      state.fuseUnlocked = false;
       const badge = document.getElementById('fuse-lock-badge');
-      badge.textContent = state.fuseUnlocked ? 'ACTIVE' : 'ENCRYPTED';
-      badge.style.borderColor = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
-      badge.style.color = state.fuseUnlocked ? 'var(--cyan)' : '#ff3b6b';
+      badge.textContent = 'FUSION MODULE OFFLINE';
+      badge.style.borderColor = '#ff3b6b';
+      badge.style.color = '#ff3b6b';
     }
 
     async function connectXaman() {
