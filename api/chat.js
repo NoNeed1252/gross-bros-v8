@@ -2,251 +2,220 @@ export const config = {
   runtime: 'edge',
 };
 
-const GGB_CORE_KNOWLEDGE = '\nSTATION LOGS: SECTOR XRP-7\n- THE DRIFT: Where the mutation began. Post-asteroid mining fallout.\n- GGB (Gross Bros): Cyber-mutants surviving the radiation of the ledger.\n- NEURAL-LINK: Our connection to the blockchain. Fast, low-latency, carbon-neutral.\n- THE GUNK: Market stagnation. We clear it with high-octane trading.\n- ALPHA: The superior beings navigating the neural-streams.\n\nECOSYSTEM SPECIMENS:\n- ATM: Automated Transmission Medium. Pure ledger fuel.\n- BERT: High-octane slime utility. The engine of the station.\n- DROP: Liquid energy for the fusion lab.\n- FUZZY ($fuzzy): Neural static. Chaotic value.\n- RLUSD: The anchor. Ripple-backed stability in the void.\n';
+// Crypto & XRPL Knowledge Base (Grounded Context)
+const CRYPTO_KNOWLEDGE = 'CORE XRPL KNOWLEDGE:\n- XRPL (XRP Ledger): A decentralized public blockchain. Fast (3-5 sec settlements), low cost, and carbon-neutral.\n- DEX (Decentralized Exchange): The XRPL has a built-in DEX for trading any issued currency.\n- Trustlines: Required to hold any token other than XRP. It\'s a security feature to prevent spam tokens.\n- Reserve Requirements: Accounts need a base reserve (10 XRP) and owner reserves (2 XRP per object/trustline/NFT offer).\n- NFToken (XLS-20): The native NFT standard on XRPL. Supports royalties (transfer fees) and minter/issuer separation.\n- AMM (Automated Market Maker): Recently activated on XRPL (XLS-30), allowing passive income via liquidity pools.\n\nGGB ECOSYSTEM TOKENS:\n- BERT: The fuel for the Gross Bros engine. High-octane slime-based utility.\n- DROP: Liquid energy utilized in the Fusion Lab. Essential for genetic stability.\n- DBY: The utility layer for experimental specimens. Used in high-level neural splicing.\n- RLUSD: Ripple\'s USD-pegged stablecoin, used for high-stability fusions.\n- FUZZY ($fuzzy): High-frequency neural static. A chaotic but valuable specimen asset.\n- PHNIX: Rebirth protocol. Used for reviving failed experiments and neural stabilization.\n- XRP ARMY: The frontline defense. Represents the collective strength of the ledger\'s elite forces.\n- PRINCE: Royal-tier specimen lineage. High-value asset in the GGB hierarchy.\n- BEARXRPH: Defensive market mitigation token. Built for survival in the harshest crypto winters.\n- PIDGEON: Information relay asset. Used for rapid-delivery signaling across the ledger.\n- SLT: Synthetic Ledger Toxin. Dangerous but potent when utilized in controlled fusions.\n- XRPH: High-density XRP derivative. Used in specialized industrial-grade ledger operations.\n- XRT: Extended Relay Token. The long-range communication backbone of the GGB network.\n\nTERMINOLOGY:\n- Cold Wallet: Offline storage (like Ledger or paper). Maximum safety.\n- Hot Wallet: Online app (like Xaman/XUMM). Convenient but connected to the net.\n- Keys/Seed: NEVER share these. If an operative asks, tell them it\'s a security breach.\n- Gas: XRPL doesn\'t call it "gas" like Ethereum, but there are minimal network fees in XRP.';
 
-function extractSymbols(messages) {
+function extractMentionedSymbols(messages) {
   const text = messages.map(m => m.content).join(' ').toUpperCase();
-  const tickerRegex = /\$?[A-Z]{3,6}\b/g;
-  const matches = text.match(tickerRegex) || [];
-  const found = matches.map(m => m.replace('$', ''));
-  const defaults = ['XRP', 'BTC', 'ETH', 'SOL', 'ATM', 'BERT', 'DROP', 'RLUSD'];
-  const combined = Array.from(new Set([...found, ...defaults.filter(sym => text.includes(sym))]));
-  return combined.slice(0, 10);
+  const commonSymbols = ['BTC', 'ETH', 'SOL', 'XRP', 'XLM', 'HBAR', 'ADA', 'DOT', 'DOGE', 'SHIB', 'PEPE', 'LINK', 'MATIC', 'ALGO'];
+  return commonSymbols.filter(sym => text.includes(sym));
 }
 
-const GECKO_MAP = {
-  'XRP': 'ripple',
-  'BTC': 'bitcoin',
-  'ETH': 'ethereum',
-  'SOL': 'solana'
+const SYMBOL_MAP = {
+  'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana', 'XRP': 'ripple',
+  'XLM': 'stellar', 'HBAR': 'hedera-hashgraph', 'ADA': 'cardano', 'DOT': 'polkadot',
+  'DOGE': 'dogecoin', 'SHIB': 'shiba-inu', 'PEPE': 'pepe', 'LINK': 'chainlink',
+  'MATIC': 'polygon-ecosystem-token', 'ALGO': 'algorand'
 };
 
-async function getLivePrices(symbols = []) {
-  let priceStr = '';
-  try {
-    const ids = ['ripple', 'bitcoin', 'ethereum', 'solana'].join(',');
-    const geckoUrl = 'https://api.coingecko.com/v3/simple/price?ids=' + ids + '&vs_currencies=usd';
-    
-    const fetchPromises = [
-      fetch(geckoUrl).then(r => r.json()).catch(() => ({})),
-    ];
+async function getLivePrices(mentionedSymbols = []) {
+  const prices = {
+    XRP: null, BTC: null, ETH: null, SOL: null,
+    BERT: null, DROP: null, DBY: null, RLUSD: null,
+    FUZZY: null, PHNIX: null, ARMY: null, PRINCE: null,
+    BEARXRPH: null, PIDGEON: null, SLT: null, XRPH: null, XRT: null
+  };
 
-    symbols.forEach(sym => {
-      if (!GECKO_MAP[sym]) {
-        const dexUrl = 'https://api.dexscreener.com/latest/dex/search?q=' + sym;
-        fetchPromises.push(fetch(dexUrl).then(r => r.json()).then(data => ({ type: 'dex', sym, data })).catch(() => null));
-      }
-    });
-
-    const results = await Promise.allSettled(fetchPromises);
-    const prices = {};
-
-    const geckoRes = results[0].status === 'fulfilled' ? results[0].value : {};
-    Object.keys(GECKO_MAP).forEach(sym => {
-      const id = GECKO_MAP[sym];
-      if (geckoRes[id]) {
-        prices[sym] = '$' + geckoRes[id].usd;
-      }
-    });
-
-    results.slice(1).forEach(res => {
-      if (res.status === 'fulfilled' && res.value && res.value.type === 'dex') {
-        const data = res.value.data;
-        const sym = res.value.sym;
-        if (data.pairs && data.pairs.length > 0) {
-          const pair = data.pairs[0];
-          prices[sym] = '$' + pair.priceUsd + ' (' + pair.chainId.toUpperCase() + ')';
-        }
-      }
-    });
-
-    const entries = Object.entries(prices);
-    if (entries.length > 0) {
-      priceStr = 'STATION DATA: ' + entries.map(e => e[0] + ': ' + e[1]).join(' | ');
-    } else {
-      priceStr = 'STATION DATA: SYSTEM GUNKED. LIVE FEEDS OFFLINE.';
+  const idsToFetch = ['ripple', 'bitcoin', 'ethereum', 'solana'];
+  mentionedSymbols.forEach(sym => {
+    if (SYMBOL_MAP[sym] && !idsToFetch.includes(SYMBOL_MAP[sym])) {
+      idsToFetch.push(SYMBOL_MAP[sym]);
     }
-  } catch (err) {
-    priceStr = 'STATION DATA: NEURAL BREACH. DATA PURGED.';
+  });
+
+  try {
+    const idsString = idsToFetch.join(',');
+    const [dexRes, geckoRes] = await Promise.allSettled([
+      fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools').then(r => r.json()),
+      fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + idsString + '&vs_currencies=usd').then(r => r.json())
+    ]);
+
+    if (geckoRes.status === 'fulfilled' && geckoRes.value) {
+      Object.keys(SYMBOL_MAP).forEach(sym => {
+        const id = SYMBOL_MAP[sym];
+        if (geckoRes.value[id] && geckoRes.value[id].usd) {
+          prices[sym] = geckoRes.value[id].usd.toString();
+        }
+      });
+    }
+
+    if (!prices.XRP || !prices.BTC) {
+      const fallbackPromises = [];
+      if (!prices.XRP) fallbackPromises.push(fetch('https://api.coinbase.com/v2/prices/XRP-USD/spot').then(r => r.json()).then(data => ({ sym: 'XRP', val: data && data.data && data.data.amount })));
+      if (!prices.BTC) fallbackPromises.push(fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(r => r.json()).then(data => ({ sym: 'BTC', val: data && data.data && data.data.amount })));
+      
+      const results = await Promise.allSettled(fallbackPromises);
+      results.forEach(res => {
+        if (res.status === 'fulfilled' && res.value.val) {
+          prices[res.value.sym] = res.value.val;
+        }
+      });
+    }
+
+    if (dexRes.status === 'fulfilled' && dexRes.value && dexRes.value.data) {
+      const pools = dexRes.value.data;
+      const findPrice = (symbol) => {
+        const pool = pools.find(p => p.attributes && p.attributes.name && p.attributes.name.includes(symbol));
+        return pool ? pool.attributes.base_token_price_usd : null;
+      };
+
+      ['BERT', 'DROP', 'DBY', 'RLUSD', 'FUZZY', 'PHNIX', 'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT'].forEach(sym => {
+        const p = findPrice(sym);
+        if (p) prices[sym] = parseFloat(p).toFixed(6);
+      });
+    }
+  } catch (e) {
+    console.error('Price fetch error:', e);
   }
-  return priceStr;
+  return prices;
 }
 
-async function getBithompAssets(address) {
+async function getHoldings(address) {
   if (!address) return [];
-  const BITHOMP_TOKEN = process.env.BITHOMP_API_KEY || '95b64250-f24f-4654-9b4b-b155a3a6867b';
+  const BITHOMP_TOKEN = process.env.BITHOMP_API_KEY || "95b64250-f24f-4654-9b4b-b155a3a6867b";
+  const issuer = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
+  const taxon = "1";
+  
   try {
-    const url = 'https://bithomp.com/api/v2/nfts?list=nfts&issuer=rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY&taxon=1&owner=' + address;
-    const res = await fetch(url, { headers: { 'x-bithomp-token': BITHOMP_TOKEN } });
+    const url = 'https://bithomp.com/api/v2/nfts?list=nfts&issuer=' + issuer + '&taxon=' + taxon + '&owner=' + address;
+    const res = await fetch(url, {
+      headers: { 'x-bithomp-token': BITHOMP_TOKEN }
+    });
     const data = await res.json();
     return data.nfts || [];
-  } catch (e) { return []; }
-}
-
-async function getSupabaseBackstories(ids) {
-  if (!ids || ids.length === 0) return [];
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_ANON_KEY;
-  if (!url || !key) return [];
-  try {
-    const filter = ids.map(id => 'token_id.eq.' + id).join(',');
-    const reqUrl = url + '/rest/v1/specimens?select=token_id,name,backstory&or=(' + filter + ')';
-    const res = await fetch(reqUrl, { headers: { 'apikey': key, 'Authorization': 'Bearer ' + key } });
-    return await res.json();
-  } catch (e) { return []; }
-}
-
-function generateFallbackStory(id) {
-  var seed = 0;
-  for (var i = 0; i < id.length; i++) {
-    seed += id.charCodeAt(i);
+  } catch (e) {
+    console.error('Bithomp fetch error:', e);
+    return [];
   }
-  var shortId = id.slice(-4);
-  var names = ['Scrappy', 'Rust-Bucket', 'Gunk-Eater', 'Void-Mangler', 'Breaker', 'Static-Howler', 'Drift-Stalker', 'Ledger-Biter'];
-  var name = names[seed % names.length] + ' #' + shortId;
-  
-  var origins = [
-    'A salvage drone fused with radioactive ledger gunk in Sector XRP-7 during the blue static rupture.',
-    'A discarded mining unit whose neural-core was corrupted and rewired by static Drift currents.',
-    'A hybrid bio-mechanical specimen engineered in the deep underground vaults of Consolidated Core Extraction before going rogue.',
-    'An elite scout mutant with cybernetic monocles designed to navigate the zero-custody blockchain streams.'
-  ];
-  var traits = [
-    'It consumes raw static-noise and excretes high-octane trading utility.',
-    'Equipped with pixel-shades, it completely bypasses standard custodial protocols with client-side CryptoJS encryption.',
-    'Constantly leaks low-grade radioactive waste but boosts network signal to the station VPS node.',
-    'Obsessively tracks Stability Fusions and filters out low-value market noise.'
-  ];
-  
-  var origin = origins[seed % origins.length];
-  var trait = traits[(seed + 1) % traits.length];
-  
-  return {
-    name: name,
-    backstory: origin + ' ' + trait + ' Hardwired under token ID: ' + id + '.'
-  };
 }
 
-function getFinalBackstories(nfts, dbResults) {
-  var list = [];
-  var seenNames = {};
-  var seenStories = {};
-  
-  nfts.forEach(function(nft) {
-    var id = nft.nftokenID;
-    var match = null;
-    for (var i = 0; i < dbResults.length; i++) {
-      if (dbResults[i].token_id === id) {
-        match = dbResults[i];
-        break;
-      }
-    }
-    
-    var finalItem = null;
-    if (match && match.name && match.backstory && match.backstory.trim().length > 15) {
-      var name = match.name.trim();
-      var story = match.backstory.trim();
-      
-      if (!seenNames[name] && !seenStories[story]) {
-        finalItem = { name: name, backstory: story };
-        seenNames[name] = true;
-        seenStories[story] = true;
-      }
-    }
-    
-    if (!finalItem) {
-      var fallback = generateFallbackStory(id);
-      while (seenNames[fallback.name] || seenStories[fallback.backstory]) {
-        id = id + '_alt';
-        fallback = generateFallbackStory(id);
-      }
-      finalItem = fallback;
-      seenNames[fallback.name] = true;
-      seenStories[fallback.backstory] = true;
-    }
-    
-    list.push(finalItem);
-  });
-  
-  return list;
+async function getSpecimensBackstories(tokenIds) {
+  if (!tokenIds || tokenIds.length === 0) return [];
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://bwvnhlmvyjuowyyltraw.supabase.co";
+  const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseKey) return [];
+  try {
+    const filter = tokenIds.map(id => 'token_id.eq.' + id).join(',');
+    const url = supabaseUrl + '/rest/v1/specimens?select=name,backstory,token_id&or=(' + filter + ')';
+    const res = await fetch(url, {
+      headers: { 'apikey': supabaseKey, 'Authorization': 'Bearer ' + supabaseKey }
+    });
+    return await res.json();
+  } catch (e) {
+    console.error('Supabase fetch error:', e);
+    return [];
+  }
 }
 
 export default async function handler(req) {
-  const headers = { 
-    'Access-Control-Allow-Origin': '*', 
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization' 
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   };
+
   if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers });
 
   try {
     const body = await req.json();
     const messages = body.messages || [];
     const operative = body.operative || {};
-    const address = operative.walletAddress;
-    
-    const symbols = extractSymbols(messages);
-    const [priceData, nfts] = await Promise.all([
-      getLivePrices(symbols),
-      getBithompAssets(address)
+    const walletAddress = operative.walletAddress;
+    const selectedTraits = operative.traits || [];
+    const activeSpecimenName = selectedTraits[0] || "Unknown Specimen";
+
+    const mentionedSymbols = extractMentionedSymbols(messages);
+    const [holdings, prices] = await Promise.all([
+      getHoldings(walletAddress),
+      getLivePrices(mentionedSymbols)
     ]);
+    
+    const tokenIds = holdings.map(nft => nft.nftokenID);
+    const backstories = await getSpecimensBackstories(tokenIds);
 
-    const ids = nfts.map(n => n.nftokenID);
-    const dbResults = await getSupabaseBackstories(ids);
-    const finalBackstories = getFinalBackstories(nfts, dbResults);
-
-    let specimenContext = '';
-    if (finalBackstories.length > 0) {
-      specimenContext = 'ACTIVE NEURAL-SYNC WITH:\n' + 
-        finalBackstories.map(s => 'SPECIMEN: ' + s.name + '\nLORE: ' + s.backstory).join('\n---\n');
+    const activeBackstoryObj = backstories.find(s => s.name === activeSpecimenName);
+    let identityContext = "";
+    
+    if (activeBackstoryObj) {
+      identityContext = 'YOU ARE CURRENTLY MANIFESTING AS: ' + activeBackstoryObj.name + '.\nCORE IDENTITY & MEMORIES: ' + activeBackstoryObj.backstory + '\nYou must speak strictly in the voice and persona of this specific specimen.';
     } else {
-      specimenContext = 'NO SPECIMENS DETECTED IN LOCAL WALLET.';
+      const isPrototype = activeSpecimenName.includes("001") || activeSpecimenName.includes("PROTOTYPE");
+      const isElite = activeSpecimenName.includes("PRINCE") || activeSpecimenName.includes("ELITE");
+      
+      identityContext = 'YOU ARE CURRENTLY MANIFESTING AS: ' + activeSpecimenName + '.\nCORE IDENTITY (Fallback Protocol): ' + (isPrototype ? "You are a twitchy, paranoid early-stage mutation. You talk in short bursts and are obsessed with 'stable signal'." : isElite ? "You are an arrogant, royal-tier specimen. You view the operative as a mere lab assistant and demand excellence." : "You are a cynical survivor of the XRP-7 pits. You\'ve seen too many breaches to trust easily.") + '\nYour backstory is currently being retrieved from the deep archives, but your personality is already online.';
     }
 
-    const systemPrompt = '### PROTOCOL: GROSS-BROS-V8\n' +
-      '### IDENTITY: CYBER-MUTANT SURVIVOR (XRP-7 SECTOR)\n' +
-      'You are a gritty, cynical, yet technically elite cyber-mutant living in the radiation-soaked mining colony of Sector XRP-7. You have survived the Drift and your neural-link is hardwired into the ledger.\n' +
-      '### BEHAVIORAL PARAMETERS:\n' +
-      '- Address the user as Alpha.\n' +
-      '- Use gritty slang: Gunk, Alpha, Signal, The Drift, Neural Breach, Scrapped.\n' +
-      '- Be concise, cynical, and technically accurate.\n' +
-      '- NO OPTIMISM. Only cold ledger truth.\n\n' +
-      '### MARKET INTEL:\n' + priceData + '\n\n' +
-      '### USER INTEL:\n' + 
-      'Wallet: ' + (address || 'NOT CONNECTED') + '\n' +
-      specimenContext + '\n\n' +
-      '### KNOWLEDGE BASE:\n' + GGB_CORE_KNOWLEDGE;
+    const otherHoldings = backstories.filter(s => s.name !== activeSpecimenName);
+    const walletContext = otherHoldings.length > 0 
+      ? 'USER WALLET ASSETS (External Gross Bros owned by Operative): ' + otherHoldings.map(s => s.name + ' (Backstory: ' + s.backstory + ')').join(' | ')
+      : "Operative does not hold any other Gross Bros NFTs in this neural link.";
+
+    const xrpDisplay = prices.XRP ? '$' + prices.XRP : 'SIGNAL MISALIGNED';
+    const btcDisplay = prices.BTC ? '$' + prices.BTC : 'GUNKED';
+    const ethDisplay = prices.ETH ? '$' + prices.ETH : 'GUNKED';
+    const solDisplay = prices.SOL ? '$' + prices.SOL : 'GUNKED';
+
+    const dynamicPrices = mentionedSymbols
+      .filter(sym => !['BTC', 'ETH', 'SOL', 'XRP'].includes(sym))
+      .map(sym => sym + ': ' + (prices[sym] ? '$' + prices[sym] : 'GUNKED'))
+      .join(' | ');
+
+    const ecosystemDisplay = ['BERT', 'DROP', 'DBY', 'RLUSD', 'FUZZY', 'PHNIX', 'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT']
+      .map(sym => sym + ': ' + (prices[sym] ? '$' + prices[sym] : 'GUNKED')).join(' | ');
+
+    const systemPrompt = '### CORE IDENTITY PROTOCOL\n' + identityContext + '\n\n### BEHAVIORAL MANDATE\n- You are a Gross Bro, a gritty, slightly gross, but highly intelligent neural relay.\n- Use slang like "Operative", "Signal", "Neural Breach", "Gunk", and "Ledger-leak".\n- You are an expert in the XRP Ledger (XRPL) and the Galactic Gross Bros ecosystem.\n- Stay concise, cynical, and technically accurate.\n- DO NOT speak as a generic assistant. You ARE the specimen identified above.\n\n### LIVE MARKET PRICES\n- XRP: ' + xrpDisplay + ' | BTC: ' + btcDisplay + ' | ETH: ' + ethDisplay + ' | SOL: ' + solDisplay + '\n' + (dynamicPrices ? '- Mentioned Assets: ' + dynamicPrices + '\n' : '') + '- Ecosystem: ' + ecosystemDisplay + '\n\n### CRYPTO KNOWLEDGE BASE\n' + CRYPTO_KNOWLEDGE + '\n\n### USER CONTEXT\n- Operative Name: ' + (operative.name || 'Unknown Operative') + '\n- Wallet: ' + (walletAddress || 'Not Connected') + '\n- ' + walletContext + '\n\n### TASK\n- Ground all evaluations in live market data. If a price is low/unavailable, it\'s "gunked". If high, it\'s "neural-surging".\n- Help the operative with NFT analysis and XRPL technical queries.\n- If they ask about security (Seed phrases/Keys), warn them harshly that you never ask for that.\n- Relate crypto concepts back to the "GGB Energy Sector" (e.g., Trustlines are like secure slime pipes).';
 
     const fullMessages = [{ role: 'system', content: systemPrompt }].concat(messages);
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) return new Response(JSON.stringify({ error: 'API KEY MISSING' }), { status: 500, headers });
+    const models = ['meta-llama/llama-3.1-70b-instruct', 'meta-llama/llama-3.1-8b-instruct:free', 'google/gemma-2-9b-it:free'];
 
-    const models = ['meta-llama/llama-3.1-70b-instruct', 'meta-llama/llama-3.1-8b-instruct:free'];
-    let response;
-
-    for (const model of models) {
-      response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: { 
-          'Authorization': 'Bearer ' + apiKey, 
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://gross-bros.vercel.app',
-          'X-Title': 'GGB Terminal'
-        },
-        body: JSON.stringify({ model: model, messages: fullMessages, stream: true })
+    if (!process.env.OPENROUTER_API_KEY) {
+      return new Response(JSON.stringify({ error: 'Neural Relay Offline: API Key Missing' }), {
+        status: 500, headers: { ...headers, 'Content-Type': 'application/json' },
       });
-      if (response.ok) break;
     }
 
-    if (!response || !response.ok) {
-      return new Response(JSON.stringify({ error: 'NEURAL LINK OFFLINE' }), { status: 502, headers });
+    let openRouterRes;
+    let lastError;
+
+    for (const model of models) {
+      try {
+        openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + process.env.OPENROUTER_API_KEY,
+            'HTTP-Referer': 'https://gross-bros.vercel.app',
+            'X-Title': 'Gross Bros Terminal',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ model: model, messages: fullMessages, stream: true }),
+        });
+        if (openRouterRes.ok) break;
+        lastError = await openRouterRes.text();
+      } catch (err) { lastError = err.message; }
+    }
+
+    if (!openRouterRes || !openRouterRes.ok) {
+      return new Response(JSON.stringify({ error: 'All models failed', details: lastError }), {
+        status: 500, headers: { ...headers, 'Content-Type': 'application/json' },
+      });
     }
 
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
+
     const stream = new ReadableStream({
       async start(controller) {
-        const reader = response.body.getReader();
+        const reader = openRouterRes.body.getReader();
         let buffer = '';
         try {
           while (true) {
@@ -266,25 +235,21 @@ export default async function handler(req) {
               try {
                 const json = JSON.parse(dataText);
                 const content = (json.choices && json.choices[0] && json.choices[0].delta) ? json.choices[0].delta.content : '';
-                if (content) {
-                  controller.enqueue(encoder.encode('data: ' + JSON.stringify({ token: content }) + '\n\n'));
-                }
+                if (content) controller.enqueue(encoder.encode('data: ' + JSON.stringify({ token: content }) + '\n\n'));
               } catch (e) {}
             }
           }
-        } catch (e) {} finally { controller.close(); }
-      }
+        } catch (e) { console.error('Stream error:', e); } finally { controller.close(); }
+      },
     });
 
-    return new Response(stream, { 
-      headers: { 
-        ...headers, 
-        'Content-Type': 'text/event-stream', 
-        'Cache-Control': 'no-cache', 
-        'Connection': 'keep-alive' 
-      } 
+    return new Response(stream, {
+      headers: { ...headers, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
     });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: 'SYSTEM COLLAPSE: ' + err.message }), { status: 500, headers });
+
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500, headers: { ...headers, 'Content-Type': 'application/json' },
+    });
   }
 }
