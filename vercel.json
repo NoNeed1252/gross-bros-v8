@@ -1,8 +1,17 @@
 {
   "rewrites": [
-    { "source": "/api/chat", "destination": "/api/chat.js" },
-    { "source": "/api/xaman", "destination": "/api/xaman.js" },
-    { "source": "/api/nft", "destination": "/api/nft.js" }
+    {
+      "source": "/api/chat",
+      "destination": "/api/chat.js"
+    },
+    {
+      "source": "/api/xaman",
+      "destination": "/api/xaman.js"
+    },
+    {
+      "source": "/api/nft",
+      "destination": "/api/nft.js"
+    }
   ],
   "env": {
     "FORCE_REDEPLOY": "2026-06-11T22:15:00Z"
