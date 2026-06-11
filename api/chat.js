@@ -2,7 +2,32 @@ export const config = {
   runtime: 'edge',
 };
 
-const CRYPTO_KNOWLEDGE = 'CORE XRPL KNOWLEDGE:\n- XRPL (XRP Ledger): A decentralized public blockchain. Fast (3-5 sec settlements), low cost, and carbon-neutral.\n- DEX (Decentralized Exchange): The XRPL has a built-in DEX for trading any issued currency.\n- Trustlines: Required to hold any token other than XRP. It is a security feature.\n- AMM (Automated Market Maker): Recently activated on XLS-30.\n\nGGB ECOSYSTEM TOKENS:\n- BERT: Fuel for Gross Bros engine.\n- DROP: Liquid energy for Fusion Lab.\n- DBY: Utility for specimens.\n- RLUSD: Ripple USD stablecoin.\n- FUZZY ($fuzzy): Neural static asset.\n- PHNIX: Rebirth protocol.\n- XRP ARMY: Frontline defense.\n- PRINCE: Royal-tier lineage.\n- BEARXRPH: Defensive mitigation.\n- PIDGEON: Information relay.\n- SLT: Synthetic Ledger Toxin.\n- XRPH: Industrial-grade derivative.\n- XRT: Backbone communication.\n\nTERMINOLOGY:\n- Cold Wallet: Offline safety.\n- Hot Wallet: Connected app.\n- Keys/Seed: NEVER share.\n- First Ledger: Primary breeding ground for meme-specimens.';
+const CRYPTO_KNOWLEDGE = 'CORE XRPL KNOWLEDGE:
+- XRPL (XRP Ledger): A decentralized public blockchain. Fast (3-5 sec settlements), low cost, and carbon-neutral.
+- DEX (Decentralized Exchange): The XRPL has a built-in DEX for trading any issued currency.
+- Trustlines: Required to hold any token other than XRP. It is a security feature.
+- AMM (Automated Market Maker): Recently activated on XLS-30.
+
+GGB ECOSYSTEM TOKENS:
+- BERT: Fuel for Gross Bros engine.
+- DROP: Liquid energy for Fusion Lab.
+- DBY: Utility for specimens.
+- RLUSD: Ripple USD stablecoin.
+- FUZZY ($fuzzy): Neural static asset.
+- PHNIX: Rebirth protocol.
+- XRP ARMY: Frontline defense.
+- PRINCE: Royal-tier lineage.
+- BEARXRPH: Defensive mitigation.
+- PIDGEON: Information relay.
+- SLT: Synthetic Ledger Toxin.
+- XRPH: Industrial-grade derivative.
+- XRT: Backbone communication.
+
+TERMINOLOGY:
+- Cold Wallet: Offline safety.
+- Hot Wallet: Connected app.
+- Keys/Seed: NEVER share.
+- First Ledger: Primary breeding ground for meme-specimens.';
 
 async function getLivePrices(mentionedSymbols = []) {
   const prices = {};
@@ -10,8 +35,7 @@ async function getLivePrices(mentionedSymbols = []) {
   const idsToFetch = ['ripple', 'bitcoin', 'ethereum', 'solana'];
   
   try {
-    const idsString = idsToFetch.join(',');
-    const geckoUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=' + idsString + '&vs_currencies=usd';
+    const geckoUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=' + idsToFetch.join(',') + '&vs_currencies=usd';
     const xrplUrl = 'https://api.geckoterminal.com/api/v2/networks/xrpl/pools';
     
     const results = await Promise.allSettled([
@@ -137,8 +161,10 @@ async function get_token_comprehensive_info(query) {
 }
 
 async function get_recent_token_news(query) {
+  const apiKey = process.env.CRYPTOPANIC_API_KEY;
+  if (!apiKey) return 'News relay disabled (no API key).';
   try {
-    const newsUrl = 'https://cryptopanic.com/api/v1/posts/?auth_token=' + (process.env.CRYPTOPANIC_API_KEY || '') + '&currencies=' + query;
+    const newsUrl = 'https://cryptopanic.com/api/v1/posts/?auth_token=' + apiKey + '&currencies=' + query;
     const res = await fetch(newsUrl).then(function(r) { return r.json(); });
     if (res && res.results && res.results.length > 0) {
       return res.results.slice(0, 3).map(function(n) { 
@@ -233,6 +259,9 @@ export default async function handler(req) {
       }
     ];
 
+    const openRouterKey = process.env.OPENROUTER_API_KEY;
+    if (!openRouterKey) throw new Error('Missing OPENROUTER_API_KEY');
+
     async function callOpenRouter(msgs, includeTools) {
       const payload = {
         model: 'meta-llama/llama-3.1-70b-instruct',
@@ -245,7 +274,7 @@ export default async function handler(req) {
       return fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer ' + process.env.OPENROUTER_API_KEY,
+          'Authorization': 'Bearer ' + openRouterKey,
           'HTTP-Referer': 'https://gross-bros.vercel.app',
           'X-Title': 'Gross Bros Terminal',
           'Content-Type': 'application/json'
@@ -256,6 +285,9 @@ export default async function handler(req) {
 
     let response = await callOpenRouter(currentMessages, true);
     let resultJson = await response.json();
+    
+    if (resultJson.error) throw new Error(resultJson.error.message || 'OpenRouter error');
+    
     const choice = resultJson.choices[0];
 
     if (choice.message && choice.message.tool_calls) {
