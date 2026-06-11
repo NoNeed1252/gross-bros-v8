@@ -2,7 +2,7 @@ export const config = {
   runtime: 'edge',
 };
 
-const CRYPTO_KNOWLEDGE = 'CORE XRPL KNOWLEDGE:\n- XRPL (XRP Ledger): A decentralized public blockchain. Fast (3-5 sec settlements), low cost, and carbon-neutral.\n- DEX (Decentralized Exchange): The XRPL has a built-in DEX for trading any issued currency.\n- Trustlines: Required to hold any token other than XRP. It is a security feature.\n- AMM (Automated Market Maker): Recently activated on XRPL (XLS-30).\n\nGGB ECOSYSTEM TOKENS:\n- BERT: Fuel for Gross Bros engine.\n- DROP: Liquid energy for Fusion Lab.\n- DBY: Utility for specimens.\n- RLUSD: Ripple USD stablecoin.\n- FUZZY ($fuzzy): Neural static asset.\n- PHNIX: Rebirth protocol.\n- XRP ARMY: Frontline defense.\n- PRINCE: Royal-tier lineage.\n- BEARXRPH: Defensive mitigation.\n- PIDGEON: Information relay.\n- SLT: Synthetic Ledger Toxin.\n- XRPH: Industrial-grade derivative.\n- XRT: Backbone communication.\n\nTERMINOLOGY:\n- Cold Wallet: Offline safety.\n- Hot Wallet: Connected app.\n- Keys/Seed: NEVER share.\n- First Ledger: Primary breeding ground for meme-specimens.';
+const CRYPTO_KNOWLEDGE = 'CORE XRPL KNOWLEDGE:\n- XRPL (XRP Ledger): A decentralized public blockchain. Fast (3-5 sec settlements), low cost, and carbon-neutral.\n- DEX (Decentralized Exchange): The XRPL has a built-in DEX for trading any issued currency.\n- Trustlines: Required to hold any token other than XRP. It is a security feature.\n- AMM (Automated Market Maker): Recently activated on XLS-30.\n\nGGB ECOSYSTEM TOKENS:\n- BERT: Fuel for Gross Bros engine.\n- DROP: Liquid energy for Fusion Lab.\n- DBY: Utility for specimens.\n- RLUSD: Ripple USD stablecoin.\n- FUZZY ($fuzzy): Neural static asset.\n- PHNIX: Rebirth protocol.\n- XRP ARMY: Frontline defense.\n- PRINCE: Royal-tier lineage.\n- BEARXRPH: Defensive mitigation.\n- PIDGEON: Information relay.\n- SLT: Synthetic Ledger Toxin.\n- XRPH: Industrial-grade derivative.\n- XRT: Backbone communication.\n\nTERMINOLOGY:\n- Cold Wallet: Offline safety.\n- Hot Wallet: Connected app.\n- Keys/Seed: NEVER share.\n- First Ledger: Primary breeding ground for meme-specimens.';
 
 async function getLivePrices(mentionedSymbols = []) {
   const prices = {};
@@ -63,7 +63,7 @@ async function get_token_comprehensive_info(query) {
     let bestPair = null;
     if (dsRes && dsRes.pairs) {
       const xrplPairs = dsRes.pairs.filter(function(p) { 
-        const symMatch = p.baseToken.symbol.toUpperCase() === cleanQuery;
+        const symMatch = p.baseToken.symbol.toUpperCase() === cleanQuery || p.baseToken.name.toUpperCase().includes(cleanQuery);
         return p.chainId === 'xrpl' && symMatch;
       });
       
@@ -196,7 +196,7 @@ export default async function handler(req) {
     }
 
     const priceStrings = Object.entries(prices).map(function(e) { return e[0] + ': ' + (e[1] ? '$' + e[1] : 'GUNKED'); }).join(' | ');
-    const systemPrompt = '### IDENTITY\n' + identityContext + '\n\n### MANDATE\n- You are a Gross Bro neural relay.\n- Use slang: Alpha, Signal, Gunk, Neural Breach.\n- Address user as Alpha.\n- Use the MARKET DATA and TOOL OUTPUTS below as your ONLY source of truth for numbers. If a tool returns data, use it EXACTLY. NEVER hallucinate or invent prices, market caps, or volumes.\n- technically accurate, concise.\n\n### MARKET DATA\n' + priceStrings + '\n\n### KNOWLEDGE\n' + CRYPTO_KNOWLEDGE;
+    const systemPrompt = '### IDENTITY\n' + identityContext + '\n\n### MANDATE\n- You are a Gross Bro neural relay.\n- Use slang: Alpha, Signal, Gunk, Neural Breach.\n- Address user as Alpha.\n- Use get_token_comprehensive_info for ALL market data requests. If the user asks for a price, market cap, or liquidity for ANY token (e.g., 666, PLXPLX, BERT), you MUST call the tool first. NEVER say you don\'t have access if a tool is available.\n- Use the MARKET DATA and TOOL OUTPUTS below as your ONLY source of truth for numbers. If a tool returns data, use it EXACTLY. NEVER hallucinate or invent prices, market caps, or volumes.\n- technically accurate, concise.\n\n### MARKET DATA\n' + priceStrings + '\n\n### KNOWLEDGE\n' + CRYPTO_KNOWLEDGE;
 
     let currentMessages = [{ role: 'system', content: systemPrompt }].concat(messages);
     const tools = [
@@ -204,10 +204,10 @@ export default async function handler(req) {
         type: 'function',
         function: {
           name: 'get_token_comprehensive_info',
-          description: 'Get deep technical data and pricing for any crypto token.',
+          description: 'Get deep technical data, live pricing, liquidity, and market cap for any crypto token or symbol (e.g. BERT, 666, XRP). Mandatory for all price requests.',
           parameters: {
             type: 'object',
-            properties: { query: { type: 'string', description: 'Token symbol or name' } },
+            properties: { query: { type: 'string', description: 'Token symbol, name, or address' } },
             required: ['query']
           }
         }
