@@ -63,7 +63,9 @@ async function get_token_comprehensive_info(query) {
     let bestPair = null;
     if (dsRes && dsRes.pairs) {
       const xrplPairs = dsRes.pairs.filter(function(p) { 
-        const symMatch = p.baseToken.symbol.toUpperCase() === cleanQuery || p.baseToken.name.toUpperCase().includes(cleanQuery);
+        const baseSym = (p.baseToken.symbol || '').toUpperCase();
+        const baseName = (p.baseToken.name || '').toUpperCase();
+        const symMatch = baseSym === cleanQuery || baseName.includes(cleanQuery);
         return p.chainId === 'xrpl' && symMatch;
       });
       
@@ -95,7 +97,8 @@ async function get_token_comprehensive_info(query) {
     
     if (gtRes && gtRes.data) {
       const pool = gtRes.data.find(function(p) {
-        return p.attributes && p.attributes.name && p.attributes.name.toUpperCase().includes(cleanQuery);
+        const pName = (p.attributes.name || '').toUpperCase();
+        return pName.includes(cleanQuery);
       });
       if (pool) {
         details += '--- XRPL Ecosystem Data ---\n';
@@ -123,6 +126,10 @@ async function get_token_comprehensive_info(query) {
       }
     }
     
+    if (!bestPair && details.indexOf('---') === -1) {
+       return 'No active signal detected for ' + query + ' on the XRPL or global markets. The void is silent.';
+    }
+
     return details;
   } catch (e) {
     return 'Neural link disrupted for ' + query + '. Signal lost.';
