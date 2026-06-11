@@ -47,6 +47,7 @@ async function getLivePrices(mentionedSymbols = []) {
 async function get_token_comprehensive_info(query) {
   try {
     let details = 'Signal Analysis for: ' + query + '\n';
+    const cleanQuery = query.replace('$', '').toUpperCase();
     
     const dsUrl = 'https://api.dexscreener.com/latest/dex/search?q=' + encodeURIComponent(query);
     const gtUrl = 'https://api.geckoterminal.com/api/v2/networks/xrpl/new_pools';
@@ -61,11 +62,22 @@ async function get_token_comprehensive_info(query) {
     
     let bestPair = null;
     if (dsRes && dsRes.pairs) {
-      const xrplPairs = dsRes.pairs.filter(function(p) { return p.chainId === 'xrpl'; });
+      const xrplPairs = dsRes.pairs.filter(function(p) { 
+        const symMatch = p.baseToken.symbol.toUpperCase() === cleanQuery;
+        return p.chainId === 'xrpl' && symMatch;
+      });
+      
       if (xrplPairs.length > 0) {
-        bestPair = xrplPairs[0];
-      } else if (dsRes.pairs.length > 0) {
-        bestPair = dsRes.pairs[0];
+        bestPair = xrplPairs.sort(function(a, b) { 
+          return (parseFloat(b.liquidity?.usd || 0)) - (parseFloat(a.liquidity?.usd || 0)); 
+        })[0];
+      } else {
+        const anyXrpl = dsRes.pairs.find(function(p) { return p.chainId === 'xrpl'; });
+        if (anyXrpl) {
+          bestPair = anyXrpl;
+        } else if (dsRes.pairs.length > 0) {
+          bestPair = dsRes.pairs[0];
+        }
       }
     }
     
@@ -83,7 +95,7 @@ async function get_token_comprehensive_info(query) {
     
     if (gtRes && gtRes.data) {
       const pool = gtRes.data.find(function(p) {
-        return p.attributes && p.attributes.name && p.attributes.name.toUpperCase().includes(query.toUpperCase());
+        return p.attributes && p.attributes.name && p.attributes.name.toUpperCase().includes(cleanQuery);
       });
       if (pool) {
         details += '--- XRPL Ecosystem Data ---\n';
