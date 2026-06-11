@@ -90,10 +90,85 @@ async function getSupabaseBackstories(ids) {
   if (!url || !key) return [];
   try {
     const filter = ids.map(id => 'token_id.eq.' + id).join(',');
-    const reqUrl = url + '/rest/v1/specimens?select=name,backstory&or=(' + filter + ')';
+    const reqUrl = url + '/rest/v1/specimens?select=token_id,name,backstory&or=(' + filter + ')';
     const res = await fetch(reqUrl, { headers: { 'apikey': key, 'Authorization': 'Bearer ' + key } });
     return await res.json();
   } catch (e) { return []; }
+}
+
+function generateFallbackStory(id) {
+  var seed = 0;
+  for (var i = 0; i < id.length; i++) {
+    seed += id.charCodeAt(i);
+  }
+  var shortId = id.slice(-4);
+  var names = ['Scrappy', 'Rust-Bucket', 'Gunk-Eater', 'Void-Mangler', 'Breaker', 'Static-Howler', 'Drift-Stalker', 'Ledger-Biter'];
+  var name = names[seed % names.length] + ' #' + shortId;
+  
+  var origins = [
+    'A salvage drone fused with radioactive ledger gunk in Sector XRP-7 during the blue static rupture.',
+    'A discarded mining unit whose neural-core was corrupted and rewired by static Drift currents.',
+    'A hybrid bio-mechanical specimen engineered in the deep underground vaults of Consolidated Core Extraction before going rogue.',
+    'An elite scout mutant with cybernetic monocles designed to navigate the zero-custody blockchain streams.'
+  ];
+  var traits = [
+    'It consumes raw static-noise and excretes high-octane trading utility.',
+    'Equipped with pixel-shades, it completely bypasses standard custodial protocols with client-side CryptoJS encryption.',
+    'Constantly leaks low-grade radioactive waste but boosts network signal to the station VPS node.',
+    'Obsessively tracks Stability Fusions and filters out low-value market noise.'
+  ];
+  
+  var origin = origins[seed % origins.length];
+  var trait = traits[(seed + 1) % traits.length];
+  
+  return {
+    name: name,
+    backstory: origin + ' ' + trait + ' Hardwired under token ID: ' + id + '.'
+  };
+}
+
+function getFinalBackstories(nfts, dbResults) {
+  var list = [];
+  var seenNames = {};
+  var seenStories = {};
+  
+  nfts.forEach(function(nft) {
+    var id = nft.nftokenID;
+    var match = null;
+    for (var i = 0; i < dbResults.length; i++) {
+      if (dbResults[i].token_id === id) {
+        match = dbResults[i];
+        break;
+      }
+    }
+    
+    var finalItem = null;
+    if (match && match.name && match.backstory && match.backstory.trim().length > 15) {
+      var name = match.name.trim();
+      var story = match.backstory.trim();
+      
+      if (!seenNames[name] && !seenStories[story]) {
+        finalItem = { name: name, backstory: story };
+        seenNames[name] = true;
+        seenStories[story] = true;
+      }
+    }
+    
+    if (!finalItem) {
+      var fallback = generateFallbackStory(id);
+      while (seenNames[fallback.name] || seenStories[fallback.backstory]) {
+        id = id + '_alt';
+        fallback = generateFallbackStory(id);
+      }
+      finalItem = fallback;
+      seenNames[fallback.name] = true;
+      seenStories[fallback.backstory] = true;
+    }
+    
+    list.push(finalItem);
+  });
+  
+  return list;
 }
 
 export default async function handler(req) {
@@ -117,10 +192,16 @@ export default async function handler(req) {
     ]);
 
     const ids = nfts.map(n => n.nftokenID);
-    const backstories = await getSupabaseBackstories(ids);
-    const specimenContext = backstories.length > 0 
-      ? 'ACTIVE NEURAL-SYNC WITH: ' + backstories.map(s => s.name).join(', ')
-      : 'NO SPECIMENS DETECTED IN LOCAL WALLET.';
+    const dbResults = await getSupabaseBackstories(ids);
+    const finalBackstories = getFinalBackstories(nfts, dbResults);
+
+    let specimenContext = '';
+    if (finalBackstories.length > 0) {
+      specimenContext = 'ACTIVE NEURAL-SYNC WITH:\n' + 
+        finalBackstories.map(s => 'SPECIMEN: ' + s.name + '\nLORE: ' + s.backstory).join('\n---\n');
+    } else {
+      specimenContext = 'NO SPECIMENS DETECTED IN LOCAL WALLET.';
+    }
 
     const systemPrompt = '### PROTOCOL: GROSS-BROS-V8\n' +
       '### IDENTITY: CYBER-MUTANT SURVIVOR (XRP-7 SECTOR)\n' +
