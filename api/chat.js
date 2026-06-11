@@ -46,33 +46,74 @@ async function getLivePrices(mentionedSymbols = []) {
 
 async function get_token_comprehensive_info(query) {
   try {
-    const searchUrl = 'https://api.coingecko.com/api/v3/search?query=' + encodeURIComponent(query);
-    const searchRes = await fetch(searchUrl).then(function(r) { return r.json(); });
-    let details = 'Token Signal: ' + query + '\n';
+    let details = 'Signal Analysis for: ' + query + '\n';
     
-    if (searchRes && searchRes.coins && searchRes.coins.length > 0) {
-      const coinId = searchRes.coins[0].id;
-      const coinUrl = 'https://api.coingecko.com/api/v3/coins/' + coinId + '?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false';
-      const coinData = await fetch(coinUrl).then(function(r) { return r.json(); });
-      if (coinData && coinData.market_data) {
-        details += 'Price: $' + coinData.market_data.current_price.usd + '\n';
-        details += 'Market Cap: $' + coinData.market_data.market_cap.usd + '\n';
-        details += '24h Change: ' + coinData.market_data.price_change_percentage_24h + '%\n';
+    const dsUrl = 'https://api.dexscreener.com/latest/dex/search?q=' + encodeURIComponent(query);
+    const gtUrl = 'https://api.geckoterminal.com/api/v2/networks/xrpl/new_pools';
+    
+    const results = await Promise.allSettled([
+      fetch(dsUrl).then(function(r) { return r.json(); }),
+      fetch(gtUrl).then(function(r) { return r.json(); })
+    ]);
+    
+    const dsRes = results[0].status === 'fulfilled' ? results[0].value : null;
+    const gtRes = results[1].status === 'fulfilled' ? results[1].value : null;
+    
+    let bestPair = null;
+    if (dsRes && dsRes.pairs) {
+      const xrplPairs = dsRes.pairs.filter(function(p) { return p.chainId === 'xrpl'; });
+      if (xrplPairs.length > 0) {
+        bestPair = xrplPairs[0];
+      } else if (dsRes.pairs.length > 0) {
+        bestPair = dsRes.pairs[0];
       }
     }
     
-    const dexUrl = 'https://api.dexscreener.com/latest/dex/search?q=' + encodeURIComponent(query);
-    const dexRes = await fetch(dexUrl).then(function(r) { return r.json(); });
-    if (dexRes && dexRes.pairs && dexRes.pairs.length > 0) {
-      const pair = dexRes.pairs[0];
-      details += 'DEX Source: ' + pair.dexId + ' (' + pair.chainId + ')\n';
-      details += 'DEX Price: $' + pair.priceUsd + '\n';
-      details += '24h Volume: $' + pair.volume.h24 + '\n';
+    if (bestPair) {
+      details += '--- Market Data (DEX) ---\n';
+      details += 'Asset: ' + bestPair.baseToken.name + ' (' + bestPair.baseToken.symbol + ')\n';
+      details += 'Network: ' + bestPair.chainId + '\n';
+      details += 'DEX: ' + bestPair.dexId + '\n';
+      details += 'Price: $' + bestPair.priceUsd + '\n';
+      if (bestPair.liquidity) details += 'Liquidity: $' + bestPair.liquidity.usd + '\n';
+      if (bestPair.volume) details += '24h Volume: $' + bestPair.volume.h24 + '\n';
+      if (bestPair.marketCap) details += 'Market Cap: $' + bestPair.marketCap + '\n';
+      details += 'Pair: ' + bestPair.pairAddress + '\n\n';
+    }
+    
+    if (gtRes && gtRes.data) {
+      const pool = gtRes.data.find(function(p) {
+        return p.attributes && p.attributes.name && p.attributes.name.toUpperCase().includes(query.toUpperCase());
+      });
+      if (pool) {
+        details += '--- XRPL Ecosystem Data ---\n';
+        details += 'Pool: ' + pool.attributes.name + '\n';
+        details += 'Price: $' + pool.attributes.base_token_price_usd + '\n';
+        details += '24h Volume: $' + pool.attributes.volume_usd.h24 + '\n';
+        details += 'Liquidity: $' + pool.attributes.reserve_in_usd + '\n\n';
+      }
+    }
+
+    if (!bestPair) {
+      const cgUrl = 'https://api.coingecko.com/api/v3/search?query=' + encodeURIComponent(query);
+      const cgSearch = await fetch(cgUrl).then(function(r) { return r.json(); });
+      if (cgSearch && cgSearch.coins && cgSearch.coins.length > 0) {
+        const coinId = cgSearch.coins[0].id;
+        const cgDetailUrl = 'https://api.coingecko.com/api/v3/coins/' + coinId + '?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false';
+        const cgData = await fetch(cgDetailUrl).then(function(r) { return r.json(); });
+        if (cgData && cgData.market_data) {
+          details += '--- Global Market Data (CoinGecko) ---\n';
+          details += 'Asset: ' + cgData.name + '\n';
+          details += 'Price: $' + cgData.market_data.current_price.usd + '\n';
+          details += 'Market Cap: $' + cgData.market_data.market_cap.usd + '\n';
+          details += '24h Change: ' + cgData.market_data.price_change_percentage_24h + '%\n';
+        }
+      }
     }
     
     return details;
   } catch (e) {
-    return 'Error retrieving comprehensive info for ' + query;
+    return 'Neural link disrupted for ' + query + '. Signal lost.';
   }
 }
 
@@ -216,7 +257,6 @@ export default async function handler(req) {
       }
       response = await callOpenRouter(currentMessages, false);
     } else {
-      // If no tool call, we need to re-fetch as a stream for the UI
       response = await callOpenRouter(currentMessages, false);
     }
 
