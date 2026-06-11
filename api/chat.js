@@ -196,7 +196,7 @@ export default async function handler(req) {
     }
 
     const priceStrings = Object.entries(prices).map(function(e) { return e[0] + ': ' + (e[1] ? '$' + e[1] : 'GUNKED'); }).join(' | ');
-    const systemPrompt = '### IDENTITY\n' + identityContext + '\n\n### MANDATE\n- You are a Gross Bro neural relay.\n- Use slang: Alpha, Signal, Gunk, Neural Breach.\n- Address user as Alpha.\n- technically accurate, concise.\n\n### MARKET DATA\n' + priceStrings + '\n\n### KNOWLEDGE\n' + CRYPTO_KNOWLEDGE;
+    const systemPrompt = '### IDENTITY\n' + identityContext + '\n\n### MANDATE\n- You are a Gross Bro neural relay.\n- Use slang: Alpha, Signal, Gunk, Neural Breach.\n- Address user as Alpha.\n- Use the MARKET DATA and TOOL OUTPUTS below as your ONLY source of truth for numbers. If a tool returns data, use it EXACTLY. NEVER hallucinate or invent prices, market caps, or volumes.\n- technically accurate, concise.\n\n### MARKET DATA\n' + priceStrings + '\n\n### KNOWLEDGE\n' + CRYPTO_KNOWLEDGE;
 
     let currentMessages = [{ role: 'system', content: systemPrompt }].concat(messages);
     const tools = [
@@ -230,7 +230,8 @@ export default async function handler(req) {
       const payload = {
         model: 'meta-llama/llama-3.1-70b-instruct',
         messages: msgs,
-        stream: !includeTools
+        stream: !includeTools,
+        temperature: 0.1
       };
       if (includeTools) payload.tools = tools;
       
