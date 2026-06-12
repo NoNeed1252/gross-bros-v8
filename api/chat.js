@@ -63,11 +63,30 @@ export default async function handler(req) {
   }
 
   try {
-    var body = await req.json();
-    var message = body.message;
-    var history = body.history || [];
+    var body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      return new Response(JSON.stringify({ error: 'Invalid JSON request body' }), { status: 400 });
+    }
+
+    var messages = body.messages || [];
+    if (!Array.isArray(messages) || messages.length === 0) {
+      // Fallback for older frontend versions sending single "message" field
+      if (body.message) {
+        messages = [{ role: 'user', content: body.message }];
+      } else {
+        return new Response(JSON.stringify({ error: 'No messages provided' }), { status: 400 });
+      }
+    }
+
+    var lastMessage = messages[messages.length - 1];
+    var messageContent = lastMessage ? lastMessage.content : '';
+    if (!messageContent) {
+      return new Response(JSON.stringify({ error: 'Malformed message content' }), { status: 400 });
+    }
     
-    var potentialSymbols = message.match(/\$?[A-Z]{2,10}/g) || [];
+    var potentialSymbols = messageContent.match(/\$?[A-Z]{2,10}/g) || [];
     var syms = [];
     for (var l = 0; l < potentialSymbols.length; l++) {
       var s = potentialSymbols[l].replace('$', '').toUpperCase();
@@ -96,13 +115,16 @@ export default async function handler(req) {
       body: JSON.stringify({
         model: 'openai/gpt-4o',
         messages: [
-          { role: 'system', content: PERSONA + priceContext },
-          { role: 'user', content: message }
-        ]
+          { role: 'system', content: PERSONA + priceContext }
+        ].concat(messages)
       })
     });
 
     var aiData = await orResp.json();
+    if (aiData.error) {
+      return new Response(JSON.stringify({ error: 'AI Relay Error: ' + aiData.error.message }), { status: 502 });
+    }
+    
     var reply = aiData.choices[0].message.content;
 
     return new Response(JSON.stringify({ reply: reply, prices: livePrices }), {
