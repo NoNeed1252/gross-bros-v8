@@ -165,6 +165,8 @@ export default async function handler(req) {
   if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers });
 
   try {
+    // Ensuring request body parsing is robust
+    if (!req.body) throw new Error('Request body missing');
     var body = await req.json();
     var messages = body.messages || [];
     var operative = body.operative || {};
