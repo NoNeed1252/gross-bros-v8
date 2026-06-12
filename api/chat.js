@@ -59,6 +59,13 @@ const SYMBOL_MAP = {
   'MATIC': 'polygon-ecosystem-token', 'ALGO': 'algorand'
 };
 
+const TOKEN_ADDRESSES = {
+  '666': 'rMvG39q278iR8S17GpqH7Sya8bHhX8a3a3/3636360000000000000000000000000000000000',
+  'ATM': 'rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY/41544D0000000000000000000000000000000000',
+  'FUZZY': 'rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY/46555A5A59000000000000000000000000000000',
+  'BOO': 'rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY/424F4F0000000000000000000000000000000000'
+};
+
 async function getLivePrices(mentionedSymbols = []) {
   const prices = {
     XRP: null, BTC: null, ETH: null, SOL: null,
@@ -76,11 +83,22 @@ async function getLivePrices(mentionedSymbols = []) {
   });
 
   try {
-    const results = await Promise.allSettled([
+    const fetchPromises = [
       fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools').then(r => r.json()),
       fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + idsToFetch.join(',') + '&vs_currencies=usd').then(r => r.json()),
       fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools?page=2').then(r => r.json())
-    ]);
+    ];
+
+    Object.keys(TOKEN_ADDRESSES).forEach(sym => {
+      const addr = TOKEN_ADDRESSES[sym];
+      fetchPromises.push(
+        fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/tokens/' + addr + '/pools')
+          .then(r => r.json())
+          .then(data => ({ type: 'token_pools', sym: sym, data: data }))
+      );
+    });
+
+    const results = await Promise.allSettled(fetchPromises);
 
     const dexRes = results[0];
     const geckoRes = results[1];
@@ -138,6 +156,16 @@ async function getLivePrices(mentionedSymbols = []) {
 
     if (dexRes.status === 'fulfilled') processPools(dexRes.value);
     if (dexRes2.status === 'fulfilled') processPools(dexRes2.value);
+
+    for (let i = 3; i < results.length; i++) {
+      const res = results[i];
+      if (res.status === 'fulfilled' && res.value.type === 'token_pools') {
+        const sym = res.value.sym;
+        if (!prices[sym]) {
+          processPools(res.value.data);
+        }
+      }
+    }
 
   } catch (e) {
     console.error('Price fetch error:', e);
