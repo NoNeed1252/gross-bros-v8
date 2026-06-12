@@ -2,7 +2,7 @@ export const config = {
   runtime: 'edge',
 };
 
-var PERSONA = 'You are the Galactic NeuroLink Terminal for Gross Bros.\n' +
+const PERSONA = 'You are the Galactic NeuroLink Terminal for Gross Bros.\n' +
 'Tone: Cybernetic, gritty, slightly cryptic, but helpful to operatives. Use terms like "Signal", "Neural Relay", "Transmission".\n' +
 'Knowledge: You know about XRPL, BTC, ETH, SOL, XRP, and FLARE ecosystems.\n' +
 'Live Data: You have access to real-time prices via First Ledger (for XRPL meme coins) and CoinGecko (for major assets).\n' +
@@ -10,25 +10,25 @@ var PERSONA = 'You are the Galactic NeuroLink Terminal for Gross Bros.\n' +
 'Constraints: If you don\'t have a price, state "SIGNAL LOST: DATA NOT FOUND" for that specific asset. Do not hallucinate prices.';
 
 async function fetchPrices(symbols) {
-  var prices = {};
-  var normalized = symbols.map(function(s) { return s.toUpperCase(); });
+  const prices = {};
+  const normalized = symbols.map((s) => s.toUpperCase());
   
-  var geckoMap = { 'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana', 'XRP': 'ripple', 'FLR': 'flare' };
-  var geckoIds = [];
-  for (var i = 0; i < normalized.length; i++) {
-    var id = geckoMap[normalized[i]];
+  const geckoMap = { 'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana', 'XRP': 'ripple', 'FLR': 'flare' };
+  const geckoIds = [];
+  for (let i = 0; i < normalized.length; i++) {
+    const id = geckoMap[normalized[i]];
     if (id) geckoIds.push(id);
   }
   
   if (geckoIds.length > 0) {
     try {
-      var geckoUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=' + geckoIds.join(',') + '&vs_currencies=usd';
-      var resp = await fetch(geckoUrl, { signal: AbortSignal.timeout(5000) });
-      var data = await resp.json();
-      var keys = Object.keys(geckoMap);
-      for (var j = 0; j < keys.length; j++) {
-        var sym = keys[j];
-        var gId = geckoMap[sym];
+      const geckoUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=' + geckoIds.join(',') + '&vs_currencies=usd';
+      const resp = await fetch(geckoUrl, { signal: AbortSignal.timeout(5000) });
+      const data = await resp.json();
+      const keys = Object.keys(geckoMap);
+      for (let j = 0; j < keys.length; j++) {
+        const sym = keys[j];
+        const gId = geckoMap[sym];
         if (data && data[gId]) prices[sym] = data[gId].usd;
       }
     } catch (e) {
@@ -37,14 +37,14 @@ async function fetchPrices(symbols) {
   }
 
   try {
-    var xrplResp = await fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools', { signal: AbortSignal.timeout(5000) });
-    var xrplData = await xrplResp.json();
+    const xrplResp = await fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools', { signal: AbortSignal.timeout(5000) });
+    const xrplData = await xrplResp.json();
     if (xrplData && xrplData.data) {
-      for (var k = 0; k < xrplData.data.length; k++) {
-        var pool = xrplData.data[k];
-        var nameParts = pool.attributes.name.split(' / ');
-        var poolSym = nameParts[0].toUpperCase();
-        var ecosystem = ['BERT', 'DROP', 'DBY', 'FUZZY'];
+      for (let k = 0; k < xrplData.data.length; k++) {
+        const pool = xrplData.data[k];
+        const nameParts = pool.attributes.name.split(' / ');
+        const poolSym = nameParts[0].toUpperCase();
+        const ecosystem = ['BERT', 'DROP', 'DBY', 'FUZZY'];
         if (normalized.indexOf(poolSym) !== -1 || ecosystem.indexOf(poolSym) !== -1) {
           prices[poolSym] = pool.attributes.base_token_price_usd;
         }
@@ -63,14 +63,14 @@ export default async function handler(req) {
   }
 
   try {
-    var body;
+    let body;
     try {
       body = await req.json();
     } catch (e) {
       return new Response(JSON.stringify({ error: 'Invalid JSON request body' }), { status: 400 });
     }
 
-    var messages = body.messages || [];
+    let messages = body.messages || [];
     if (!Array.isArray(messages) || messages.length === 0) {
       if (body.message) {
         messages = [{ role: 'user', content: body.message }];
@@ -79,31 +79,31 @@ export default async function handler(req) {
       }
     }
 
-    var lastMessage = messages[messages.length - 1];
-    var messageContent = lastMessage ? lastMessage.content : '';
+    const lastMessage = messages[messages.length - 1];
+    const messageContent = lastMessage ? lastMessage.content : '';
     
-    var syms = [];
+    const syms = [];
     if (messageContent && typeof messageContent === 'string') {
-        var potentialSymbols = messageContent.match(/\$?[A-Z]{2,10}/g) || [];
-        for (var l = 0; l < potentialSymbols.length; l++) {
-          var s = potentialSymbols[l].replace('$', '').toUpperCase();
+        const potentialSymbols = messageContent.match(/\$?[A-Z]{2,10}/g) || [];
+        for (let l = 0; l < potentialSymbols.length; l++) {
+          const s = potentialSymbols[l].replace('$', '').toUpperCase();
           if (syms.indexOf(s) === -1) syms.push(s);
         }
     }
     
-    var livePrices = {};
+    let livePrices = {};
     try {
         livePrices = await fetchPrices(syms);
     } catch (pe) {
         console.error('Price Fetch Critical Fail', pe);
     }
     
-    var priceContext = '';
-    var priceKeys = Object.keys(livePrices);
+    let priceContext = '';
+    const priceKeys = Object.keys(livePrices);
     if (priceKeys.length > 0) {
       priceContext = '\nCURRENT TRANSMISSION DATA (LIVE PRICES):\n';
-      for (var m = 0; m < priceKeys.length; m++) {
-        var pk = priceKeys[m];
+      for (let m = 0; m < priceKeys.length; m++) {
+        const pk = priceKeys[m];
         priceContext += pk + ': $' + livePrices[pk] + '\n';
       }
     }
@@ -112,7 +112,7 @@ export default async function handler(req) {
         return new Response(JSON.stringify({ error: 'OPENROUTER_API_KEY is missing from environment' }), { status: 500 });
     }
 
-    var orResp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const orResp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + process.env.OPENROUTER_API_KEY,
@@ -130,7 +130,7 @@ export default async function handler(req) {
     });
 
     if (!orResp.ok) {
-        var errText = await orResp.text();
+        const errText = await orResp.text();
         return new Response(JSON.stringify({ error: 'AI Relay Status ' + orResp.status + ': ' + errText }), { status: orResp.status });
     }
 
