@@ -105,6 +105,70 @@ async function getBestTokenQuote(symbol) {
   var bestLiq = 0;
 
   try {
+    var xrplUrl = "https://api.geckoterminal.com/api/v2/search/pools?query=" + encodeURIComponent(cleanSymbol) + "&network=xrpl";
+    var xrplRes = await fetch(xrplUrl, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "User-Agent": "GrossBros-Chat/1.0 (grossbros.vercel.app)"
+      }
+    });
+    if (xrplRes.ok) {
+      var xrplJson = await xrplRes.json().catch(function() { return null; });
+      if (xrplJson && xrplJson.data && Array.isArray(xrplJson.data)) {
+        for (var j = 0; j < xrplJson.data.length; j++) {
+          var xrPool = xrplJson.data[j];
+          if (!xrPool || !xrPool.attributes) continue;
+          var xrAttrs = xrPool.attributes;
+          var xrName = (xrAttrs.name || "").toUpperCase();
+          var xrMatch = symbolRegex.test(xrName);
+          if (xrMatch) {
+            var xrLiqStr = xrAttrs.reserve_in_usd || xrAttrs.liquidity || "0";
+            var xrLiq = parseFloat(xrLiqStr) || 0;
+            if (xrLiq > bestLiq) {
+              var xrPrice = xrAttrs.base_token_price_usd || xrAttrs.quote_token_price_usd || "N/A";
+              var xrDex = "First Ledger / XRPL DEX";
+              if (xrAttrs.dex_name) {
+                xrDex = xrAttrs.dex_name;
+              } else if (xrAttrs.dex && typeof xrAttrs.dex === "object" && xrAttrs.dex.name) {
+                xrDex = xrAttrs.dex.name;
+              }
+              bestLiq = xrLiq;
+              bestPool = {
+                symbol: cleanSymbol,
+                price: xrPrice,
+                liquidity: xrLiq,
+                network: "xrpl",
+                dex: xrDex,
+                name: xrAttrs.name || cleanSymbol
+              };
+            }
+          }
+        }
+      }
+    }
+  } catch (e2) {
+    // graceful
+  }
+
+  try {
+    var ontdexResult = await getOnTheDEXQuote(cleanSymbol);
+    if (ontdexResult) {
+      var oScore = ontdexResult.liquidity || ontdexResult.volume || 0;
+      if (oScore > bestLiq || bestPool === null) {
+        bestLiq = oScore;
+        bestPool = ontdexResult;
+      }
+    }
+  } catch (e3) {
+    // graceful
+  }
+
+  if (bestPool) {
+    return bestPool;
+  }
+
+  try {
     var genUrl = "https://api.geckoterminal.com/api/v2/search/pools?query=" + encodeURIComponent(cleanSymbol);
     var genRes = await fetch(genUrl, {
       method: "GET",
@@ -156,69 +220,6 @@ async function getBestTokenQuote(symbol) {
     // graceful
   }
 
-  try {
-    var xrplUrl = "https://api.geckoterminal.com/api/v2/search/pools?query=" + encodeURIComponent(cleanSymbol) + "&network=xrpl";
-    var xrplRes = await fetch(xrplUrl, {
-      method: "GET",
-      headers: {
-        "Accept": "application/json",
-        "User-Agent": "GrossBros-Chat/1.0 (grossbros.vercel.app)"
-      }
-    });
-    if (xrplRes.ok) {
-      var xrplJson = await xrplRes.json().catch(function() { return null; });
-      if (xrplJson && xrplJson.data && Array.isArray(xrplJson.data)) {
-        for (var j = 0; j < xrplJson.data.length; j++) {
-          var xrPool = xrplJson.data[j];
-          if (!xrPool || !xrPool.attributes) continue;
-          var xrAttrs = xrPool.attributes;
-          var xrName = (xrAttrs.name || "").toUpperCase();
-          var xrMatch = symbolRegex.test(xrName);
-          if (xrMatch) {
-            var xrLiqStr = xrAttrs.reserve_in_usd || xrAttrs.liquidity || "0";
-            var xrLiq = parseFloat(xrLiqStr) || 0;
-            if (xrLiq > bestLiq || (bestPool && bestPool.network !== "xrpl" && xrLiq > bestLiq * 0.5)) {
-              var xrPrice = xrAttrs.base_token_price_usd || xrAttrs.quote_token_price_usd || "N/A";
-              var xrDex = "First Ledger / XRPL DEX";
-              if (xrAttrs.dex_name) {
-                xrDex = xrAttrs.dex_name;
-              } else if (xrAttrs.dex && typeof xrAttrs.dex === "object" && xrAttrs.dex.name) {
-                xrDex = xrAttrs.dex.name;
-              }
-              bestLiq = xrLiq;
-              bestPool = {
-                symbol: cleanSymbol,
-                price: xrPrice,
-                liquidity: xrLiq,
-                network: "xrpl",
-                dex: xrDex,
-                name: xrAttrs.name || cleanSymbol
-              };
-            }
-          }
-        }
-      }
-    }
-  } catch (e2) {
-    // graceful
-  }
-
-  try {
-    var ontdexResult = await getOnTheDEXQuote(cleanSymbol);
-    if (ontdexResult) {
-      var oScore = ontdexResult.liquidity || ontdexResult.volume || 0;
-      if (oScore > bestLiq || bestPool === null) {
-        bestLiq = oScore;
-        bestPool = ontdexResult;
-      }
-    }
-  } catch (e3) {
-    // graceful
-  }
-
-  if (!bestPool) {
-    return null;
-  }
   return bestPool;
 }
 
@@ -318,11 +319,15 @@ export default async function handler(req) {
       model: modelChoice,
       messages: orMessages,
       temperature: 0.82,
-      max_tokens: 450,
+      max_tokens: 600,
       top_p: 0.95,
       stream: true
     };
     var payloadString = JSON.stringify(requestPayload);
+    
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 50000);
+
     var orFetchRes = await fetch(orUrl, {
       method: "POST",
       headers: {
@@ -331,8 +336,12 @@ export default async function handler(req) {
         "HTTP-Referer": "https://grossbros.vercel.app",
         "X-Title": "Galactic Gross Bros Comms Terminal"
       },
-      body: payloadString
+      body: payloadString,
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
+
     if (!orFetchRes.ok) {
       var fallbackMsg = "yo the fusion core's lagging hard right now, cosmic interference or some shit. ping me again in a minute";
       var sseFallback = "data: {\"choices\":[{\"delta\":{\"content\":\"" + fallbackMsg + "\"}}]}\n\ndata: [DONE]\n\n";
