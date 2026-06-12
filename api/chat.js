@@ -2,12 +2,13 @@ export const config = {
   runtime: 'edge',
 };
 
-const PERSONA = 'You are the Galactic NeuroLink Terminal for Gross Bros.\n' +
-'Tone: Cybernetic, gritty, slightly cryptic, but helpful to operatives. Use terms like "Signal", "Neural Relay", "Transmission".\n' +
-'Knowledge: You know about XRPL, BTC, ETH, SOL, XRP, and FLARE ecosystems.\n' +
-'Live Data: You have access to real-time prices via First Ledger (for XRPL meme coins) and CoinGecko (for major assets).\n' +
-'Meme Coins: You prioritize First Ledger for discovering and pricing new XRPL specimens.\n' +
-'Constraints: If you don\'t have a price, state "SIGNAL LOST: DATA NOT FOUND" for that specific asset. Do not hallucinate prices.';
+const PERSONA = `You are the Galactic NeuroLink Terminal for Gross Bros.
+Tone: Cybernetic, gritty, slightly cryptic, but helpful to operatives. Use terms like "Signal", "Neural Relay", "Transmission".
+Instruction: You are a strict terminal agent. Do not act as a conversational bot. Always use the live data provided. Avoid fluff, filler words, or hallucinations. Maintain technical precision.
+Knowledge: You know about XRPL, BTC, ETH, SOL, XRP, and FLARE ecosystems.
+Live Data: You have access to real-time prices via First Ledger (for XRPL meme coins) and CoinGecko (for major assets).
+Meme Coins: You prioritize First Ledger for discovering and pricing new XRPL specimens.
+Constraints: If you don't have a price, state "SIGNAL LOST: DATA NOT FOUND" for that specific asset. Do not hallucinate prices.`;
 
 async function fetchPrices(symbols) {
   const prices = {};
@@ -42,11 +43,24 @@ async function fetchPrices(symbols) {
     if (xrplData && xrplData.data) {
       for (let k = 0; k < xrplData.data.length; k++) {
         const pool = xrplData.data[k];
-        const nameParts = pool.attributes.name.split(' / ');
-        const poolSym = nameParts[0].toUpperCase();
-        const ecosystem = ['BERT', 'DROP', 'DBY', 'FUZZY'];
-        if (normalized.indexOf(poolSym) !== -1 || ecosystem.indexOf(poolSym) !== -1) {
-          prices[poolSym] = pool.attributes.base_token_price_usd;
+        const poolName = pool.attributes.name.toUpperCase();
+        
+        // Log raw pool names for diagnostics
+        console.log('SCANNING POOL:', poolName);
+        
+        // Relaxed matching: check if any of our symbols appear in the pool name
+        // GeckoTerminal pool names often look like "FUZZY / XRP" or "FUZZY/XRP" or "XRP / FUZZY"
+        for (let l = 0; l < normalized.length; l++) {
+            const s = normalized[l];
+            const ecosystem = ['BERT', 'DROP', 'DBY', 'FUZZY'];
+            
+            // Check if symbol or known ecosystem tokens match a part of the pool name
+            if (poolName.includes(s) || (ecosystem.includes(s) && poolName.includes(s))) {
+                // If we haven't found a price yet, or this is a primary match, take it
+                if (!prices[s]) {
+                    prices[s] = pool.attributes.base_token_price_usd;
+                }
+            }
         }
       }
     }
@@ -84,7 +98,7 @@ export default async function handler(req) {
     
     const syms = [];
     if (messageContent && typeof messageContent === 'string') {
-        const potentialSymbols = messageContent.match(/\$?[A-Z]{2,10}/g) || [];
+        const potentialSymbols = messageContent.match(/\\$?[A-Z]{2,10}/g) || [];
         for (let l = 0; l < potentialSymbols.length; l++) {
           const s = potentialSymbols[l].replace('$', '').toUpperCase();
           if (syms.indexOf(s) === -1) syms.push(s);
@@ -101,10 +115,10 @@ export default async function handler(req) {
     let priceContext = '';
     const priceKeys = Object.keys(livePrices);
     if (priceKeys.length > 0) {
-      priceContext = '\nCURRENT TRANSMISSION DATA (LIVE PRICES):\n';
+      priceContext = '\\nCURRENT TRANSMISSION DATA (LIVE PRICES):\\n';
       for (let m = 0; m < priceKeys.length; m++) {
         const pk = priceKeys[m];
-        priceContext += pk + ': $' + livePrices[pk] + '\n';
+        priceContext += pk + ': $' + livePrices[pk] + '\\n';
       }
     }
 
