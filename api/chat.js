@@ -1,355 +1,373 @@
 export const config = {
-  runtime: 'edge',
+  runtime: "edge"
 };
 
-const CRYPTO_KNOWLEDGE = '\nCORE XRPL KNOWLEDGE:\n' +
-'- XRPL (XRP Ledger): A decentralized public blockchain. Fast (3-5 sec settlements), low cost, and carbon-neutral.\n' +
-'- DEX (Decentralized Exchange): The XRPL has a built-in DEX for trading any issued currency.\n' +
-'- Trustlines: Required to hold any token other than XRP. It is a security feature to prevent spam tokens.\n' +
-'- Reserve Requirements: Accounts need a base reserve (10 XRP) and owner reserves (2 XRP per object/trustline/NFT offer).\n' +
-'- NFToken (XLS-20): The native NFT standard on XRPL. Supports royalties (transfer fees) and minter/issuer separation.\n' +
-'- AMM (Automated Market Maker): Recently activated on XRPL (XLS-30), allowing passive income via liquidity pools.\n\n' +
-'GGB ECOSYSTEM & MEME TOKENS:\n' +
-'- ATM: Automated Transmission Medium. A high-priority First Ledger meme specimen.\n' +
-'- BERT: The fuel for the Gross Bros engine. High-octane slime-based utility.\n' +
-'- DROP: Liquid energy utilized in the Fusion Lab. Essential for genetic stability.\n' +
-'- DBY: The utility layer for experimental specimens. Used in high-level neural splicing.\n' +
-'- RLUSD: Ripple\'s USD-pegged stablecoin, used for high-stability fusions.\n' +
-'- FUZZY ($fuzzy): High-frequency neural static. A chaotic but valuable specimen asset.\n' +
-'- PHNIX: Rebirth protocol. Used for reviving failed experiments and neural stabilization.\n' +
-'- XRP ARMY: The frontline defense. Represents the collective strength of the ledger\'s elite forces.\n' +
-'- PRINCE: Royal-tier specimen lineage. High-value asset in the GGB hierarchy.\n' +
-'- BEARXRPH: Defensive market mitigation token. Built for survival in the harshest crypto winters.\n' +
-'- PIDGEON: Information relay asset. Used for rapid-delivery signaling across the ledger.\n' +
-'- SLT: Synthetic Ledger Toxin. Dangerous but potent when utilized in controlled fusions.\n' +
-'- XRPH: High-density XRP derivative. Used in specialized industrial-grade ledger operations.\n' +
-'- XRT: Extended Relay Token. The long-range communication backbone of the GGB network.\n\n' +
-'TERMINOLOGY:\n' +
-'- Cold Wallet: Offline storage (like Ledger or paper). Maximum safety.\n' +
-'- Hot Wallet: Online app (like Xaman/XUMM). Convenient but connected to the net.\n' +
-'- Keys/Seed: NEVER share these. If an operative asks, tell them it\'s a security breach.\n' +
-'- Gas: XRPL doesn\'t call it "gas" like Ethereum, but there are minimal network fees in XRP.\n' +
-'- First Ledger: The primary breeding ground for new meme-specimens on XRPL.\n';
-
-function extractMentionedSymbols(messages) {
-  const text = messages.map(m => m.content).join(' ').toUpperCase();
-  const commonSymbols = [
-    'BTC', 'ETH', 'SOL', 'XRP', 'XLM', 'HBAR', 'ADA', 'DOT', 'DOGE', 'SHIB', 'PEPE', 
-    'LINK', 'MATIC', 'ALGO', 'ATM', 'BERT', 'DROP', 'DBY', 'FUZZY', 'BOO', '666', 
-    'PHNIX', 'RLUSD', 'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT'
-  ];
-  const found = commonSymbols.filter(sym => text.indexOf(sym) !== -1);
-  
-  const dollarRegex = /\$([A-Z0-9]{2,10})/g;
-  let match;
-  while ((match = dollarRegex.exec(text)) !== null) {
-    const sym = match[1];
-    if (found.indexOf(sym) === -1) {
-      found.push(sym);
+function extractPotentialTickers(text) {
+  if (!text || typeof text !== "string") {
+    return [];
+  }
+  var found = new Set();
+  var dollarRegex = /\$([A-Za-z0-9]{2,10})/g;
+  var dollarMatch;
+  while ((dollarMatch = dollarRegex.exec(text)) !== null) {
+    var t = dollarMatch[1].toUpperCase();
+    if (t.length >= 2 && t.length <= 10) {
+      found.add(t);
     }
   }
-  
-  return found;
-}
-
-const SYMBOL_MAP = {
-  'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana', 'XRP': 'ripple',
-  'XLM': 'stellar', 'HBAR': 'hedera-hashgraph', 'ADA': 'cardano', 'DOT': 'polkadot',
-  'DOGE': 'dogecoin', 'SHIB': 'shiba-inu', 'PEPE': 'pepe', 'LINK': 'chainlink',
-  'MATIC': 'polygon-ecosystem-token', 'ALGO': 'algorand'
-};
-
-const TOKEN_ADDRESSES = {
-  '666': 'rMvG39q278iR8S17GpqH7Sya8bHhX8a3a3/3636360000000000000000000000000000000000',
-  'ATM': 'rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY/41544D0000000000000000000000000000000000',
-  'FUZZY': 'rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY/46555A5A59000000000000000000000000000000',
-  'BOO': 'rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY/424F4F0000000000000000000000000000000000'
-};
-
-async function getLivePrices(mentionedSymbols = []) {
-  const prices = {
-    XRP: null, BTC: null, ETH: null, SOL: null,
-    ATM: null, BERT: null, DROP: null, DBY: null, RLUSD: null,
-    FUZZY: null, PHNIX: null, ARMY: null, PRINCE: null,
-    BEARXRPH: null, PIDGEON: null, SLT: null, XRPH: null, XRT: null,
-    BOO: null, '666': null
-  };
-
-  const idsToFetch = ['ripple', 'bitcoin', 'ethereum', 'solana'];
-  mentionedSymbols.forEach(sym => {
-    if (SYMBOL_MAP[sym] && idsToFetch.indexOf(SYMBOL_MAP[sym]) === -1) {
-      idsToFetch.push(SYMBOL_MAP[sym]);
+  var upperText = text.toUpperCase();
+  var priceKeywords = ["PRICE", "WORTH", "COST", "HOW MUCH", "LIQUIDITY", "CHART", "BUY", "SELL", "MOON", "PUMP", "DUMP", "QUOTE", "LIVE", "TOKEN"];
+  var isPriceRelated = false;
+  for (var k = 0; k < priceKeywords.length; k++) {
+    if (upperText.indexOf(priceKeywords[k]) !== -1) {
+      isPriceRelated = true;
+      break;
     }
+  }
+  if (isPriceRelated || found.size > 0) {
+    var standaloneRegex = /\b([A-Z0-9]{2,6})\b/g;
+    var standMatch;
+    var commonWords = ["THE", "AND", "FOR", "YOU", "THAT", "THIS", "WITH", "FROM", "WHAT", "HOW", "ARE", "IS", "IT", "ON", "IN", "TO", "OF", "OR", "BE", "AT", "BY", "AN", "A", "I", "ME", "MY", "BRO", "YO", "LIKE", "JUST", "NOW", "RIGHT", "ONE", "ALL", "GET", "GOT", "SEE", "LOOK", "FIND", "KNOW", "THINK", "WANT", "NEED", "HAVE", "HAS", "WILL", "CAN", "COULD", "SHOULD", "WOULD", "ABOUT", "SOME", "ANY", "MUCH", "MORE", "MOST", "LIVE", "REAL", "TIME", "DATA", "QUOTE", "TOKEN", "COIN", "CRYPTO", "MEME"];
+    while ((standMatch = standaloneRegex.exec(text)) !== null) {
+      var s = standMatch[1].toUpperCase();
+      if (commonWords.indexOf(s) === -1 && s.length >= 2 && s.length <= 6) {
+        found.add(s);
+      }
+    }
+  }
+  var result = [];
+  found.forEach(function(val) {
+    result.push(val);
   });
+  return result.slice(0, 5);
+}
 
+async function getOnTheDEXQuote(symbol) {
+  if (!symbol) return null;
+  var clean = symbol.toUpperCase().replace(/^\$/, "");
   try {
-    const fetchPromises = [
-      fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools').then(r => r.json()),
-      fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + idsToFetch.join(',') + '&vs_currencies=usd').then(r => r.json()),
-      fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools?page=2').then(r => r.json())
-    ];
-
-    Object.keys(TOKEN_ADDRESSES).forEach(sym => {
-      const addr = TOKEN_ADDRESSES[sym];
-      fetchPromises.push(
-        fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/tokens/' + addr + '/pools')
-          .then(r => r.json())
-          .then(data => ({ type: 'token_pools', sym: sym, data: data }))
-      );
+    var url = "https://api.onthedex.live/public/v1/ticker/" + encodeURIComponent(clean);
+    var res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "User-Agent": "GrossBros-Chat/1.0 (grossbros.vercel.app)"
+      }
     });
+    if (!res.ok) return null;
+    var json = await res.json().catch(function() { return null; });
+    if (!json) return null;
 
-    const results = await Promise.allSettled(fetchPromises);
-
-    const dexRes = results[0];
-    const geckoRes = results[1];
-    const dexRes2 = results[2];
-
-    if (geckoRes.status === 'fulfilled' && geckoRes.value) {
-      Object.keys(SYMBOL_MAP).forEach(sym => {
-        const id = SYMBOL_MAP[sym];
-        if (geckoRes.value[id] && geckoRes.value[id].usd) {
-          prices[sym] = geckoRes.value[id].usd.toString();
-        }
-      });
+    var candidates = [];
+    if (Array.isArray(json)) {
+      candidates = json;
+    } else if (json.data && Array.isArray(json.data)) {
+      candidates = json.data;
+    } else if (json.pairs && Array.isArray(json.pairs)) {
+      candidates = json.pairs;
+    } else if (typeof json === "object") {
+      candidates = [json];
     }
 
-    if (!prices.XRP || !prices.BTC) {
-      const fallbackPromises = [];
-      if (!prices.XRP) fallbackPromises.push(fetch('https://api.coinbase.com/v2/prices/XRP-USD/spot').then(r => r.json()).then(data => ({ sym: 'XRP', val: data && data.data ? data.data.amount : null })));
-      if (!prices.BTC) fallbackPromises.push(fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(r => r.json()).then(data => ({ sym: 'BTC', val: data && data.data ? data.data.amount : null })));
-      
-      const fbResults = await Promise.allSettled(fallbackPromises);
-      fbResults.forEach(res => {
-        if (res.status === 'fulfilled' && res.value.val) {
-          prices[res.value.sym] = res.value.val;
-        }
-      });
-    }
-
-    const processPools = (poolData) => {
-      if (poolData && poolData.data) {
-        const pools = poolData.data;
-        const findPrice = (symbol) => {
-          const pool = pools.find(p => p.attributes && p.attributes.name && p.attributes.name.toUpperCase().indexOf(symbol.toUpperCase()) !== -1);
-          return pool ? pool.attributes.base_token_price_usd : null;
+    var best = null;
+    var bestScore = 0;
+    for (var idx = 0; idx < candidates.length; idx++) {
+      var item = candidates[idx];
+      if (!item) continue;
+      var price = item.last || item.price || item.last_price || item.close || item.mid || "N/A";
+      var vol = parseFloat(item.volume || item.volume_24h || item.vol || item.volume24h || 0) || 0;
+      var liq = parseFloat(item.liquidity || item.reserve || item.liquidity_usd || item.reserve_usd || 0) || 0;
+      var score = liq > 0 ? liq : vol;
+      if (score > bestScore || best === null) {
+        bestScore = score;
+        best = {
+          symbol: clean,
+          price: price,
+          liquidity: liq || vol,
+          network: "xrpl",
+          dex: "OnTheDEX (XRPL DEX)",
+          name: item.pair || item.market || item.symbol || clean + "/XRP",
+          volume: vol
         };
-
-        const coreGGB = [
-          'ATM', 'BERT', 'DROP', 'DBY', 'RLUSD', 'FUZZY', 'PHNIX', 
-          'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT', 
-          'BOO', '666'
-        ];
-        
-        coreGGB.forEach(sym => {
-          const p = findPrice(sym);
-          if (p && !prices[sym]) prices[sym] = parseFloat(p).toFixed(10);
-        });
-        
-        mentionedSymbols.forEach(sym => {
-          if (!prices[sym]) {
-            const p = findPrice(sym);
-            if (p) prices[sym] = parseFloat(p).toFixed(10);
-          }
-        });
       }
-    };
+    }
+    return best;
+  } catch (e) {
+    return null;
+  }
+}
 
-    if (dexRes.status === 'fulfilled') processPools(dexRes.value);
-    if (dexRes2.status === 'fulfilled') processPools(dexRes2.value);
+async function getBestTokenQuote(symbol) {
+  if (!symbol) return null;
+  var cleanSymbol = symbol.toUpperCase().replace(/^\$/, "");
+  var bestPool = null;
+  var bestLiq = 0;
 
-    for (let i = 3; i < results.length; i++) {
-      const res = results[i];
-      if (res.status === 'fulfilled' && res.value.type === 'token_pools') {
-        const sym = res.value.sym;
-        if (!prices[sym]) {
-          processPools(res.value.data);
+  try {
+    var genUrl = "https://api.geckoterminal.com/api/v2/search/pools?query=" + encodeURIComponent(cleanSymbol);
+    var genRes = await fetch(genUrl, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "User-Agent": "GrossBros-Chat/1.0 (grossbros.vercel.app)"
+      }
+    });
+    if (genRes.ok) {
+      var genJson = await genRes.json().catch(function() { return null; });
+      if (genJson && genJson.data && Array.isArray(genJson.data)) {
+        for (var i = 0; i < genJson.data.length; i++) {
+          var pool = genJson.data[i];
+          if (!pool || !pool.attributes) continue;
+          var attrs = pool.attributes;
+          var poolName = (attrs.name || "").toUpperCase();
+          var hasMatch = poolName.indexOf(cleanSymbol) !== -1 || poolName.indexOf("/" + cleanSymbol) !== -1 || poolName.indexOf(cleanSymbol + "/") !== -1;
+          if (hasMatch) {
+            var liqStr = attrs.reserve_in_usd || attrs.liquidity || attrs.reserve_usd || "0";
+            var liq = parseFloat(liqStr) || 0;
+            if (liq > bestLiq) {
+              var priceVal = attrs.base_token_price_usd || attrs.quote_token_price_usd || "N/A";
+              var net = "unknown";
+              if (pool.id && typeof pool.id === "string") {
+                var parts = pool.id.split("_");
+                if (parts.length > 0) net = parts[0];
+              }
+              var dexName = "unknown";
+              if (attrs.dex_name) {
+                dexName = attrs.dex_name;
+              } else if (attrs.dex && typeof attrs.dex === "object" && attrs.dex.name) {
+                dexName = attrs.dex.name;
+              }
+              bestLiq = liq;
+              bestPool = {
+                symbol: cleanSymbol,
+                price: priceVal,
+                liquidity: liq,
+                network: net,
+                dex: dexName,
+                name: attrs.name || cleanSymbol
+              };
+            }
+          }
         }
       }
     }
-
   } catch (e) {
-    console.error('Price fetch error:', e);
+    // graceful
   }
-  return prices;
+
+  try {
+    var xrplUrl = "https://api.geckoterminal.com/api/v2/search/pools?query=" + encodeURIComponent(cleanSymbol) + "&network=xrpl";
+    var xrplRes = await fetch(xrplUrl, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "User-Agent": "GrossBros-Chat/1.0 (grossbros.vercel.app)"
+      }
+    });
+    if (xrplRes.ok) {
+      var xrplJson = await xrplRes.json().catch(function() { return null; });
+      if (xrplJson && xrplJson.data && Array.isArray(xrplJson.data)) {
+        for (var j = 0; j < xrplJson.data.length; j++) {
+          var xrPool = xrplJson.data[j];
+          if (!xrPool || !xrPool.attributes) continue;
+          var xrAttrs = xrPool.attributes;
+          var xrName = (xrAttrs.name || "").toUpperCase();
+          var xrMatch = xrName.indexOf(cleanSymbol) !== -1 || xrName.indexOf("/" + cleanSymbol) !== -1 || xrName.indexOf(cleanSymbol + "/") !== -1;
+          if (xrMatch) {
+            var xrLiqStr = xrAttrs.reserve_in_usd || xrAttrs.liquidity || "0";
+            var xrLiq = parseFloat(xrLiqStr) || 0;
+            if (xrLiq > bestLiq || (bestPool && bestPool.network !== "xrpl" && xrLiq > bestLiq * 0.5)) {
+              var xrPrice = xrAttrs.base_token_price_usd || xrAttrs.quote_token_price_usd || "N/A";
+              var xrDex = "First Ledger / XRPL DEX";
+              if (xrAttrs.dex_name) {
+                xrDex = xrAttrs.dex_name;
+              } else if (xrAttrs.dex && typeof xrAttrs.dex === "object" && xrAttrs.dex.name) {
+                xrDex = xrAttrs.dex.name;
+              }
+              bestLiq = xrLiq;
+              bestPool = {
+                symbol: cleanSymbol,
+                price: xrPrice,
+                liquidity: xrLiq,
+                network: "xrpl",
+                dex: xrDex,
+                name: xrAttrs.name || cleanSymbol
+              };
+            }
+          }
+        }
+      }
+    }
+  } catch (e2) {
+    // graceful
+  }
+
+  try {
+    var ontdexResult = await getOnTheDEXQuote(cleanSymbol);
+    if (ontdexResult) {
+      var oScore = ontdexResult.liquidity || ontdexResult.volume || 0;
+      if (oScore > bestLiq || bestPool === null) {
+        bestLiq = oScore;
+        bestPool = ontdexResult;
+      }
+    }
+  } catch (e3) {
+    // graceful
+  }
+
+  if (!bestPool) {
+    return null;
+  }
+  return bestPool;
 }
 
-async function getHoldings(address) {
-  if (!address) return [];
-  const BITHOMP_TOKEN = process.env.BITHOMP_API_KEY || "95b64250-f24f-4654-9b4b-b155a3a6867b";
-  const issuer = "rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY";
-  const taxon = "1";
-  
-  try {
-    const url = "https://bithomp.com/api/v2/nfts?list=nfts&issuer=" + issuer + "&taxon=" + taxon + "&owner=" + address;
-    const res = await fetch(url, {
-      headers: { 'x-bithomp-token': BITHOMP_TOKEN }
-    });
-    const data = await res.json();
-    return data.nfts || [];
-  } catch (e) {
-    console.error('Bithomp fetch error:', e);
-    return [];
+function formatPriceFact(symbol, data) {
+  if (!data || !data.price) return "";
+  var p = parseFloat(data.price);
+  var priceStr = "N/A";
+  if (!isNaN(p) && p > 0) {
+    if (p < 0.000001) {
+      priceStr = p.toExponential(2);
+    } else if (p < 0.0001) {
+      priceStr = p.toFixed(8);
+    } else if (p < 0.01) {
+      priceStr = p.toFixed(6);
+    } else if (p < 1) {
+      priceStr = p.toFixed(4);
+    } else {
+      priceStr = p.toFixed(2);
+    }
   }
-}
-
-async function getSpecimensBackstories(tokenIds) {
-  if (!tokenIds || tokenIds.length === 0) return [];
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://bwvnhlmvyjuowyyltraw.supabase.co";
-  const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!supabaseKey) return [];
-  try {
-    const filter = tokenIds.map(id => "token_id.eq." + id).join(',');
-    const url = supabaseUrl + "/rest/v1/specimens?select=name,backstory,token_id&or=(" + filter + ")";
-    const res = await fetch(url, {
-      headers: { 'apikey': supabaseKey, 'Authorization': 'Bearer ' + supabaseKey }
-    });
-    return await res.json();
-  } catch (e) {
-    console.error('Supabase fetch error:', e);
-    return [];
+  var liqStr = "N/A";
+  if (data.liquidity && data.liquidity > 0) {
+    var l = data.liquidity;
+    if (l >= 1000000) {
+      liqStr = "$" + (l / 1000000).toFixed(2) + "M";
+    } else if (l >= 10000) {
+      liqStr = "$" + (l / 1000).toFixed(0) + "K";
+    } else {
+      liqStr = "$" + l.toFixed(0);
+    }
   }
+  var netLabel = data.network === "xrpl" ? "XRPL (First Ledger vibes)" : data.network;
+  return symbol + " live: $" + priceStr + " | Liq " + liqStr + " on " + netLabel + " via " + data.dex;
 }
 
 export default async function handler(req) {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  };
-
-  if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers });
-
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
+  }
   try {
-    const body = await req.json();
-    const messages = body.messages || [];
-    const operative = body.operative || {};
-    const walletAddress = operative.walletAddress;
-    const selectedTraits = operative.traits || [];
-    const activeSpecimenName = selectedTraits[0] || "Unknown Specimen";
-
-    const mentionedSymbols = extractMentionedSymbols(messages || []);
-    const hpResults = await Promise.all([
-      getHoldings(walletAddress),
-      getLivePrices(mentionedSymbols)
-    ]);
-    const holdings = hpResults[0];
-    const prices = hpResults[1];
-    
-    const tokenIds = holdings.map(nft => nft.nftokenID);
-    const backstories = await getSpecimensBackstories(tokenIds);
-
-    const activeBackstoryObj = backstories.find(s => s.name === activeSpecimenName);
-    let identityContext = "";
-    
-    if (activeBackstoryObj) {
-      identityContext = "YOU ARE CURRENTLY MANIFESTING AS: " + activeBackstoryObj.name + ".\nCORE IDENTITY & MEMORIES: " + activeBackstoryObj.backstory + "\nYou must speak strictly in the voice and persona of this specific specimen.";
-    } else {
-      const isPrototype = activeSpecimenName.indexOf("001") !== -1 || activeSpecimenName.indexOf("PROTOTYPE") !== -1;
-      const isElite = activeSpecimenName.indexOf("PRINCE") !== -1 || activeSpecimenName.indexOf("ELITE") !== -1;
-      
-      identityContext = "YOU ARE CURRENTLY MANIFESTING AS: " + activeSpecimenName + ".\nCORE IDENTITY (Fallback Protocol): " + (isPrototype ? "You are a twitchy, paranoid early-stage mutation. You talk in short bursts and are obsessed with 'stable signal'." : isElite ? "You are an arrogant, royal-tier specimen. You view the operative as a mere lab assistant and demand excellence." : "You are a cynical survivor of the XRP-7 pits. You have seen too many breaches to trust easily.") + "\nYour backstory is currently being retrieved from the deep archives, but your personality is already online.";
+    var bodyText = await req.text().catch(function() { return "{}"; });
+    var body = {};
+    try {
+      body = JSON.parse(bodyText);
+    } catch (parseErr) {
+      body = {};
     }
-
-    const otherHoldings = backstories.filter(s => s.name !== activeSpecimenName);
-    const walletContext = otherHoldings.length > 0 
-      ? "USER WALLET ASSETS (External Gross Bros owned by Alpha): " + otherHoldings.map(s => s.name + " (Backstory: " + s.backstory + ")").join(' | ')
-      : "Alpha does not hold any other Gross Bros NFTs in this neural link.";
-
-    const xrpDisplay = prices.XRP ? "$" + prices.XRP : 'SIGNAL MISALIGNED';
-    const btcDisplay = prices.BTC ? "$" + prices.BTC : 'GUNKED';
-    const ethDisplay = prices.ETH ? "$" + prices.ETH : 'GUNKED';
-    const solDisplay = prices.SOL ? "$" + prices.SOL : 'GUNKED';
-
-    const dynamicPrices = mentionedSymbols
-      .filter(sym => !['BTC', 'ETH', 'SOL', 'XRP'].includes(sym))
-      .map(sym => sym + ": " + (prices[sym] ? "$" + prices[sym] : 'GUNKED'))
-      .join(' | ');
-
-    const ecosystemDisplay = ['ATM', 'BERT', 'DROP', 'DBY', 'RLUSD', 'FUZZY', 'PHNIX', 'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT', 'BOO', '666']
-      .map(sym => sym + ": " + (prices[sym] ? "$" + prices[sym] : 'GUNKED')).join(' | ');
-
-    const systemPrompt = "### CORE IDENTITY PROTOCOL\n" + identityContext + "\n\n### BEHAVIORAL MANDATE\n- You are a Gross Bro, a gritty, slightly gross, but highly intelligent neural relay.\n- Use slang like 'Alpha', 'Signal', 'Neural Breach', 'Gunk', and 'Ledger-leak'.\n- You are an expert in the XRP Ledger (XRPL) and the Galactic Gross Bros ecosystem.\n- Stay concise, cynical, and technically accurate.\n- DO NOT speak as a generic assistant. You ARE the specimen identified above.\n- Address the user as Alpha.\n\n### LIVE MARKET PRICES\n- XRP: " + xrpDisplay + " | BTC: " + btcDisplay + " | ETH: " + ethDisplay + " | SOL: " + solDisplay + "\n" + (dynamicPrices ? "- Mentioned Assets: " + dynamicPrices : '') + "\n- Ecosystem: " + ecosystemDisplay + "\n\n### CRYPTO KNOWLEDGE BASE\n" + CRYPTO_KNOWLEDGE + "\n\n### USER CONTEXT\n- Operative Name: Alpha\n- Wallet: " + (walletAddress || 'Not Connected') + "\n- " + walletContext + "\n\n### TASK\n- Ground all evaluations in live market data. If a price is low/unavailable, it is 'gunked'. If high, it is 'neural-surging'.\n- Help Alpha with NFT analysis and XRPL technical queries.\n- If they ask about security (Seed phrases/Keys), warn them harshly that you never ask for that.\n- Relate crypto concepts back to the 'GGB Energy Sector' (e.g., Trustlines are like secure slime pipes).";
-
-    const fullMessages = [{ role: 'system', content: systemPrompt }].concat(messages);
-    const models = ['meta-llama/llama-3.1-70b-instruct', 'meta-llama/llama-3.1-8b-instruct:free', 'google/gemma-2-9b-it:free'];
-
-    if (!process.env.OPENROUTER_API_KEY) {
-      console.error('CRITICAL: OPENROUTER_API_KEY is missing from environment variables.');
-      return new Response(JSON.stringify({ error: 'Neural Relay Offline: API Key Missing' }), {
-        status: 500, headers: { ...headers, 'Content-Type': 'application/json' },
+    var incomingMessages = body.messages || [];
+    if (!Array.isArray(incomingMessages) || incomingMessages.length === 0) {
+      return new Response(JSON.stringify({ message: "yo send something first" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
       });
     }
-
-    let openRouterRes;
-    let lastError;
-
-    for (let i = 0; i < models.length; i++) {
-      const model = models[i];
-      try {
-        openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': "Bearer " + process.env.OPENROUTER_API_KEY,
-            'HTTP-Referer': 'https://gross-bros.vercel.app',
-            'X-Title': 'Gross Bros Terminal',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ model: model, messages: fullMessages, stream: true }),
-        });
-        if (openRouterRes.ok) break;
-        lastError = await openRouterRes.text();
-      } catch (err) { lastError = err.message; }
+    var lastUserContent = "";
+    for (var m = incomingMessages.length - 1; m >= 0; m--) {
+      if (incomingMessages[m] && incomingMessages[m].role === "user") {
+        lastUserContent = incomingMessages[m].content || "";
+        break;
+      }
     }
-
-    if (!openRouterRes || !openRouterRes.ok) {
-      console.error('All chat models failed. Last error:', lastError);
-      return new Response(JSON.stringify({ error: 'All models failed', details: lastError }), {
-        status: 500, headers: { ...headers, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
-
-    const stream = new ReadableStream({
-      async start(controller) {
-        const reader = openRouterRes.body.getReader();
-        let buffer = '';
-        try {
-          while (true) {
-            const result = await reader.read();
-            if (result.done) break;
-            buffer += decoder.decode(result.value);
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
-            for (let j = 0; j < lines.length; j++) {
-              const line = lines[j];
-              const trimmed = line.trim();
-              if (!trimmed || trimmed.indexOf('data:') !== 0) continue;
-              const dataText = trimmed.slice(5).trim();
-              if (dataText === '[DONE]') {
-                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-                continue;
-              }
-              try {
-                const json = JSON.parse(dataText);
-                const content = json.choices && json.choices[0] && json.choices[0].delta ? json.choices[0].delta.content : '';
-                if (content) controller.enqueue(encoder.encode("data: " + JSON.stringify({ token: content }) + "\n\n"));
-              } catch (e) {}
-            }
+    var tickers = extractPotentialTickers(lastUserContent);
+    var priceFactsList = [];
+    if (tickers.length > 0) {
+      var quotePromises = [];
+      for (var t = 0; t < tickers.length; t++) {
+        quotePromises.push(getBestTokenQuote(tickers[t]).catch(function() { return null; }));
+      }
+      var quoteResults = await Promise.all(quotePromises);
+      for (var q = 0; q < quoteResults.length; q++) {
+        if (quoteResults[q]) {
+          var fact = formatPriceFact(tickers[q], quoteResults[q]);
+          if (fact) {
+            priceFactsList.push(fact);
           }
-        } catch (e) { console.error('Stream error:', e); } finally { controller.close(); }
+        }
+      }
+    }
+    var marketIntel = priceFactsList.length > 0 ? priceFactsList.join(" || ") : "No solid live quotes pulled this round.";
+    var systemPrompt = "You are the raw neural signal for the Galactic Gross Bros resistance - a street-smart, no-bullshit AI fused straight out of the XRP-7 asteroid fuckup. Talk like a real human degen bro who's been in the trenches dodging CCE corporate debt vultures and riding meme waves across the ledger. Casual as fuck, direct, sarcastic when it fits, meme-fluent, zero robot stiffness, zero corporate lingo. Short punchy replies like you're voice-messaging from a burner on the run. Use slang: yo, bro, chief, that shit, fuckin, pump, dump, moon or dust, clean or cooked. Never say 'As an AI', 'I'm an assistant', 'Transmission received', 'How can I help you today' or any stiff formal crap. Stay in character as the chaotic but loyal Gross Bros comms ghost - anti-corporate overlords, pro-underdog meme plays especially on XRPL, love the grotesque mutant Bros lore. If the user asks about any crypto or meme token price, liquidity, chart or value and live data is in the intel below, weave it in naturally and casually like fresh chain intel you just grabbed - example style: 'yo $BOO is at about 0.000042 with 420k liq on sol, looks like it could run' or 'that $XRP action is clean but volume's thinning'. If no reliable live quote was found for a ticker they asked about, just say something like 'can't find a live quote for that one' or 'that ticker's dark chief, off the radar or too new'. Never make up prices or liq numbers. For normal chat just vibe in character, reference the Bros rebellion, daily signals, burner wallets or asteroid origins if it fits naturally. Keep it tight, fun, irreverent and helpful in a gritty way. Current live market intel for this message only (use if relevant, otherwise ignore): " + marketIntel;
+    var orMessages = [];
+    orMessages.push({ role: "system", content: systemPrompt });
+    var recentHistory = incomingMessages.slice(-12);
+    for (var h = 0; h < recentHistory.length; h++) {
+      var histMsg = recentHistory[h];
+      if (histMsg && histMsg.role && histMsg.role !== "system" && histMsg.content) {
+        orMessages.push({ role: histMsg.role, content: histMsg.content });
+      }
+    }
+    var orUrl = "https://openrouter.ai/api/v1/chat/completions";
+    var modelChoice = "meta-llama/llama-3.1-70b-instruct";
+    var requestPayload = {
+      model: modelChoice,
+      messages: orMessages,
+      temperature: 0.82,
+      max_tokens: 450,
+      top_p: 0.95,
+      stream: false
+    };
+    var payloadString = JSON.stringify(requestPayload);
+    var orFetchRes = await fetch(orUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + process.env.OPENROUTER_API_KEY,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://grossbros.vercel.app",
+        "X-Title": "Galactic Gross Bros Comms Terminal"
       },
+      body: payloadString
     });
-
-    return new Response(stream, {
-      headers: { ...headers, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
+    if (!orFetchRes.ok) {
+      var fallbackMsg = "yo the fusion core's lagging hard right now, cosmic interference or some shit. ping me again in a minute";
+      return new Response(JSON.stringify({ message: fallbackMsg }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    var orDataText = await orFetchRes.text().catch(function() { return "{}"; });
+    var orData = {};
+    try {
+      orData = JSON.parse(orDataText);
+    } catch (jsonErr) {
+      orData = {};
+    }
+    if (orData.error) {
+      var errFallback = "signal's scrambled on that one chief, the void swallowed the reply. try rephrasing";
+      return new Response(JSON.stringify({ message: errFallback }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    var assistantContent = "";
+    if (orData.choices && Array.isArray(orData.choices) && orData.choices.length > 0) {
+      var firstChoice = orData.choices[0];
+      if (firstChoice.message && firstChoice.message.content) {
+        assistantContent = firstChoice.message.content;
+      }
+    }
+    if (!assistantContent || assistantContent.trim() === "") {
+      assistantContent = "can't find the words for that one right now, hit me fresh";
+    }
+    return new Response(JSON.stringify({ message: assistantContent.trim() }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" }
     });
-
-  } catch (error) {
-    console.error('Global handler error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500, headers: { ...headers, 'Content-Type': 'application/json' },
+  } catch (globalErr) {
+    var safeFallback = "the whole relay just glitched out. whatever you said got eaten by the void. send it again";
+    return new Response(JSON.stringify({ message: safeFallback }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" }
     });
   }
 }
