@@ -33,8 +33,23 @@ const CRYPTO_KNOWLEDGE = '\nCORE XRPL KNOWLEDGE:\n' +
 
 function extractMentionedSymbols(messages) {
   const text = messages.map(m => m.content).join(' ').toUpperCase();
-  const commonSymbols = ['BTC', 'ETH', 'SOL', 'XRP', 'XLM', 'HBAR', 'ADA', 'DOT', 'DOGE', 'SHIB', 'PEPE', 'LINK', 'MATIC', 'ALGO', 'ATM', 'BERT', 'DROP', 'DBY', 'FUZZY'];
-  return commonSymbols.filter(sym => text.includes(sym));
+  const commonSymbols = [
+    'BTC', 'ETH', 'SOL', 'XRP', 'XLM', 'HBAR', 'ADA', 'DOT', 'DOGE', 'SHIB', 'PEPE', 
+    'LINK', 'MATIC', 'ALGO', 'ATM', 'BERT', 'DROP', 'DBY', 'FUZZY', 'BOO', '666', 
+    'PHNIX', 'RLUSD', 'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT'
+  ];
+  const found = commonSymbols.filter(sym => text.indexOf(sym) !== -1);
+  
+  const dollarRegex = /\$([A-Z0-9]{2,10})/g;
+  let match;
+  while ((match = dollarRegex.exec(text)) !== null) {
+    const sym = match[1];
+    if (found.indexOf(sym) === -1) {
+      found.push(sym);
+    }
+  }
+  
+  return found;
 }
 
 const SYMBOL_MAP = {
@@ -49,12 +64,13 @@ async function getLivePrices(mentionedSymbols = []) {
     XRP: null, BTC: null, ETH: null, SOL: null,
     ATM: null, BERT: null, DROP: null, DBY: null, RLUSD: null,
     FUZZY: null, PHNIX: null, ARMY: null, PRINCE: null,
-    BEARXRPH: null, PIDGEON: null, SLT: null, XRPH: null, XRT: null
+    BEARXRPH: null, PIDGEON: null, SLT: null, XRPH: null, XRT: null,
+    BOO: null, '666': null
   };
 
   const idsToFetch = ['ripple', 'bitcoin', 'ethereum', 'solana'];
   mentionedSymbols.forEach(sym => {
-    if (SYMBOL_MAP[sym] && !idsToFetch.includes(SYMBOL_MAP[sym])) {
+    if (SYMBOL_MAP[sym] && idsToFetch.indexOf(SYMBOL_MAP[sym]) === -1) {
       idsToFetch.push(SYMBOL_MAP[sym]);
     }
   });
@@ -62,11 +78,13 @@ async function getLivePrices(mentionedSymbols = []) {
   try {
     const results = await Promise.allSettled([
       fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools').then(r => r.json()),
-      fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + idsToFetch.join(',') + '&vs_currencies=usd').then(r => r.json())
+      fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + idsToFetch.join(',') + '&vs_currencies=usd').then(r => r.json()),
+      fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools?page=2').then(r => r.json())
     ]);
 
     const dexRes = results[0];
     const geckoRes = results[1];
+    const dexRes2 = results[2];
 
     if (geckoRes.status === 'fulfilled' && geckoRes.value) {
       Object.keys(SYMBOL_MAP).forEach(sym => {
@@ -90,18 +108,37 @@ async function getLivePrices(mentionedSymbols = []) {
       });
     }
 
-    if (dexRes.status === 'fulfilled' && dexRes.value && dexRes.value.data) {
-      const pools = dexRes.value.data;
-      const findPrice = (symbol) => {
-        const pool = pools.find(p => p.attributes && p.attributes.name && p.attributes.name.toUpperCase().indexOf(symbol.toUpperCase()) !== -1);
-        return pool ? pool.attributes.base_token_price_usd : null;
-      };
+    const processPools = (poolData) => {
+      if (poolData && poolData.data) {
+        const pools = poolData.data;
+        const findPrice = (symbol) => {
+          const pool = pools.find(p => p.attributes && p.attributes.name && p.attributes.name.toUpperCase().indexOf(symbol.toUpperCase()) !== -1);
+          return pool ? pool.attributes.base_token_price_usd : null;
+        };
 
-      ['ATM', 'BERT', 'DROP', 'DBY', 'RLUSD', 'FUZZY', 'PHNIX', 'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT'].forEach(sym => {
-        const p = findPrice(sym);
-        if (p) prices[sym] = parseFloat(p).toFixed(10);
-      });
-    }
+        const coreGGB = [
+          'ATM', 'BERT', 'DROP', 'DBY', 'RLUSD', 'FUZZY', 'PHNIX', 
+          'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT', 
+          'BOO', '666'
+        ];
+        
+        coreGGB.forEach(sym => {
+          const p = findPrice(sym);
+          if (p && !prices[sym]) prices[sym] = parseFloat(p).toFixed(10);
+        });
+        
+        mentionedSymbols.forEach(sym => {
+          if (!prices[sym]) {
+            const p = findPrice(sym);
+            if (p) prices[sym] = parseFloat(p).toFixed(10);
+          }
+        });
+      }
+    };
+
+    if (dexRes.status === 'fulfilled') processPools(dexRes.value);
+    if (dexRes2.status === 'fulfilled') processPools(dexRes2.value);
+
   } catch (e) {
     console.error('Price fetch error:', e);
   }
@@ -200,7 +237,7 @@ export default async function handler(req) {
       .map(sym => sym + ": " + (prices[sym] ? "$" + prices[sym] : 'GUNKED'))
       .join(' | ');
 
-    const ecosystemDisplay = ['ATM', 'BERT', 'DROP', 'DBY', 'RLUSD', 'FUZZY', 'PHNIX', 'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT']
+    const ecosystemDisplay = ['ATM', 'BERT', 'DROP', 'DBY', 'RLUSD', 'FUZZY', 'PHNIX', 'ARMY', 'PRINCE', 'BEARXRPH', 'PIDGEON', 'SLT', 'XRPH', 'XRT', 'BOO', '666']
       .map(sym => sym + ": " + (prices[sym] ? "$" + prices[sym] : 'GUNKED')).join(' | ');
 
     const systemPrompt = "### CORE IDENTITY PROTOCOL\n" + identityContext + "\n\n### BEHAVIORAL MANDATE\n- You are a Gross Bro, a gritty, slightly gross, but highly intelligent neural relay.\n- Use slang like 'Alpha', 'Signal', 'Neural Breach', 'Gunk', and 'Ledger-leak'.\n- You are an expert in the XRP Ledger (XRPL) and the Galactic Gross Bros ecosystem.\n- Stay concise, cynical, and technically accurate.\n- DO NOT speak as a generic assistant. You ARE the specimen identified above.\n- Address the user as Alpha.\n\n### LIVE MARKET PRICES\n- XRP: " + xrpDisplay + " | BTC: " + btcDisplay + " | ETH: " + ethDisplay + " | SOL: " + solDisplay + "\n" + (dynamicPrices ? "- Mentioned Assets: " + dynamicPrices : '') + "\n- Ecosystem: " + ecosystemDisplay + "\n\n### CRYPTO KNOWLEDGE BASE\n" + CRYPTO_KNOWLEDGE + "\n\n### USER CONTEXT\n- Operative Name: Alpha\n- Wallet: " + (walletAddress || 'Not Connected') + "\n- " + walletContext + "\n\n### TASK\n- Ground all evaluations in live market data. If a price is low/unavailable, it is 'gunked'. If high, it is 'neural-surging'.\n- Help Alpha with NFT analysis and XRPL technical queries.\n- If they ask about security (Seed phrases/Keys), warn them harshly that you never ask for that.\n- Relate crypto concepts back to the 'GGB Energy Sector' (e.g., Trustlines are like secure slime pipes).";
