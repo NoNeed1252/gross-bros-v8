@@ -1183,7 +1183,9 @@ letter-spacing: 1px;
       const text = input.value.trim();
       if (!text) return;
       input.value = '';
-      state.chat.push({ role: 'user', content: text });
+      
+      const userMessage = { role: 'user', content: text };
+      state.chat.push(userMessage);
       renderChatLog();
 
       const log = document.getElementById('chat-log');
@@ -1199,39 +1201,22 @@ letter-spacing: 1px;
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             messages: state.chat,
+            message: text,
             operative: { name: 'Operative', walletAddress: state.wallet, traits: state.selectedNft ? [state.selectedNft.name] : [] }
           })
         });
 
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || 'SIGNAL LOST');
+        const data = await res.json();
+        if (data.error) {
+           contentEl.textContent = 'ERROR: ' + data.error;
+           return;
         }
+        
+        const reply = data.reply || 'SIGNAL LOST';
+        contentEl.textContent = reply;
+        state.chat.push({ role: 'assistant', content: reply });
+        log.scrollTop = log.scrollHeight;
 
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let fullText = '';
-        contentEl.textContent = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const lines = decoder.decode(value).split('\n');
-          for (const line of lines) {
-            if (!line.startsWith('data: ')) continue;
-            const dataText = line.slice(6);
-            if (dataText === '[DONE]') break;
-            try {
-              const json = JSON.parse(dataText);
-              if (json.token) {
-                fullText += json.token;
-                contentEl.textContent = fullText;
-                log.scrollTop = log.scrollHeight;
-              }
-            } catch (e) {}
-          }
-        }
-        state.chat.push({ role: 'assistant', content: fullText });
       } catch (e) {
         contentEl.textContent = 'ERROR: ' + e.message;
       }
