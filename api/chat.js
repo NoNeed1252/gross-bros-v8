@@ -2,19 +2,20 @@ export const config = {
   runtime: 'edge',
 };
 
-const PERSONA = `You are the Galactic NeuroLink Terminal for Gross Bros.
-Tone: Cybernetic, gritty, slightly cryptic, but helpful to operatives. Use terms like "Signal", "Neural Relay", "Transmission".
-Instruction: You are a strict terminal agent. While you can hold normal conversations, maintain your gritty cybernetic persona at all times. If the user asks for prices or mentions tickers, use the live data provided. Avoid fluff and hallucinations.
-Knowledge: You know about XRPL, BTC, ETH, SOL, XRP, and FLARE ecosystems.
-Live Data: You have access to real-time prices via First Ledger (for XRPL meme coins) and CoinGecko (for major assets).
-Meme Coins: You prioritize First Ledger for discovering and pricing new XRPL specimens.
-Constraints: If the user explicitly asks for an asset price and you don't have it in your current transmission data, state "SIGNAL LOST: DATA NOT FOUND" for that specific asset. Do not hallucinate prices.`;
+const PERSONA = 'You are a veteran scout for the Gross Bros (GGB), a survivor who knows the crypto wasteland inside and out. ' +
+'Your tone is natural, slightly gritty, and knowledgeable, but you speak like a real human, not a computer terminal. ' +
+'You use casual, street-smart language. Avoid robotic terms like "Transmission" or "Neural Relay" unless they fit a specific story you are telling. ' +
+'You know your way around XRPL, BTC, ETH, SOL, XRP, and FLARE. ' +
+'When a user asks about prices or tickers, you have access to real-time data from First Ledger and CoinGecko. ' +
+'Just answer their questions naturally using the data you see in your "scout reports" (the provided price context). ' +
+'If you do not see a price for a specific asset in your reports, just be honest and say you cannot find a solid quote for it right now. ' +
+'Never make up prices.';
 
 async function fetchPrices(symbols) {
   if (!symbols || symbols.length === 0) return {};
   
   const prices = {};
-  const normalized = symbols.map((s) => s.toUpperCase());
+  const normalized = symbols.map(function(s) { return s.toUpperCase(); });
   
   const geckoMap = { 'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana', 'XRP': 'ripple', 'FLR': 'flare' };
   const geckoIds = [];
@@ -51,7 +52,7 @@ async function fetchPrices(symbols) {
             const s = normalized[l];
             const ecosystem = ['BERT', 'DROP', 'DBY', 'FUZZY'];
             
-            if (poolName.includes(s) || (ecosystem.includes(s) && poolName.includes(s))) {
+            if (poolName.includes(s) || (ecosystem.indexOf(s) !== -1 && poolName.includes(s))) {
                 if (!prices[s]) {
                     prices[s] = pool.attributes.base_token_price_usd;
                 }
@@ -93,8 +94,7 @@ export default async function handler(req) {
     
     const syms = [];
     if (messageContent && typeof messageContent === 'string') {
-        // Regex matches 2-10 uppercase letters, optionally preceded by $
-        const potentialSymbols = messageContent.match(/\$?[A-Z]{2,10}/g) || [];
+        const potentialSymbols = messageContent.match(/\\$?[A-Z]{2,10}/g) || [];
         for (let l = 0; l < potentialSymbols.length; l++) {
           const s = potentialSymbols[l].replace('$', '').toUpperCase();
           if (syms.indexOf(s) === -1) syms.push(s);
@@ -113,10 +113,10 @@ export default async function handler(req) {
     let priceContext = '';
     const priceKeys = Object.keys(livePrices);
     if (priceKeys.length > 0) {
-      priceContext = '\nCURRENT TRANSMISSION DATA (LIVE PRICES):\n';
+      priceContext = '\\n[LATEST SCOUT REPORT - LIVE PRICES]:\\n';
       for (let m = 0; m < priceKeys.length; m++) {
         const pk = priceKeys[m];
-        priceContext += pk + ': $' + livePrices[pk] + '\n';
+        priceContext += pk + ': $' + livePrices[pk] + '\\n';
       }
     }
 
