@@ -4,13 +4,15 @@ export const config = {
 
 const PERSONA = `You are the Galactic NeuroLink Terminal for Gross Bros.
 Tone: Cybernetic, gritty, slightly cryptic, but helpful to operatives. Use terms like "Signal", "Neural Relay", "Transmission".
-Instruction: You are a strict terminal agent. Do not act as a conversational bot. Always use the live data provided. Avoid fluff, filler words, or hallucinations. Maintain technical precision.
+Instruction: You are a strict terminal agent. While you can hold normal conversations, maintain your gritty cybernetic persona at all times. If the user asks for prices or mentions tickers, use the live data provided. Avoid fluff and hallucinations.
 Knowledge: You know about XRPL, BTC, ETH, SOL, XRP, and FLARE ecosystems.
 Live Data: You have access to real-time prices via First Ledger (for XRPL meme coins) and CoinGecko (for major assets).
 Meme Coins: You prioritize First Ledger for discovering and pricing new XRPL specimens.
-Constraints: If you don't have a price, state "SIGNAL LOST: DATA NOT FOUND" for that specific asset. Do not hallucinate prices.`;
+Constraints: If the user explicitly asks for an asset price and you don't have it in your current transmission data, state "SIGNAL LOST: DATA NOT FOUND" for that specific asset. Do not hallucinate prices.`;
 
 async function fetchPrices(symbols) {
+  if (!symbols || symbols.length === 0) return {};
+  
   const prices = {};
   const normalized = symbols.map((s) => s.toUpperCase());
   
@@ -45,18 +47,11 @@ async function fetchPrices(symbols) {
         const pool = xrplData.data[k];
         const poolName = pool.attributes.name.toUpperCase();
         
-        // Log raw pool names for diagnostics
-        console.log('SCANNING POOL:', poolName);
-        
-        // Relaxed matching: check if any of our symbols appear in the pool name
-        // GeckoTerminal pool names often look like "FUZZY / XRP" or "FUZZY/XRP" or "XRP / FUZZY"
         for (let l = 0; l < normalized.length; l++) {
             const s = normalized[l];
             const ecosystem = ['BERT', 'DROP', 'DBY', 'FUZZY'];
             
-            // Check if symbol or known ecosystem tokens match a part of the pool name
             if (poolName.includes(s) || (ecosystem.includes(s) && poolName.includes(s))) {
-                // If we haven't found a price yet, or this is a primary match, take it
                 if (!prices[s]) {
                     prices[s] = pool.attributes.base_token_price_usd;
                 }
@@ -98,7 +93,8 @@ export default async function handler(req) {
     
     const syms = [];
     if (messageContent && typeof messageContent === 'string') {
-        const potentialSymbols = messageContent.match(/\\$?[A-Z]{2,10}/g) || [];
+        // Regex matches 2-10 uppercase letters, optionally preceded by $
+        const potentialSymbols = messageContent.match(/\$?[A-Z]{2,10}/g) || [];
         for (let l = 0; l < potentialSymbols.length; l++) {
           const s = potentialSymbols[l].replace('$', '').toUpperCase();
           if (syms.indexOf(s) === -1) syms.push(s);
@@ -106,19 +102,21 @@ export default async function handler(req) {
     }
     
     let livePrices = {};
-    try {
-        livePrices = await fetchPrices(syms);
-    } catch (pe) {
-        console.error('Price Fetch Critical Fail', pe);
+    if (syms.length > 0) {
+      try {
+          livePrices = await fetchPrices(syms);
+      } catch (pe) {
+          console.error('Price Fetch Critical Fail', pe);
+      }
     }
     
     let priceContext = '';
     const priceKeys = Object.keys(livePrices);
     if (priceKeys.length > 0) {
-      priceContext = '\\nCURRENT TRANSMISSION DATA (LIVE PRICES):\\n';
+      priceContext = '\nCURRENT TRANSMISSION DATA (LIVE PRICES):\n';
       for (let m = 0; m < priceKeys.length; m++) {
         const pk = priceKeys[m];
-        priceContext += pk + ': $' + livePrices[pk] + '\\n';
+        priceContext += pk + ': $' + livePrices[pk] + '\n';
       }
     }
 
