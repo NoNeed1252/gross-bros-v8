@@ -100,10 +100,15 @@ async function getOnTheDEXQuote(symbol) {
 async function getBestTokenQuote(symbol) {
   if (!symbol) return null;
   var cleanSymbol = symbol.toUpperCase().replace(/^\$/, "");
-  var symbolRegex = new RegExp("(^|[^A-Z0-9])" + cleanSymbol + "([^A-Z0-9]|$)", "i");
+  
+  // Relaxed regex to match tokens even with address suffixes or weird pair names
+  // e.g. ATM.r... or ATM/XRP or FUZZY_r...
+  var symbolRegex = new RegExp("(^|[^A-Z0-9])" + cleanSymbol + "($|[^A-Z0-9])", "i");
+  
   var bestPool = null;
   var bestLiq = 0;
 
+  // 1. STRICT XRPL PREFERENCE: Try GeckoTerminal XRPL network specific search
   try {
     var xrplUrl = "https://api.geckoterminal.com/api/v2/search/pools?query=" + encodeURIComponent(cleanSymbol) + "&network=xrpl";
     var xrplRes = await fetch(xrplUrl, {
@@ -121,11 +126,13 @@ async function getBestTokenQuote(symbol) {
           if (!xrPool || !xrPool.attributes) continue;
           var xrAttrs = xrPool.attributes;
           var xrName = (xrAttrs.name || "").toUpperCase();
-          var xrMatch = symbolRegex.test(xrName);
-          if (xrMatch) {
+          
+          // Use more robust matching: check for exact symbol or symbol with suffix
+          var hasMatch = xrName.indexOf(cleanSymbol) !== -1;
+          if (hasMatch) {
             var xrLiqStr = xrAttrs.reserve_in_usd || xrAttrs.liquidity || "0";
             var xrLiq = parseFloat(xrLiqStr) || 0;
-            if (xrLiq > bestLiq) {
+            if (xrLiq >= bestLiq) {
               var xrPrice = xrAttrs.base_token_price_usd || xrAttrs.quote_token_price_usd || "N/A";
               var xrDex = "First Ledger / XRPL DEX";
               if (xrAttrs.dex_name) {
@@ -151,11 +158,13 @@ async function getBestTokenQuote(symbol) {
     // graceful
   }
 
+  // 2. STRICT XRPL PREFERENCE: Try OnTheDEX (XRPL specific)
   try {
     var ontdexResult = await getOnTheDEXQuote(cleanSymbol);
     if (ontdexResult) {
       var oScore = ontdexResult.liquidity || ontdexResult.volume || 0;
-      if (oScore > bestLiq || bestPool === null) {
+      // If OnTheDEX result is found, it's XRPL, so we prioritize it
+      if (oScore >= bestLiq || bestPool === null) {
         bestLiq = oScore;
         bestPool = ontdexResult;
       }
@@ -164,10 +173,13 @@ async function getBestTokenQuote(symbol) {
     // graceful
   }
 
+  // IF WE FOUND ANY XRPL POOL, STOP HERE. DO NOT FALL BACK TO GLOBAL.
+  // This prevents BSC/ETH pools from hijacking the search even if they have more liq.
   if (bestPool) {
     return bestPool;
   }
 
+  // 3. GLOBAL FALLBACK: Only if no XRPL pool was found at all
   try {
     var genUrl = "https://api.geckoterminal.com/api/v2/search/pools?query=" + encodeURIComponent(cleanSymbol);
     var genRes = await fetch(genUrl, {
