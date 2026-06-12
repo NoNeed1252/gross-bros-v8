@@ -1196,6 +1196,9 @@ letter-spacing: 1px;
       const contentEl = bubble.querySelector('.msg-content');
 
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1203,22 +1206,59 @@ letter-spacing: 1px;
             messages: state.chat,
             message: text,
             operative: { name: 'Operative', walletAddress: state.wallet, traits: state.selectedNft ? [state.selectedNft.name] : [] }
-          })
+          }),
+          signal: controller.signal
         });
 
-        const data = await res.json();
-        if (data.error) {
-           contentEl.textContent = 'ERROR: ' + data.error;
-           return;
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || ('SIGNAL LOST (STATUS ' + res.status + ')'));
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+        contentEl.textContent = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+          for (const line of lines) {
+            if (!line.trim() || !line.startsWith('data: ')) continue;
+            const dataText = line.slice(6).trim();
+            if (dataText === '[DONE]') break;
+            try {
+              const json = JSON.parse(dataText);
+              const token = json.choices?.[0]?.delta?.content || json.token || '';
+              if (token) {
+                fullText += token;
+                contentEl.textContent = fullText;
+                log.scrollTop = log.scrollHeight;
+              }
+            } catch (e) {
+                // Fallback for non-streamed content if server sends raw JSON reply
+                try {
+                    const directJson = JSON.parse(chunk);
+                    if (directJson.reply) {
+                        fullText = directJson.reply;
+                        contentEl.textContent = fullText;
+                        break;
+                    }
+                } catch(e2) {}
+            }
+          }
         }
         
-        const reply = data.reply || 'SIGNAL LOST';
-        contentEl.textContent = reply;
-        state.chat.push({ role: 'assistant', content: reply });
-        log.scrollTop = log.scrollHeight;
-
+        if (!fullText) throw new Error('EMPTY TRANSMISSION');
+        
+        state.chat.push({ role: 'assistant', content: fullText });
       } catch (e) {
-        contentEl.textContent = 'ERROR: ' + e.message;
+        console.error('Chat error:', e);
+        contentEl.textContent = 'SIGNAL BREACH: ' + (e.name === 'AbortError' ? 'REQUEST TIMEOUT' : e.message);
       }
     }
 
