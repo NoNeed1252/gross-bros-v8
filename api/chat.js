@@ -27,7 +27,7 @@ async function getLivePrices(mentionedSymbols) {
 
 async function getHoldings(address) {
   if (!address) return [];
-  var BITHOMP_TOKEN = '95b64250-f24f-4654-9b4b-b155a3a6867b';
+  var BITHOMP_TOKEN = process.env.BITHOMP_TOKEN;
   try {
     var url = 'https://bithomp.com/api/v2/nfts?list=nfts&issuer=rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY&taxon=1&owner=' + address;
     var res = await fetch(url, { headers: { 'x-bithomp-token': BITHOMP_TOKEN } });
@@ -38,8 +38,8 @@ async function getHoldings(address) {
 
 export default async function handler(req) {
   var headers = { 'Content-Type': 'application/json' };
-  var xamanKey = '88e5dad9-2503-455b-8777-628f8007a82c';
-  var xamanSecret = 'b09b8426-c2cc-491b-872e-06579b7654a8';
+  var xamanKey = process.env.XAMAN_KEY;
+  var xamanSecret = process.env.XAMAN_SECRET;
   
   try {
     return new Response(JSON.stringify({ status: 'ok' }), { status: 200, headers: headers });
