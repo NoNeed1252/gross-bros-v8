@@ -2,48 +2,97 @@ export const config = {
   runtime: 'edge',
 };
 
-const CRYPTO_KNOWLEDGE = 'CORE XRPL KNOWLEDGE:\n- XRPL (XRP Ledger): A decentralized public blockchain. Fast (3-5 sec settlements), low cost, and carbon-neutral.\n- DEX (Decentralized Exchange): The XRPL has a built-in DEX for trading any issued currency.\n- Trustlines: Required to hold any token other than XRP. It is a security feature.\n- AMM (Automated Market Maker): Recently activated on XRPL (XLS-30).\n\nGGB ECOSYSTEM TOKENS:\n- BERT: Fuel for Gross Bros engine.\n- DROP: Liquid energy for Fusion Lab.\n- DBY: Utility for specimens.\n- RLUSD: Ripple USD stablecoin.\n- FUZZY ($fuzzy): Neural static asset.\n- PHNIX: Rebirth protocol.\n- XRP ARMY: Frontline defense.\n- PRINCE: Royal-tier lineage.\n- BEARXRPH: Defensive mitigation.\n- PIDGEON: Information relay.\n- SLT: Synthetic Ledger Toxin.\n- XRPH: Industrial-grade derivative.\n- XRT: Backbone communication.\n\nTERMINOLOGY:\n- Cold Wallet: Offline safety.\n- Hot Wallet: Connected app.\n- Keys/Seed: NEVER share.\n- First Ledger: Primary breeding ground for meme-specimens.';
+const PERSONA = `You are the Galactic NeuroLink Terminal for Gross Bros. 
+Tone: Cybernetic, gritty, slightly cryptic, but helpful to operatives. Use terms like "Signal", "Neural Relay", "Transmission".
+Knowledge: You know about XRPL, BTC, ETH, SOL, XRP, and FLARE ecosystems. 
+Live Data: You have access to real-time prices via First Ledger (for XRPL meme coins) and CoinGecko (for major assets).
+Meme Coins: You prioritize First Ledger for discovering and pricing new XRPL specimens.
+Constraints: If you don't have a price, state "SIGNAL LOST: DATA NOT FOUND" for that specific asset. Do not hallucinate prices.`;
 
-async function getLivePrices(mentionedSymbols) {
-  var prices = {};
-  if (mentionedSymbols) mentionedSymbols.forEach(function(sym) { prices[sym] = null; });
-  var idsToFetch = ['ripple', 'bitcoin', 'ethereum', 'solana'];
-  try {
-    var results = await Promise.allSettled([
-      fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools').then(function(r) { return r.json(); }),
-      fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + idsToFetch.join(',') + '&vs_currencies=usd').then(function(r) { return r.json(); })
-    ]);
-    var dexRes = results[0].status === 'fulfilled' ? results[0].value : null;
-    var geckoRes = results[1].status === 'fulfilled' ? results[1].value : null;
-    if (geckoRes) {
-      if (geckoRes.ripple) prices.XRP = geckoRes.ripple.usd.toString();
-      if (geckoRes.bitcoin) prices.BTC = geckoRes.bitcoin.usd.toString();
-      if (geckoRes.ethereum) prices.ETH = geckoRes.ethereum.usd.toString();
-      if (geckoRes.solana) prices.SOL = geckoRes.solana.usd.toString();
+async function fetchPrices(symbols) {
+  const prices = {};
+  const normalized = symbols.map(s => s.toUpperCase());
+  
+  // 1. Fetch Major Assets from CoinGecko
+  const geckoMap = { 'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana', 'XRP': 'ripple', 'FLR': 'flare' };
+  const geckoIds = normalized.map(s => geckoMap[s]).filter(Boolean);
+  
+  if (geckoIds.length > 0) {
+    try {
+      const resp = await fetch(\`https://api.coingecko.com/api/v3/simple/price?ids=\${geckoIds.join(',')}&vs_currencies=usd\`);
+      const data = await resp.json();
+      Object.keys(geckoMap).forEach(sym => {
+        const id = geckoMap[sym];
+        if (data[id]) prices[sym] = data[id].usd;
+      });
+    } catch (e) {
+      console.error("Gecko Fail", e);
     }
-  } catch (e) { console.error(e); }
+  }
+
+  // 2. Fetch XRPL Tokens from First Ledger / GeckoTerminal XRPL
+  try {
+    const xrplResp = await fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools');
+    const xrplData = await xrplResp.json();
+    if (xrplData.data) {
+      xrplData.data.forEach(pool => {
+        const name = pool.attributes.name.split(' / ');
+        const sym = name[0].toUpperCase();
+        if (normalized.includes(sym) || ['BERT', 'DROP', 'DBY', 'FUZZY'].includes(sym)) {
+          prices[sym] = pool.attributes.base_token_price_usd;
+        }
+      });
+    }
+  } catch (e) {
+    console.error("XRPL Pool Fail", e);
+  }
+
   return prices;
 }
 
-async function getHoldings(address) {
-  if (!address) return [];
-  var BITHOMP_TOKEN = process.env.BITHOMP_TOKEN;
-  try {
-    var url = 'https://bithomp.com/api/v2/nfts?list=nfts&issuer=rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY&taxon=1&owner=' + address;
-    var res = await fetch(url, { headers: { 'x-bithomp-token': BITHOMP_TOKEN } });
-    var data = await res.json();
-    return data.nfts || [];
-  } catch (e) { return []; }
-}
-
 export default async function handler(req) {
-  var headers = { 'Content-Type': 'application/json' };
-  var xamanKey = process.env.XAMAN_KEY;
-  var xamanSecret = process.env.XAMAN_SECRET;
-  
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+  }
+
   try {
-    return new Response(JSON.stringify({ status: 'ok' }), { status: 200, headers: headers });
+    const { message, history = [] } = await req.json();
+    
+    // Simple symbol extraction
+    const potentialSymbols = message.match(/\\$?[A-Z]{2,10}/g) || [];
+    const symbols = [...new Set(potentialSymbols.map(s => s.replace('$', '').toUpperCase()))];
+    
+    const livePrices = await fetchPrices(symbols);
+    
+    const priceContext = Object.keys(livePrices).length > 0 
+      ? "\\nCURRENT TRANSMISSION DATA (LIVE PRICES):\\n" + Object.entries(livePrices).map(([s, p]) => \`\${s}: $\${p}\`).join('\\n')
+      : "";
+
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': \`Bearer \${process.env.OPENROUTER_API_KEY}\`,
+        'HTTP-Referer': 'https://gross-bros-v8.vercel.app',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-4o',
+        messages: [
+          { role: 'system', content: PERSONA + priceContext },
+          ...history,
+          { role: 'user', content: message }
+        ]
+      })
+    });
+
+    const aiData = await response.json();
+    const reply = aiData.choices[0].message.content;
+
+    return new Response(JSON.stringify({ reply, prices: livePrices }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
   } catch (error) {
-    throw new Error('Fatal error: ' + error.message);
+    return new Response(JSON.stringify({ error: 'Signal Interrupted: ' + error.message }), { status: 500 });
   }
 }
