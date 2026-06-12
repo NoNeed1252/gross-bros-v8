@@ -28,12 +28,14 @@ async function fetchPrices(symbols) {
     try {
       const geckoUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=' + geckoIds.join(',') + '&vs_currencies=usd';
       const resp = await fetch(geckoUrl, { signal: AbortSignal.timeout(5000) });
-      const data = await resp.json();
-      const keys = Object.keys(geckoMap);
-      for (let j = 0; j < keys.length; j++) {
-        const sym = keys[j];
-        const gId = geckoMap[sym];
-        if (data && data[gId]) prices[sym] = data[gId].usd;
+      if (resp.ok) {
+        const data = await resp.json();
+        const keys = Object.keys(geckoMap);
+        for (let j = 0; j < keys.length; j++) {
+          const sym = keys[j];
+          const gId = geckoMap[sym];
+          if (data && data[gId]) prices[sym] = data[gId].usd;
+        }
       }
     } catch (e) {
       console.error('Gecko Fail', e);
@@ -42,21 +44,23 @@ async function fetchPrices(symbols) {
 
   try {
     const xrplResp = await fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/pools', { signal: AbortSignal.timeout(5000) });
-    const xrplData = await xrplResp.json();
-    if (xrplData && xrplData.data) {
-      for (let k = 0; k < xrplData.data.length; k++) {
-        const pool = xrplData.data[k];
-        const poolName = pool.attributes.name.toUpperCase();
-        
-        for (let l = 0; l < normalized.length; l++) {
+    if (xrplResp.ok) {
+      const xrplData = await xrplResp.json();
+      if (xrplData && xrplData.data) {
+        for (let k = 0; k < xrplData.data.length; k++) {
+          const pool = xrplData.data[k];
+          const poolName = pool.attributes.name.toUpperCase();
+          
+          for (let l = 0; l < normalized.length; l++) {
             const s = normalized[l];
             const ecosystem = ['BERT', 'DROP', 'DBY', 'FUZZY'];
             
-            if (poolName.includes(s) || (ecosystem.indexOf(s) !== -1 && poolName.includes(s))) {
-                if (!prices[s]) {
-                    prices[s] = pool.attributes.base_token_price_usd;
-                }
+            if (poolName.indexOf(s) !== -1 || (ecosystem.indexOf(s) !== -1 && poolName.indexOf(s) !== -1)) {
+              if (!prices[s]) {
+                prices[s] = pool.attributes.base_token_price_usd;
+              }
             }
+          }
         }
       }
     }
@@ -94,34 +98,34 @@ export default async function handler(req) {
     
     const syms = [];
     if (messageContent && typeof messageContent === 'string') {
-        const potentialSymbols = messageContent.match(/\\$?[A-Z]{2,10}/g) || [];
-        for (let l = 0; l < potentialSymbols.length; l++) {
-          const s = potentialSymbols[l].replace('$', '').toUpperCase();
-          if (syms.indexOf(s) === -1) syms.push(s);
-        }
+      const potentialSymbols = messageContent.match(/\$?[A-Z]{2,10}/g) || [];
+      for (let l = 0; l < potentialSymbols.length; l++) {
+        const s = potentialSymbols[l].replace('$', '').toUpperCase();
+        if (syms.indexOf(s) === -1) syms.push(s);
+      }
     }
     
     let livePrices = {};
     if (syms.length > 0) {
       try {
-          livePrices = await fetchPrices(syms);
+        livePrices = await fetchPrices(syms);
       } catch (pe) {
-          console.error('Price Fetch Critical Fail', pe);
+        console.error('Price Fetch Critical Fail', pe);
       }
     }
     
     let priceContext = '';
     const priceKeys = Object.keys(livePrices);
     if (priceKeys.length > 0) {
-      priceContext = '\\n[LATEST SCOUT REPORT - LIVE PRICES]:\\n';
+      priceContext = '\n[LATEST SCOUT REPORT - LIVE PRICES]:\n';
       for (let m = 0; m < priceKeys.length; m++) {
         const pk = priceKeys[m];
-        priceContext += pk + ': $' + livePrices[pk] + '\\n';
+        priceContext += pk + ': $' + livePrices[pk] + '\n';
       }
     }
 
     if (!process.env.OPENROUTER_API_KEY) {
-        return new Response(JSON.stringify({ error: 'OPENROUTER_API_KEY is missing from environment' }), { status: 500 });
+      return new Response(JSON.stringify({ error: 'OPENROUTER_API_KEY is missing from environment' }), { status: 500 });
     }
 
     const orResp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -142,23 +146,23 @@ export default async function handler(req) {
     });
 
     if (!orResp.ok) {
-        const errText = await orResp.text();
-        return new Response(JSON.stringify({ error: 'AI Relay Status ' + orResp.status + ': ' + errText }), { status: orResp.status });
+      const errText = await orResp.text();
+      return new Response(JSON.stringify({ error: 'AI Relay Status ' + orResp.status + ': ' + errText }), { status: orResp.status });
     }
 
     return new Response(orResp.body, {
       status: 200,
       headers: { 
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive'
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
       }
     });
   } catch (error) {
     console.error('Global Handler Error:', error);
     return new Response(JSON.stringify({ error: 'Signal Interrupted: ' + error.message }), { 
-        status: error.name === 'TimeoutError' ? 504 : 500,
-        headers: { 'Content-Type': 'application/json' }
+      status: error.name === 'TimeoutError' ? 504 : 500,
+      headers: { 'Content-Type': 'application/json' }
     });
   }
 }
