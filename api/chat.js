@@ -100,6 +100,7 @@ async function getOnTheDEXQuote(symbol) {
 async function getBestTokenQuote(symbol) {
   if (!symbol) return null;
   var cleanSymbol = symbol.toUpperCase().replace(/^\$/, "");
+  var symbolRegex = new RegExp("(^|[^A-Z0-9])" + cleanSymbol + "([^A-Z0-9]|$)", "i");
   var bestPool = null;
   var bestLiq = 0;
 
@@ -120,7 +121,7 @@ async function getBestTokenQuote(symbol) {
           if (!pool || !pool.attributes) continue;
           var attrs = pool.attributes;
           var poolName = (attrs.name || "").toUpperCase();
-          var hasMatch = poolName.indexOf(cleanSymbol) !== -1 || poolName.indexOf("/" + cleanSymbol) !== -1 || poolName.indexOf(cleanSymbol + "/") !== -1;
+          var hasMatch = symbolRegex.test(poolName);
           if (hasMatch) {
             var liqStr = attrs.reserve_in_usd || attrs.liquidity || attrs.reserve_usd || "0";
             var liq = parseFloat(liqStr) || 0;
@@ -172,7 +173,7 @@ async function getBestTokenQuote(symbol) {
           if (!xrPool || !xrPool.attributes) continue;
           var xrAttrs = xrPool.attributes;
           var xrName = (xrAttrs.name || "").toUpperCase();
-          var xrMatch = xrName.indexOf(cleanSymbol) !== -1 || xrName.indexOf("/" + cleanSymbol) !== -1 || xrName.indexOf(cleanSymbol + "/") !== -1;
+          var xrMatch = symbolRegex.test(xrName);
           if (xrMatch) {
             var xrLiqStr = xrAttrs.reserve_in_usd || xrAttrs.liquidity || "0";
             var xrLiq = parseFloat(xrLiqStr) || 0;
@@ -267,9 +268,13 @@ export default async function handler(req) {
     }
     var incomingMessages = body.messages || [];
     if (!Array.isArray(incomingMessages) || incomingMessages.length === 0) {
-      return new Response(JSON.stringify({ message: "yo send something first" }), {
+      var sseNoInput = "data: {\"choices\":[{\"delta\":{\"content\":\"yo send something first\"}}]}\n\ndata: [DONE]\n\n";
+      return new Response(sseNoInput, {
         status: 200,
-        headers: { "Content-Type": "application/json" }
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache"
+        }
       });
     }
     var lastUserContent = "";
@@ -315,7 +320,7 @@ export default async function handler(req) {
       temperature: 0.82,
       max_tokens: 450,
       top_p: 0.95,
-      stream: false
+      stream: true
     };
     var payloadString = JSON.stringify(requestPayload);
     var orFetchRes = await fetch(orUrl, {
@@ -330,44 +335,34 @@ export default async function handler(req) {
     });
     if (!orFetchRes.ok) {
       var fallbackMsg = "yo the fusion core's lagging hard right now, cosmic interference or some shit. ping me again in a minute";
-      return new Response(JSON.stringify({ message: fallbackMsg }), {
+      var sseFallback = "data: {\"choices\":[{\"delta\":{\"content\":\"" + fallbackMsg + "\"}}]}\n\ndata: [DONE]\n\n";
+      return new Response(sseFallback, {
         status: 200,
-        headers: { "Content-Type": "application/json" }
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive"
+        }
       });
     }
-    var orDataText = await orFetchRes.text().catch(function() { return "{}"; });
-    var orData = {};
-    try {
-      orData = JSON.parse(orDataText);
-    } catch (jsonErr) {
-      orData = {};
-    }
-    if (orData.error) {
-      var errFallback = "signal's scrambled on that one chief, the void swallowed the reply. try rephrasing";
-      return new Response(JSON.stringify({ message: errFallback }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-    var assistantContent = "";
-    if (orData.choices && Array.isArray(orData.choices) && orData.choices.length > 0) {
-      var firstChoice = orData.choices[0];
-      if (firstChoice.message && firstChoice.message.content) {
-        assistantContent = firstChoice.message.content;
-      }
-    }
-    if (!assistantContent || assistantContent.trim() === "") {
-      assistantContent = "can't find the words for that one right now, hit me fresh";
-    }
-    return new Response(JSON.stringify({ message: assistantContent.trim() }), {
+    return new Response(orFetchRes.body, {
       status: 200,
-      headers: { "Content-Type": "application/json" }
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive"
+      }
     });
   } catch (globalErr) {
     var safeFallback = "the whole relay just glitched out. whatever you said got eaten by the void. send it again";
-    return new Response(JSON.stringify({ message: safeFallback }), {
+    var sseSafeFallback = "data: {\"choices\":[{\"delta\":{\"content\":\"" + safeFallback + "\"}}]}\n\ndata: [DONE]\n\n";
+    return new Response(sseSafeFallback, {
       status: 200,
-      headers: { "Content-Type": "application/json" }
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive"
+      }
     });
   }
 }
