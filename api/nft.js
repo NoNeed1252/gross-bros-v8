@@ -57,12 +57,22 @@ export default async function handler(req) {
     const dailyBro = FALLBACK_BROS[dailyIndex];
 
     if (searchParams.get('daily') === 'true') {
-      return new Response(JSON.stringify({ dailyBro: dailyBro }), {
+      const responsePayload = {
+        dailyBro: {
+          nftokenID: dailyBro.nftokenID,
+          metadata: {
+            name: dailyBro.metadata.name,
+            description: dailyBro.metadata.description,
+            image: dailyBro.metadata.image
+          }
+        }
+      };
+      return new Response(JSON.stringify(responsePayload), {
         status: 200,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
+          'Access-Control-Allow-Origin': '*'
+        }
       });
     }
 
