@@ -1,19 +1,12 @@
 {
   "name": "gross-bros-v8",
-  "version": "1.18.12",
+  "version": "1.18.5",
+  "private": true,
   "type": "module",
-  "description": "Galactic Gross Bros - XRPL NFT Ecosystem",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
-  },
   "dependencies": {
-    "express": "^4.18.2",
-    "dotenv": "^16.3.1",
-    "cors": "^2.8.5"
+    "express": "^4.18.2"
   },
-  "engines": {
-    "node": "22.x"
+  "scripts": {
+    "redeploy": "echo 1780875842"
   }
 }
