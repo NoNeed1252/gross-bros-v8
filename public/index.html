@@ -969,8 +969,8 @@ letter-spacing: 1px;
           const { done, value } = await reader.read();
           if (done) break;
           const chunk = decoder.decode(value);
-          const lines = chunk.split('\n');
-          for (const line of lines) {
+          const chunkLines = chunk.split('\n');
+          for (const line of chunkLines) {
             if (!line.trim() || !line.startsWith('data: ')) continue;
             const dataText = line.slice(6).trim();
             if (dataText === '[DONE]') break;
@@ -1039,7 +1039,16 @@ letter-spacing: 1px;
       
       if (isMobile && payload?.next?.app_deep_link) {
         startPolling(payload.uuid);
-        window.location.href = payload.next.app_deep_link;
+        setTimeout(function() {
+          window.location.href = payload.next.app_deep_link;
+        }, 50);
+      } else if (payload?.next?.always) {
+        const width = 600;
+        const height = 700;
+        const left = Math.round((window.innerWidth - width) / 2 + window.screenX);
+        const top = Math.round((window.innerHeight - height) / 2 + window.screenY);
+        window.open(payload.next.always, 'XamanSign', 'width=' + width + ',height=' + height + ',top=' + top + ',left=' + left);
+        startPolling(payload.uuid);
       } else if (payload?.refs?.qr_png) {
         document.getElementById('qr-image').src = payload.refs.qr_png;
         document.getElementById('qr-overlay').style.display = 'flex';
@@ -1050,7 +1059,8 @@ letter-spacing: 1px;
     function startPolling(uuid) {
       if (checkInterval) clearInterval(checkInterval);
       checkInterval = setInterval(async () => {
-        const status = await (await fetch('/api/xaman?action=check-payload&uuid=' + uuid)).json();
+        const statusResponse = await fetch('/api/xaman?action=check-payload&uuid=' + uuid);
+        const status = await statusResponse.json();
         if (status.signed) {
           clearInterval(checkInterval);
           document.getElementById('qr-overlay').style.display = 'none';
