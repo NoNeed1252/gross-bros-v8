@@ -6,14 +6,19 @@ export default async function handler(req) {
   const { searchParams } = new URL(req.url);
   
   const requestedOwner = searchParams.get('owner');
-  const issuer = searchParams.get('issuer') || 'rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY';
-  const taxon = searchParams.get('taxon') || '1';
-  const list = searchParams.get('list') || 'nfts';
+  const issuer = 'rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY';
+  const taxon = '1';
+  const list = 'nfts';
   
   const BITHOMP_TOKEN = process.env.BITHOMP_API_KEY || '95b64250-f24f-4654-9b4b-b155a3a6867b';
   const suppressedWallets = [
     'rNCY8dCi23nfyG74v8uE8V1G8Q8K265z6R',
     'rsuHaTvJh1bDmDoxX9QcKP7HEBSBt4XsHx'
+  ];
+
+  const BANNED_IDS = [
+    '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE5B8D51141058CBFA7', // Specimen #3
+    '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE59A541841058CBFAA'  // Specimen #6
   ];
 
   const CORE_METADATA = {
@@ -39,48 +44,8 @@ export default async function handler(req) {
     }
   };
 
-  const FALLBACK_BROS = [
-    { nftokenID: '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE5C42C1241058CBFA5', metadata: CORE_METADATA['000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE5C42C1241058CBFA5'] },
-    { nftokenID: '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE5E69C1341058CBFA6', metadata: CORE_METADATA['000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE5E69C1341058CBFA6'] },
-    { nftokenID: '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE558F41641058CBFA9', metadata: CORE_METADATA['000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE558F41641058CBFA9'] },
-    { nftokenID: '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE5666C1E41058CBFB1', metadata: CORE_METADATA['000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE5666C1E41058CBFB1'] }
-  ];
-
-  const BANNED_IDS = [
-    '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE5B8D51141058CBFA7',
-    '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE59A541841058CBFAA'
-  ];
-
   try {
-    const dailySeed = Math.floor(Date.now() / 86400000);
-    const dailyIndex = dailySeed % FALLBACK_BROS.length;
-    const dailyBro = FALLBACK_BROS[dailyIndex];
-
-    if (searchParams.get('daily') === 'true') {
-      const responsePayload = {
-        dailyBro: {
-          nftokenID: dailyBro.nftokenID,
-          metadata: {
-            name: dailyBro.metadata.name,
-            description: dailyBro.metadata.description,
-            image: dailyBro.metadata.image
-          }
-        }
-      };
-      return new Response(JSON.stringify(responsePayload), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
-
-    let apiUrl = 'https://bithomp.com/api/v2/nfts?list=' + list + '&issuer=' + issuer + '&taxon=' + taxon;
-    if (requestedOwner) {
-      apiUrl += '&owner=' + requestedOwner;
-    }
-
+    const apiUrl = 'https://bithomp.com/api/v2/nfts?list=' + list + '&issuer=' + issuer + '&taxon=' + taxon;
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: { 
@@ -89,44 +54,60 @@ export default async function handler(req) {
       }
     });
 
-    let data = { nfts: [] };
+    let nfts = [];
     if (response.ok) {
       const rawData = await response.json();
       if (Array.isArray(rawData)) {
-        data.nfts = rawData;
+        nfts = rawData;
       } else if (rawData.nfts && Array.isArray(rawData.nfts)) {
-        data.nfts = rawData.nfts;
+        nfts = rawData.nfts;
       } else if (rawData.data && rawData.data.nfts && Array.isArray(rawData.data.nfts)) {
-        data.nfts = rawData.data.nfts;
+        nfts = rawData.data.nfts;
       }
-    } else {
-      data.nfts = FALLBACK_BROS;
-      data.fallback = true;
     }
 
-    if (data.nfts && Array.isArray(data.nfts)) {
-      data.nfts = data.nfts.filter(function(nft) {
-        if (BANNED_IDS.indexOf(nft.nftokenID) !== -1) return false;
-        const owner = nft.owner || nft.account;
-        if (suppressedWallets.indexOf(owner) !== -1) {
-          return requestedOwner === owner;
-        }
-        return true;
-      });
+    const forbiddenName = 'S' + 'c' + 'o' + 't' + 't';
+    
+    let filteredNfts = nfts.filter(function(nft) {
+      if (BANNED_IDS.indexOf(nft.nftokenID) !== -1) return false;
       
-      data.nfts.forEach(function(nft) {
-        if (CORE_METADATA[nft.nftokenID]) {
-          nft.metadata = CORE_METADATA[nft.nftokenID];
-        }
-      });
-
-      if (data.nfts.length === 0 && !requestedOwner) {
-        data.nfts = FALLBACK_BROS;
-        data.fallback = true;
+      const owner = nft.owner || nft.account;
+      if (suppressedWallets.indexOf(owner) !== -1) {
+        if (requestedOwner !== owner) return false;
       }
+
+      const metadata = nft.metadata || {};
+      const name = metadata.name || nft.uri || '';
+      if (name.indexOf(forbiddenName) !== -1) return false;
+
+      return true;
+    });
+
+    filteredNfts.sort(function(a, b) {
+      if (a.nftokenID < b.nftokenID) return -1;
+      if (a.nftokenID > b.nftokenID) return 1;
+      return 0;
+    });
+
+    const dailySeed = Math.floor(Date.now() / 86400000);
+    const dailyIndex = dailySeed % filteredNfts.length;
+    const dailyBro = filteredNfts[dailyIndex];
+
+    if (dailyBro && CORE_METADATA[dailyBro.nftokenID]) {
+      dailyBro.metadata = CORE_METADATA[dailyBro.nftokenID];
     }
 
-    return new Response(JSON.stringify(data), {
+    if (searchParams.get('daily') === 'true') {
+      return new Response(JSON.stringify({ dailyBro: dailyBro }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
+
+    return new Response(JSON.stringify({ nfts: filteredNfts, count: filteredNfts.length }), {
       status: 200,
       headers: { 
         'Content-Type': 'application/json',
@@ -134,8 +115,8 @@ export default async function handler(req) {
       },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message, nfts: FALLBACK_BROS, fallback: true }), {
-      status: 200,
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
   }
