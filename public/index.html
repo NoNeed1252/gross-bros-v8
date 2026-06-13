@@ -409,13 +409,27 @@
           <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>LORE</h2>
           <div class="lore-box">
             <h3 style="font-family:Orbitron, sans-serif; font-size: 18px; color: var(--cyan); margin-top: 0;">PROLOGUE: THE XRP-7 INCIDENT</h3>
-            <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7...</p>
+            <p>The Galactic Gross Bros emerged from the cosmic wreckage of a failed interplanetary mining operation on XRP-7, a distant asteroid rich with a volatile energy source tied to the XRP Ledger. When the miners accidentally unleashed a mutated strain of alien life, these grotesque, big-eyed entities were born, fused with the Ledger's digital essence.</p>
+            <p>Now they roam the galaxy, their exaggerated expressions are a mix of disgust and defiance, guarding the remnants of their XRP roots while seeking new digital frontiers.</p>
+          </div>
+          <div class="lore-box">
+            <h3 style="font-family:Orbitron, sans-serif; font-size: 18px; color: var(--cyan); margin-top: 0;">CHAPTER 1: THE NEURAL AWAKENING</h3>
+            <p>Before the breach, the Consolidated Core Extraction syndicate didn't just run the rigs on XRP-7 - they owned the blood in your veins. Every breath of recycled air was leased. Every drop of water was docked from your daily ledger. They kept the crew trapped in a loop of artificial debt, paying in corporate credits that only worked at CCE depots.</p>
+            <p>Then the drills hit the living core. The blue static rupture didn't just mutate our flesh - it scrambled CCE's system of control. When the quarantine protocols sealed us in the deep dark to rot, the crew didn't die. We fused with the raw digital essence of the XRP Ledger itself.</p>
           </div>
         </div>
       </section>
 
       <section id='section-2' class='section'>
-        <div id="game-room-container"></div>
+        <div class='panel'>
+          <h2 style='font-family:Orbitron,sans-serif;'>GAME ROOM</h2>
+          <div id="game-room-container" style="border: 1px dashed var(--cyan); padding: 40px; text-align: center; border-radius: 20px;">
+            <p>GAME MODULE INITIALIZING...</p>
+            <div class="row" style="justify-content: center; margin-top: 20px;">
+              <button class="btn" onclick="switchTab(3)">ACCESS FUSION LAB</button>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section id='section-3' class='section'>
@@ -523,6 +537,11 @@
     };
     let gwIdx = 0;
 
+    const MOCK_NFTS = [
+      { name: 'SPECIMEN #001', image: 'https://nftstorage.link/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ' },
+      { name: 'SPECIMEN #042', image: 'https://nftstorage.link/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' }
+    ];
+
     const state = { connected: false, wallet: '', chat: [], fuseUnlocked: false, selectedNft: null, userNfts: [], tickerItems: [] };
 
     function hexToUtf8(hex) {
@@ -533,23 +552,15 @@
           bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
         }
         return new TextDecoder().decode(bytes);
-      } catch (e) {
-        return '';
-      }
+      } catch (e) { return ''; }
     }
 
     function resolveIpfs(uri) {
       const value = String(uri || '').trim();
       if (!value) return '';
-      if (/^[0-9a-fA-F]+$/.test(value)) {
-        return resolveIpfs(hexToUtf8(value));
-      }
-      if (value.startsWith('ipfs://')) {
-        return CONFIG.GATEWAYS[0] + value.slice('ipfs://'.length).replace(/^\/+/, '');
-      }
-      if (value.startsWith('ar://')) {
-        return 'https://arweave.net/' + value.slice('ar://'.length).replace(/^\/+/, '');
-      }
+      if (/^[0-9a-fA-F]+$/.test(value)) return resolveIpfs(hexToUtf8(value));
+      if (value.startsWith('ipfs://')) return CONFIG.GATEWAYS[0] + value.slice('ipfs://'.length).replace(/^\/+/, '');
+      if (value.startsWith('ar://')) return 'https://arweave.net/' + value.slice('ar://'.length).replace(/^\/+/, '');
       return value;
     }
 
@@ -576,6 +587,40 @@
           document.getElementById('bro-of-day-status').textContent = 'Signal synchronized.';
         }
       } catch (e) { console.error(e); }
+    }
+
+    async function fetchUserNfts(address) {
+      try {
+        const res = await fetch('/api/nft?owner=' + address + '&issuer=' + CONFIG.ISSUER);
+        const data = await res.json();
+        state.userNfts = (data.nfts || []).map(n => ({ name: n.metadata?.name || 'SPECIMEN', image: resolveIpfs(n.metadata?.image || n.uri) }));
+        if (state.userNfts.length === 0) state.userNfts = MOCK_NFTS;
+        renderNftSelection();
+        selectNft(0);
+      } catch (e) { 
+        state.userNfts = MOCK_NFTS;
+        renderNftSelection();
+        selectNft(0);
+      }
+    }
+
+    function renderNftSelection() {
+      const track = document.getElementById('nft-selection-track');
+      if (!track) return;
+      track.innerHTML = state.userNfts.map((nft, index) => {
+        const active = state.selectedNft?.name === nft.name;
+        return "<div class='nft-select-card " + (active ? 'active' : '') + "' onclick='selectNft(" + index + ")'><img src='" + nft.image + "' alt=''></div>";
+      }).join('');
+    }
+
+    function selectNft(index) {
+      const nft = state.userNfts[index];
+      if (!nft) return;
+      state.selectedNft = nft;
+      document.getElementById('held-nft-empty').style.display = 'none';
+      document.getElementById('connected-nft-display').style.display = 'flex';
+      document.getElementById('connected-nft-image').src = nft.image;
+      renderNftSelection();
     }
 
     async function connectXaman() {
@@ -608,6 +653,7 @@
           state.wallet = status.account;
           document.getElementById('wallet-btn').textContent = 'LINKED';
           document.getElementById('xaman-status').textContent = status.account.slice(0,6) + '...' + status.account.slice(-4);
+          fetchUserNfts(status.account);
         }
       }, 2500);
     }
