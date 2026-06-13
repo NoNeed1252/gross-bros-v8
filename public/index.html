@@ -901,7 +901,8 @@ letter-spacing: 1px;
 
     async function fetchUserNfts(address) {
       try {
-        const res = await fetch('/api/nft?owner=' + address + '&issuer=' + CONFIG.ISSUER);
+        const url = address ? '/api/nft?owner=' + address + '&issuer=' + CONFIG.ISSUER : '/api/nft?issuer=' + CONFIG.ISSUER;
+        const res = await fetch(url);
         const data = await res.json();
         state.userNfts = [];
         if (data.nfts && data.nfts.length > 0) {
