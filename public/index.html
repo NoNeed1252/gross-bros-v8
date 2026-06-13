@@ -368,9 +368,6 @@ letter-spacing: 1px;
     <div class="qr-container">
       <img id="qr-image" src="" alt="Scan with Xaman">
     </div>
-    <div id="xaman-deep-link-container" style="display:none; margin-top:20px; text-align:center;">
-       <a id="xaman-deep-link" href="#" class="btn" style="display:inline-block; text-decoration:none;">OPEN IN XAMAN</a>
-    </div>
     <p style="margin-top: 20px; font-family: Orbitron;">SCAN WITH XAMAN TO SYNC</p>
     <button class="btn" style="margin-top: 10px;">CANCEL</button>
   </div>
@@ -417,7 +414,7 @@ letter-spacing: 1px;
           <div class='panel'>
             <div class='muted' style='letter-spacing:.35em;text-transform:uppercase;font-size:11px;'>BRO OF THE DAY</div>
             <h1 id="status-msg" style='font-family:Orbitron,sans-serif;font-size:clamp(28px,5vw,62px);margin:10px 0 0;'>BRO OF THE DAY</h1>
-            <p style='line-height:1.8;color:#ddfff9;opacity:.86;max-width:58ch'>Daily rotation pulled from the core specimen list, with one NFT selected every 24 hours.</p>
+            <p style='line-height:1.8;color:#ddfff9;opacity:.86;max-width:58ch'>Daily rotation pulled from the full issuer collection, with one NFT selected every 24 hours.</p>
             <div class='row'>
               <button class='btn' onclick="switchTab(1)">READ TRANSMISSIONS</button>
             </div>
@@ -696,7 +693,6 @@ letter-spacing: 1px;
       }
     };
     
-    // Auto-init AppKit when module loads
     window.initAppKit();
   </script>
 
@@ -1107,7 +1103,6 @@ letter-spacing: 1px;
         document.getElementById('xaman-status').textContent = saved.slice(0,6) + '...' + saved.slice(-4);
         fetchUserNfts(saved);
       } else {
-        // Load mock NFTs for guest view in Fusion Lab
         fetchUserNfts(null);
       }
     }
