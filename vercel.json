@@ -1,19 +1,12 @@
 {
   "rewrites": [
-    {
-      "source": "/api/chat",
-      "destination": "/api/chat.js"
-    },
-    {
-      "source": "/api/xaman",
-      "destination": "/api/xaman.js"
-    },
-    {
-      "source": "/api/nft",
-      "destination": "/api/nft.js"
-    }
+    { "source": "/", "destination": "/public/index.html" },
+    { "source": "/api/chat", "destination": "/api/chat.js" },
+    { "source": "/api/xaman", "destination": "/api/xaman.js" },
+    { "source": "/api/nft", "destination": "/api/nft.js" }
   ],
+  "cleanUrls": true,
   "env": {
-    "FORCE_REDEPLOY": "2026-06-11T22:15:00Z"
+    "FORCE_REDEPLOY": "2026-06-13T03:30:00Z"
   }
 }

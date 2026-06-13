@@ -1,6 +1,7 @@
 {
   "name": "gross-bros-v8",
   "version": "1.18.12",
+  "type": "module",
   "description": "Galactic Gross Bros - XRPL NFT Ecosystem",
   "main": "server.js",
   "scripts": {
