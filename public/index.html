@@ -417,7 +417,6 @@ letter-spacing: 1px;
             <p style='line-height:1.8;color:#ddfff9;opacity:.86;max-width:58ch'>Daily rotation pulled from the core specimen list, with one NFT selected every 24 hours.</p>
             <div class='row'>
               <button class='btn' onclick="switchTab(1)">READ TRANSMISSIONS</button>
-              <button class='btn' onclick="window.open('https://xrp.cafe/collection/galactic-gross-bros', '_blank')">BUY A BRO</button>
             </div>
             <div class='row' style='margin-top: 16px;'>
               <button class='btn' onclick="switchTab(4)">LAUNCH TERMINAL</button>
@@ -431,7 +430,10 @@ letter-spacing: 1px;
                 <img id='bro-of-day-image' alt='Bro of the Day' src='' onerror='handleImageError(this)'>
               </div>
               <div class='nft-meta'>
-                <p id='bro-of-day-description' class='nft-subtitle'>Live NFT lore is loading...</p>
+                <h3 id='bro-of-day-name' style='font-family:Orbitron,sans-serif; font-size: 18px; margin: 10px 0 5px; color: var(--cyan);'>LOAD_NAME_FAIL</h3>
+                <div class='row' style='margin-bottom: 12px;'>
+                  <button class='btn' onclick="window.open('https://xrp.cafe/collection/galactic-gross-bros', '_blank')">BUY A BRO</button>
+                </div>
                 <div id='bro-of-day-status' class='muted' style='font-size:10px;'>Initializing...</div>
               </div>
             </div>
@@ -809,16 +811,9 @@ letter-spacing: 1px;
       if (el) el.textContent = message;
     }
 
-    function cleanLoreText(metadata) {
-      if (!metadata) return 'Live NFT lore is loading from the full BRO collection.';
-      const candidates = [metadata.lore, metadata.backstory, metadata.story, metadata.description];
-      const raw = candidates.find((value) => typeof value === 'string' && value.trim()) || '';
-      return raw.replace(/\s{2,}/g, ' ').trim() || 'Live NFT lore is loading from the full BRO collection.';
-    }
-
     async function loadBroOfDay() {
       const imgEl = document.getElementById('bro-of-day-image');
-      const descEl = document.getElementById('bro-of-day-description');
+      const nameEl = document.getElementById('bro-of-day-name');
       try {
         setBroOfDayStatus('Crawl in progress...');
         const res = await safeFetch('/api/nft?daily=true');
@@ -829,7 +824,7 @@ letter-spacing: 1px;
         
         if (dailyBro.metadata.image) {
           imgEl.src = resolveIpfs(dailyBro.metadata.image);
-          descEl.textContent = cleanLoreText(dailyBro.metadata);
+          nameEl.textContent = dailyBro.metadata.name || 'UNNAMED_BRO';
           setBroOfDayStatus('Signal synchronized.');
         } else {
           throw new Error('Image field missing in metadata');
@@ -837,7 +832,7 @@ letter-spacing: 1px;
       } catch (e) {
         console.error('loadBroOfDay failure:', e);
         imgEl.src = CONFIG.FALLBACK_IMAGE;
-        descEl.textContent = 'SIGNAL LOSS: FALLBACK ENGAGED';
+        nameEl.textContent = 'SIGNAL_LOST';
         setBroOfDayStatus('SIGNAL BREACH: DEFAULTING TO STATIC');
       }
     }
