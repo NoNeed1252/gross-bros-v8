@@ -819,16 +819,16 @@ letter-spacing: 1px;
         const data = await res.json();
         const dailyBro = data.dailyBro;
         if (!dailyBro) throw new Error('No Daily Bro found');
-
-        if (dailyBro.metadata) {
+        if (dailyBro.metadata && dailyBro.metadata.image) {
           imgEl.src = resolveIpfs(dailyBro.metadata.image);
-          descEl.textContent = cleanLoreText(dailyBro.metadata);
+          const loreText = dailyBro.metadata.description || dailyBro.metadata.name || '';
+          descEl.textContent = cleanLoreText(loreText);
           setBroOfDayStatus('Signal synchronized.');
         } else {
           throw new Error('Metadata missing');
         }
-      } catch (e) { 
-        console.error(e); 
+      } catch (e) {
+        console.error(e);
         imgEl.src = CONFIG.FALLBACK_IMAGE;
         descEl.textContent = 'SIGNAL LOSS: FALLBACK ENGAGED';
         setBroOfDayStatus('SIGNAL BREACH: DEFAULTING TO STATIC');
