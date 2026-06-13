@@ -101,14 +101,11 @@ async function getBestTokenQuote(symbol) {
   if (!symbol) return null;
   var cleanSymbol = symbol.toUpperCase().replace(/^\$/, "");
   
-  // Relaxed regex to match tokens even with address suffixes or weird pair names
-  // e.g. ATM.r... or ATM/XRP or FUZZY_r...
   var symbolRegex = new RegExp("(^|[^A-Z0-9])" + cleanSymbol + "($|[^A-Z0-9])", "i");
   
   var bestPool = null;
   var bestLiq = 0;
 
-  // 1. STRICT XRPL PREFERENCE: Try GeckoTerminal XRPL network specific search
   try {
     var xrplUrl = "https://api.geckoterminal.com/api/v2/search/pools?query=" + encodeURIComponent(cleanSymbol) + "&network=xrpl";
     var xrplRes = await fetch(xrplUrl, {
@@ -127,7 +124,6 @@ async function getBestTokenQuote(symbol) {
           var xrAttrs = xrPool.attributes;
           var xrName = (xrAttrs.name || "").toUpperCase();
           
-          // Use more robust matching: check for exact symbol or symbol with suffix
           var hasMatch = xrName.indexOf(cleanSymbol) !== -1;
           if (hasMatch) {
             var xrLiqStr = xrAttrs.reserve_in_usd || xrAttrs.liquidity || "0";
@@ -154,32 +150,23 @@ async function getBestTokenQuote(symbol) {
         }
       }
     }
-  } catch (e2) {
-    // graceful
-  }
+  } catch (e2) {}
 
-  // 2. STRICT XRPL PREFERENCE: Try OnTheDEX (XRPL specific)
   try {
     var ontdexResult = await getOnTheDEXQuote(cleanSymbol);
     if (ontdexResult) {
       var oScore = ontdexResult.liquidity || ontdexResult.volume || 0;
-      // If OnTheDEX result is found, it's XRPL, so we prioritize it
       if (oScore >= bestLiq || bestPool === null) {
         bestLiq = oScore;
         bestPool = ontdexResult;
       }
     }
-  } catch (e3) {
-    // graceful
-  }
+  } catch (e3) {}
 
-  // IF WE FOUND ANY XRPL POOL, STOP HERE. DO NOT FALL BACK TO GLOBAL.
-  // This prevents BSC/ETH pools from hijacking the search even if they have more liq.
   if (bestPool) {
     return bestPool;
   }
 
-  // 3. GLOBAL FALLBACK: Only if no XRPL pool was found at all
   try {
     var genUrl = "https://api.geckoterminal.com/api/v2/search/pools?query=" + encodeURIComponent(cleanSymbol);
     var genRes = await fetch(genUrl, {
@@ -228,9 +215,7 @@ async function getBestTokenQuote(symbol) {
         }
       }
     }
-  } catch (e) {
-    // graceful
-  }
+  } catch (e) {}
 
   return bestPool;
 }
@@ -366,7 +351,32 @@ export default async function handler(req) {
         }
       });
     }
-    return new Response(orFetchRes.body, {
+
+    var decoder = new TextDecoder();
+    var encoder = new TextEncoder();
+    var buffer = "";
+
+    var transformStream = new TransformStream({
+      transform(chunk, controller) {
+        buffer += decoder.decode(chunk, { stream: true });
+        var lines = buffer.split("\n");
+        buffer = lines.pop();
+
+        for (var l = 0; l < lines.length; l++) {
+          var line = lines[l].trim();
+          if (line) {
+            controller.enqueue(encoder.encode(line + "\n\n"));
+          }
+        }
+      },
+      flush(controller) {
+        if (buffer.trim()) {
+          controller.enqueue(encoder.encode(buffer.trim() + "\n\n"));
+        }
+      }
+    });
+
+    return new Response(orFetchRes.body.pipeThrough(transformStream), {
       status: 200,
       headers: {
         "Content-Type": "text/event-stream",
