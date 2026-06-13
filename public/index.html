@@ -16,6 +16,7 @@
     }
     a { color: inherit; }
 
+    /* CRT Overlays - Ensure pointer-events: none is on both */
     body::before {
       content: ' ';
       position: fixed;
@@ -37,7 +38,7 @@
 
     .shell { 
       position: relative;
-      z-index: 10;
+      z-index: 10; /* Above backgrounds, below overlays */
       max-width: 1480px; min-height: calc(100vh - 24px); margin: 12px auto;
       border: 24px solid #1f1f1f; border-radius: 24px; overflow: hidden;
       background: #050505; box-shadow: 0 30px 70px -20px rgba(0,0,0,.95), 0 0 100px -20px var(--cyan);
@@ -230,6 +231,7 @@
     }
     .muted { color: rgba(0,255,200,.6); }
 
+    /* Lore Box Styles */
     .lore-box {
       max-height: 400px;
       overflow-y: auto;
@@ -245,6 +247,7 @@
     .lore-box::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.5); border-radius: 10px; }
     .lore-box::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 10px; box-shadow: 0 0 10px var(--cyan); }
 
+    /* Xaman QR Overlay */
     #qr-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.9); z-index: 9999; display: none;
@@ -282,6 +285,7 @@ letter-spacing: 1px;
 }
 .social-card .desc { font-size: 12px; color: rgba(0,255,200,0.7); }
 
+    /* Privacy and Terms Modals */
     .modal {
       display: none;
       position: fixed;
@@ -317,6 +321,7 @@ letter-spacing: 1px;
       cursor: pointer;
     }
 
+    /* Wallet Group Layout Styles */
     .wallet-group {
       display: flex;
       align-items: center;
@@ -540,6 +545,7 @@ letter-spacing: 1px;
           <h2 style='font-family:Orbitron,sans-serif;font-size:clamp(24px,4vw,48px);margin:10px 0 16px;'>SECURE TERMINAL</h2>
           
           <div class='grid grid-2' style='gap:20px; margin-top:20px;'>
+            <!-- Burner Wallet Generation & Deposit Tracker -->
             <div class='panel' style='background:rgba(0,255,200,0.02); border:1px solid rgba(0,255,200,0.15);'>
               <div class='muted' style='letter-spacing:.2em;text-transform:uppercase;font-size:11px;'>BURNER CORE</div>
               <h3 style='font-family:Orbitron,sans-serif; margin:10px 0 14px; color:#fff;'>BURNER MODULE</h3>
@@ -558,6 +564,7 @@ letter-spacing: 1px;
               </div>
             </div>
 
+            <!-- Bot Controls Panel -->
             <div class='panel' style='background:rgba(0,255,200,0.02); border:1px solid rgba(0,255,200,0.15);'>
               <div class='muted' style='letter-spacing:.2em;text-transform:uppercase;font-size:11px;'>AUTOMATED OPERATIONS</div>
               <h3 style='font-family:Orbitron,sans-serif; margin:10px 0 14px; color:#fff;'>TRADING BOT CONTROLS</h3>
@@ -700,8 +707,8 @@ letter-spacing: 1px;
         'https://dweb.link/ipfs/', 
         'https://fleek.ipfs.io/ipfs/'
       ], 
-      FALLBACK: 'https://placehold.co/600x800/000000/00ffc8?text=SIGNAL+LOST',
-      FALLBACK_IMAGE: 'https://placehold.co/600x800/000000/00ffc8?text=SIGNAL+LOST',
+      FALLBACK: 'https://grossbros.vercel.app/fallback/static.png',
+      FALLBACK_IMAGE: 'https://grossbros.vercel.app/fallback/static.png',
       ISSUER: 'rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY',
       WC_PROJECT_ID: 'a16d6c0cad2df1ceea121c581b95cffb'
     };
@@ -772,23 +779,18 @@ letter-spacing: 1px;
     }
 
     function handleImageError(img) {
-      if (img.dataset.fallbackTried === 'true') return;
-      const currentSrc = img.src;
       if (gwIdx < CONFIG.GATEWAYS.length) {
+        const currentSrc = img.src;
         let cid = '';
         if (currentSrc.indexOf('/ipfs/') !== -1) {
           cid = currentSrc.split('/ipfs/')[1];
         }
-        const nextGw = CONFIG.GATEWAYS[gwIdx];
-        gwIdx++;
         if (cid) {
-          img.src = nextGw + cid;
+          img.src = CONFIG.GATEWAYS[gwIdx++] + cid;
         } else {
-          img.dataset.fallbackTried = 'true';
           img.src = CONFIG.FALLBACK_IMAGE;
         }
       } else { 
-        img.dataset.fallbackTried = 'true';
         img.src = CONFIG.FALLBACK_IMAGE; 
       }
     }
@@ -804,11 +806,6 @@ letter-spacing: 1px;
       document.querySelectorAll('.section').forEach((s, i) => { 
         s.classList.toggle('active', i === idx); 
       });
-      if (idx === 2) {
-        if (typeof CombatSystem !== 'undefined' && CombatSystem.init) {
-          CombatSystem.init();
-        }
-      }
       if (idx === 5) fetchLeaderboard();
     }
 
@@ -818,8 +815,7 @@ letter-spacing: 1px;
     }
 
     function cleanLoreText(metadata) {
-      if (!metadata) return 'Live NFT lore is loading from the full BRO collection.';
-      const candidates = [metadata.lore, metadata.backstory, metadata.story, metadata.description];
+      const candidates = [metadata?.lore, metadata?.backstory, metadata?.story, metadata?.description];
       const raw = candidates.find((value) => typeof value === 'string' && value.trim()) || '';
       return raw.replace(/\s{2,}/g, ' ').trim() || 'Live NFT lore is loading from the full BRO collection.';
     }
@@ -829,21 +825,34 @@ letter-spacing: 1px;
       const descEl = document.getElementById('bro-of-day-description');
       try {
         setBroOfDayStatus('Crawl in progress...');
-        const res = await safeFetch('/api/nft?daily=true');
-        if (!res.ok) throw new Error('API signal breach');
+        const res = await safeFetch('/api/nft?issuer=' + CONFIG.ISSUER + '&taxon=1&list=nfts');
         const data = await res.json();
-        const dailyBro = data.dailyBro;
-        if (!dailyBro || !dailyBro.metadata) throw new Error('No Daily Bro metadata found');
-        
-        if (dailyBro.metadata.image) {
-          imgEl.src = resolveIpfs(dailyBro.metadata.image);
-          descEl.textContent = cleanLoreText(dailyBro.metadata);
+        const nfts = data.nfts || [];
+        if (nfts.length === 0) throw new Error('No NFTs found');
+
+        const seed = Math.floor(Date.now() / 86400000) % nfts.length;
+        let found = null;
+        for (let i = 0; i < Math.min(nfts.length, 10); i++) {
+          const bro = nfts[(seed + i) % nfts.length];
+          if (bro && bro.uri) {
+            const metaRes = await safeFetch(resolveIpfs(bro.uri));
+            const meta = await metaRes.json();
+            if (meta.image || meta.image_url || meta.image_file) {
+              found = { meta, ...bro };
+              break;
+            }
+          }
+        }
+
+        if (found) {
+          imgEl.src = resolveIpfs(found.meta.image || found.meta.image_url || found.meta.image_file);
+          descEl.textContent = cleanLoreText(found.meta);
           setBroOfDayStatus('Signal synchronized.');
         } else {
-          throw new Error('Image field missing in metadata');
+          throw new Error('Metadata unreachable');
         }
-      } catch (e) {
-        console.error('loadBroOfDay failure:', e);
+      } catch (e) { 
+        console.error(e); 
         imgEl.src = CONFIG.FALLBACK_IMAGE;
         descEl.textContent = 'SIGNAL LOSS: FALLBACK ENGAGED';
         setBroOfDayStatus('SIGNAL BREACH: DEFAULTING TO STATIC');
@@ -856,7 +865,7 @@ letter-spacing: 1px;
           fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple,bitcoin,ethereum,solana&vs_currencies=usd').then(r => r.json()),
           fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/tokens/raqVwqakELDXTXmU8FQw53fJ9Sehr7hDTR/pools').then(r => r.json()),
           fetch('/api/alerts').then(r => r.json())
-        ]).then(results => results.map(r => r.status === 'fulfilled' ? r.value : null));
+        ]).then(results => results.map(r => r.status === 'fulfilled' ? r.value : {}));
 
         if (prices?.ripple?.usd) state.xrpPrice = prices.ripple.usd;
 
@@ -869,8 +878,6 @@ letter-spacing: 1px;
 
         if (atmData?.data?.[0]?.attributes?.base_token_price_usd) {
           priceItems.push('ATM: $' + parseFloat(atmData.data[0].attributes.base_token_price_usd).toFixed(8));
-        } else {
-          priceItems.push('ATM: GUNKED');
         }
 
         let displayItems = [];
@@ -890,18 +897,17 @@ letter-spacing: 1px;
     function renderTicker() {
       const track = document.getElementById('warning-ticker-track');
       if (!track) return;
-      const items = state.tickerItems.length > 0 ? state.tickerItems : ['SYSTEM STATUS: GUNKED'];
-      track.innerHTML = items.concat(items).map(i => "<span class='ticker-item'>" + i + "</span>").join(' &bull; ');
+      track.innerHTML = state.tickerItems.concat(state.tickerItems).map(i => "<span class='ticker-item'>" + i + "</span>").join(' &bull; ');
     }
 
     async function fetchUserNfts(address) {
       try {
-        const res = await fetch('/api/nft?owner=' + address + '&issuer=' + CONFIG.ISSUER);
+        const res = await fetch('/api/nft?owner=' + address + '&issuer=' + CONFIG.ISSUER + '&taxon=1&list=nfts');
         const data = await res.json();
         state.userNfts = [];
         for (const n of (data.nfts || [])) {
           try {
-            const meta = n.metadata || await (await safeFetch(resolveIpfs(n.uri))).json();
+            const meta = await (await safeFetch(resolveIpfs(n.uri))).json();
             state.userNfts.push({ name: meta.name, image: resolveIpfs(meta.image) });
           } catch(e){}
         }
@@ -969,8 +975,8 @@ letter-spacing: 1px;
           const { done, value } = await reader.read();
           if (done) break;
           const chunk = decoder.decode(value);
-          const chunkLines = chunk.split('\n');
-          for (const line of chunkLines) {
+          const lines = chunk.split('\n');
+          for (const line of lines) {
             if (!line.trim() || !line.startsWith('data: ')) continue;
             const dataText = line.slice(6).trim();
             if (dataText === '[DONE]') break;
