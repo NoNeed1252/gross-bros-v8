@@ -68,6 +68,7 @@ export default async function handler(req) {
     let data = { nfts: [] };
     if (response.ok) {
       const rawData = await response.json();
+      // Handle potential Bithomp nesting: data.nfts or root array or rawData.data.nfts
       if (Array.isArray(rawData)) {
         data.nfts = rawData;
       } else if (rawData.nfts && Array.isArray(rawData.nfts)) {
