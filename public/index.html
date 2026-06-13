@@ -382,7 +382,7 @@ letter-spacing: 1px;
         </div>
       </div>
       <div class="wallet-group">
-        <button id='wallet-btn' class='wallet-btn' onclick="connectXaman()">CONNECT XAMAN</button>
+        <button id='xamanBtn' class='wallet-btn' onclick="connectXaman()">CONNECT XAMAN</button>
         <button id='wc-btn' class='wallet-btn' onclick="connectMultiChain()">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">
             <path d="M15.4286 9.51343C13.5352 7.73032 10.4648 7.73032 8.57143 9.51343L4.28571 13.5434C4.10714 13.7113 4 13.9463 4 14.1983V17.0003C4 17.5526 4.44772 18.0003 5 18.0003H19C19.5523 18.0003 20 17.5526 20 17.0003V14.1983C20 13.9463 19.8929 13.7113 19.7143 13.5434L15.4286 9.51343Z" fill="#3396FF"/>
@@ -663,6 +663,33 @@ letter-spacing: 1px;
   </div>
 
   <script src="/combat.js"></script>
+  <script type="module">
+    import { createAppKit } from 'https://esm.sh/@reown/appkit';
+    import { EthersAdapter } from 'https://esm.sh/@reown/appkit-adapter-ethers';
+    import { mainnet, arbitrum } from 'https://esm.sh/@reown/appkit/networks';
+
+    const projectId = 'a16d6c0cad2df1ceea121c581b95cffb';
+    const metadata = {
+      name: 'Galactic Gross Bros',
+      description: 'Neural CRT relay // terminal interface',
+      url: 'https://gross-bros-v8.vercel.app',
+      icons: ['https://avatars.githubusercontent.com/u/287007234']
+    };
+
+    window.appKit = createAppKit({
+      adapters: [new EthersAdapter()],
+      networks: [mainnet, arbitrum],
+      metadata,
+      projectId,
+      features: { analytics: true }
+    });
+
+    window.connectMultiChain = async function() {
+      if (window.appKit) {
+        await window.appKit.open();
+      }
+    };
+  </script>
   <script>
     const CONFIG = { 
       GATEWAYS: [
@@ -686,24 +713,6 @@ letter-spacing: 1px;
       { name: 'SPECIMEN #088', image: 'https://nftstorage.link/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' }
     ];
 
-    const COSMIC_ASSETS = {
-       nfts: [
-          { name: 'VOIDWALKER PROTOCOL', image: 'https://nftstorage.link/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ' },
-          { name: 'NEURAL SPIKE', image: 'https://nftstorage.link/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' },
-          { name: 'CORE FRAGMENT', image: 'https://nftstorage.link/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' }
-       ],
-       tokens: [
-          { name: 'RLUSD', image: 'https://nftstorage.link/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ' },
-          { name: 'ATM', image: 'https://nftstorage.link/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' },
-          { name: 'XRP', image: 'https://nftstorage.link/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' }
-       ],
-       outposts: [
-          { name: 'SECTOR 7-G', image: 'https://nftstorage.link/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ' },
-          { name: 'FUSION LAB DELTA', image: 'https://nftstorage.link/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' },
-          { name: 'VOID STATION', image: 'https://nftstorage.link/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' }
-       ]
-    };
-
     const state = { 
       connected: false, 
       wallet: '', 
@@ -715,7 +724,6 @@ letter-spacing: 1px;
       fuseTargetUsd: 50,
       xrpPrice: 0,
       activePayloadUuid: null,
-      appKit: null,
       alphaOperative: false,
       tickerItems: []
     };
@@ -888,7 +896,7 @@ letter-spacing: 1px;
 
     async function fetchUserNfts(address) {
       try {
-        const res = await fetch('/api/nft?owner=' + address + '&issuer=' + CONFIG.ISSUER + '&taxon=' + taxon);
+        const res = await fetch('/api/nft?owner=' + address + '&issuer=' + CONFIG.ISSUER);
         const data = await res.json();
         state.userNfts = [];
         for (const n of (data.nfts || [])) {
@@ -1020,12 +1028,19 @@ letter-spacing: 1px;
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
     async function connectXaman() {
-      const payload = await (await fetch('/api/xaman?action=create-payload', {
+      const res = await fetch('/api/xaman?action=create-payload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ txjson: { TransactionType: 'SignIn' } })
-      })).json();
-      if (payload?.refs?.qr_png) {
+      });
+      const payload = await res.json();
+      
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (window.innerWidth <= 800);
+      
+      if (isMobile && payload?.next?.app_deep_link) {
+        startPolling(payload.uuid);
+        window.location.href = payload.next.app_deep_link;
+      } else if (payload?.refs?.qr_png) {
         document.getElementById('qr-image').src = payload.refs.qr_png;
         document.getElementById('qr-overlay').style.display = 'flex';
         startPolling(payload.uuid);
@@ -1033,6 +1048,7 @@ letter-spacing: 1px;
     }
 
     function startPolling(uuid) {
+      if (checkInterval) clearInterval(checkInterval);
       checkInterval = setInterval(async () => {
         const status = await (await fetch('/api/xaman?action=check-payload&uuid=' + uuid)).json();
         if (status.signed) {
@@ -1041,7 +1057,7 @@ letter-spacing: 1px;
           state.connected = true;
           state.wallet = status.account;
           localStorage.setItem('ggb_wallet', status.account);
-          document.getElementById('wallet-btn').textContent = 'LINKED';
+          document.getElementById('xamanBtn').textContent = 'LINKED';
           document.getElementById('xaman-status').textContent = status.account.slice(0,6) + '...' + status.account.slice(-4);
           fetchUserNfts(status.account);
         }
@@ -1056,13 +1072,14 @@ letter-spacing: 1px;
       if (saved) {
         state.connected = true;
         state.wallet = saved;
-        document.getElementById('wallet-btn').textContent = 'LINKED';
+        document.getElementById('xamanBtn').textContent = 'LINKED';
         document.getElementById('xaman-status').textContent = saved.slice(0,6) + '...' + saved.slice(-4);
         fetchUserNfts(saved);
       }
     }
 
     window.onload = init;
+    window.connectXaman = connectXaman;
   </script>
 </body>
 </html>
