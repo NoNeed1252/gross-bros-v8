@@ -816,7 +816,7 @@ letter-spacing: 1px;
         
         if (!meta) throw new Error("Metadata unreachable.");
         
-        if (imgEl) imgEl.src = xrplUriToHttp(meta.image || meta.image_url);
+        if (imgEl) imgEl.src = xrplUriToHttp(meta.image || meta.image_url || meta.image_file);
         if (descEl) descEl.textContent = cleanLoreText(meta);
         setBroOfDayStatus("Signal synchronized.");
       } catch (e) {
@@ -1119,7 +1119,7 @@ letter-spacing: 1px;
              if (meta) {
                state.userNfts.push({
                  name: meta.name || "BRO #" + n.nftokenID.slice(-4),
-                 image: xrplUriToHttp(meta.image || meta.image_url)
+                 image: xrplUriToHttp(meta.image || meta.image_url || meta.image_file)
                });
              }
            } catch(e){}
