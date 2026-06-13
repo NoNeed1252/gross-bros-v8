@@ -693,24 +693,6 @@ letter-spacing: 1px;
       { name: "SPECIMEN #088", image: "https://nftstorage.link/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" }
     ];
 
-    const COSMIC_ASSETS = {
-       nfts: [
-          { name: "VOIDWALKER PROTOCOL", image: "https://nftstorage.link/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ" },
-          { name: "NEURAL SPIKE", image: "https://nftstorage.link/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" },
-          { name: "CORE FRAGMENT", image: "https://nftstorage.link/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" }
-       ],
-       tokens: [
-          { name: "RLUSD", image: "https://nftstorage.link/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ" },
-          { name: "ATM", image: "https://nftstorage.link/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" },
-          { name: "XRP", image: "https://nftstorage.link/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" }
-       ],
-       outposts: [
-          { name: "SECTOR 7-G", image: "https://nftstorage.link/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ" },
-          { name: "FUSION LAB DELTA", image: "https://nftstorage.link/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" },
-          { name: "VOID STATION", image: "https://nftstorage.link/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" }
-       ]
-    };
-
     const state = { 
       connected: false, 
       wallet: "", 
@@ -798,6 +780,7 @@ letter-spacing: 1px;
       document.querySelectorAll('.section').forEach((s, i) => { 
         s.classList.toggle('active', i === idx); 
       });
+      if (idx === 2 && window.CombatSystem) CombatSystem.init();
       if (idx === 5) fetchLeaderboard();
     }
 
@@ -853,10 +836,9 @@ letter-spacing: 1px;
 
     async function updateTicker() {
       try {
-        const [prices, atmData, alertsData] = await Promise.allSettled([
+        const [prices, atmData] = await Promise.allSettled([
           fetch("https://api.coingecko.com/api/v3/simple/price?ids=ripple,bitcoin,ethereum,solana&vs_currencies=usd").then(r => r.json()),
-          fetch("https://api.geckoterminal.com/api/v2/networks/xrpl/tokens/raqVwqakELDXTXmU8FQw53fJ9Sehr7hDTR/pools").then(r => r.json()),
-          fetch("/api/alerts").then(r => r.json())
+          fetch("https://api.geckoterminal.com/api/v2/networks/xrpl/tokens/raqVwqakELDXTXmU8FQw53fJ9Sehr7hDTR/pools").then(r => r.json())
         ]).then(results => results.map(r => r.status === "fulfilled" ? r.value : {}));
 
         if (prices?.ripple?.usd) state.xrpPrice = prices.ripple.usd;
@@ -872,14 +854,7 @@ letter-spacing: 1px;
           priceItems.push("ATM: $" + parseFloat(atmData.data[0].attributes.base_token_price_usd).toFixed(8));
         }
 
-        let displayItems = [];
-        const rotationSeed = Math.floor(Date.now() / (6 * 60 * 60 * 1000));
-        
-        if (alertsData?.alerts?.length > 0) {
-           displayItems.push("[SYSTEM ALERT] " + alertsData.alerts[rotationSeed % alertsData.alerts.length].message.toUpperCase());
-        } else {
-           displayItems.push("[SYSTEM STATUS] ALPHA PROTOCOL ONLINE");
-        }
+        let displayItems = ["[SYSTEM STATUS] ALPHA PROTOCOL ONLINE"];
         
         state.tickerItems = displayItems.concat(priceItems);
         renderTicker();
@@ -1052,6 +1027,24 @@ letter-spacing: 1px;
           fetchUserNfts(status.account);
         }
       }, 2500);
+    }
+
+    async function generateBurnerWallet() {
+      const savedBurner = "r" + Math.random().toString(36).substring(7);
+      localStorage.setItem("ggb_burner_address", savedBurner);
+      document.getElementById("burner-address-display").textContent = savedBurner;
+      document.getElementById("burner-balance-display").textContent = "10.00 XRP";
+    }
+
+    function refreshBurnerBalance() {
+      const bal = (Math.random() * 100).toFixed(2);
+      document.getElementById("burner-balance-display").textContent = bal + " XRP";
+    }
+
+    function toggleTradingBot(start) {
+      const el = document.getElementById("bot-status-indicator");
+      el.textContent = start ? "ACTIVE" : "OFFLINE";
+      el.style.color = start ? "#39ff14" : "#ff3b6b";
     }
 
     function init() {
