@@ -30,7 +30,7 @@ export default async function handler(req) {
     '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE558F41641058CBFA9': {
       name: 'Specimen #5',
       description: 'The Neural Link. Signal broadcast strength peaking.',
-      image: 'ipfs://QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ'
+      image: 'ipfs://QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ'
     },
     '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE5666C1E41058CBFB1': {
       name: 'Specimen #203',
