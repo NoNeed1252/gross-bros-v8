@@ -806,6 +806,9 @@ letter-spacing: 1px;
       document.querySelectorAll('.section').forEach((s, i) => { 
         s.classList.toggle('active', i === idx); 
       });
+      if (idx === 2 && window.CombatSystem) {
+        window.CombatSystem.init();
+      }
       if (idx === 5) fetchLeaderboard();
     }
 
@@ -825,28 +828,13 @@ letter-spacing: 1px;
       const descEl = document.getElementById('bro-of-day-description');
       try {
         setBroOfDayStatus('Crawl in progress...');
-        const res = await safeFetch('/api/nft?issuer=' + CONFIG.ISSUER + '&taxon=1&list=nfts');
+        const res = await safeFetch('/api/nft?daily=true');
         const data = await res.json();
-        const nfts = data.nfts || [];
-        if (nfts.length === 0) throw new Error('No NFTs found');
+        const found = data.dailyBro;
 
-        const seed = Math.floor(Date.now() / 86400000) % nfts.length;
-        let found = null;
-        for (let i = 0; i < Math.min(nfts.length, 10); i++) {
-          const bro = nfts[(seed + i) % nfts.length];
-          if (bro && bro.uri) {
-            const metaRes = await safeFetch(resolveIpfs(bro.uri));
-            const meta = await metaRes.json();
-            if (meta.image || meta.image_url || meta.image_file) {
-              found = { meta, ...bro };
-              break;
-            }
-          }
-        }
-
-        if (found) {
-          imgEl.src = resolveIpfs(found.meta.image || found.meta.image_url || found.meta.image_file);
-          descEl.textContent = cleanLoreText(found.meta);
+        if (found && found.metadata) {
+          imgEl.src = resolveIpfs(found.metadata.image || found.metadata.image_url || found.metadata.image_file);
+          descEl.textContent = cleanLoreText(found.metadata);
           setBroOfDayStatus('Signal synchronized.');
         } else {
           throw new Error('Metadata unreachable');
@@ -907,8 +895,9 @@ letter-spacing: 1px;
         state.userNfts = [];
         for (const n of (data.nfts || [])) {
           try {
-            const meta = await (await safeFetch(resolveIpfs(n.uri))).json();
-            state.userNfts.push({ name: meta.name, image: resolveIpfs(meta.image) });
+            const metaRes = await safeFetch(resolveIpfs(n.uri));
+            const meta = await metaRes.json();
+            state.userNfts.push({ name: meta.name, image: resolveIpfs(meta.image || meta.image_url) });
           } catch(e){}
         }
         if (state.userNfts.length === 0) state.userNfts = MOCK_NFTS;
