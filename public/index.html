@@ -694,7 +694,7 @@ letter-spacing: 1px;
        tokens: [
           { name: "RLUSD", image: "https://ipfs.io/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ" },
           { name: "ATM", image: "https://ipfs.io/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" },
-          { name: "XRP", image: "https://ipfs.io/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6YJ" }
+          { name: "XRP", image: "https://ipfs.io/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ" }
        ],
        outposts: [
           { name: "SECTOR 7-G", image: "https://ipfs.io/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ" },
@@ -805,17 +805,13 @@ letter-spacing: 1px;
         if (nfts.length === 0) throw new Error("No NFTs found.");
         
         const seed = dailyRotationSeed();
-        let meta = null;
-        let attempts = 0;
+        const selected = nfts[seed % nfts.length];
         
-        while (!meta && attempts < Math.min(nfts.length, 10)) {
-          const selected = nfts[(seed + attempts) % nfts.length];
-          const uri = selected.uri;
-          if (uri) {
-            const metaUri = xrplUriToHttp(uri);
-            meta = await safeFetch(metaUri);
-          }
-          attempts++;
+        // Prefer metadata object directly if provided by API (Bithomp mode)
+        let meta = selected.metadata;
+        if (!meta && selected.uri) {
+           const metaUri = xrplUriToHttp(selected.uri);
+           meta = await safeFetch(metaUri);
         }
         
         if (!meta) throw new Error("Metadata unreachable.");
@@ -1115,12 +1111,17 @@ letter-spacing: 1px;
         state.userNfts = [];
         for (const n of nfts) {
            try {
-             const metaUri = xrplUriToHttp(n.uri);
-             const meta = await (await fetch(metaUri)).json();
-             state.userNfts.push({
-               name: meta.name || "BRO #" + n.nftokenID.slice(-4),
-               image: xrplUriToHttp(meta.image)
-             });
+             let meta = n.metadata;
+             if (!meta && n.uri) {
+                const metaUri = xrplUriToHttp(n.uri);
+                meta = await (await fetch(metaUri)).json();
+             }
+             if (meta) {
+               state.userNfts.push({
+                 name: meta.name || "BRO #" + n.nftokenID.slice(-4),
+                 image: xrplUriToHttp(meta.image || meta.image_url)
+               });
+             }
            } catch(e){}
         }
 
