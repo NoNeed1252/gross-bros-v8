@@ -20,22 +20,22 @@ export default async function handler(req) {
     '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE5C42C1241058CBFA5': {
       name: 'Specimen #1',
       description: 'The Prime Specimen. Origin point of the static leak.',
-      image: 'https://grossbros.vercel.app/fallback/specimen-1.png'
+      image: 'ipfs://QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ'
     },
     '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE5E69C1341058CBFA6': {
       name: 'Specimen #2',
       description: 'The Second Breach. Genetic stability failing.',
-      image: 'https://grossbros.vercel.app/fallback/specimen-2.png'
+      image: 'ipfs://QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ'
     },
     '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE558F41641058CBFA9': {
       name: 'Specimen #5',
       description: 'The Neural Link. Signal broadcast strength peaking.',
-      image: 'https://grossbros.vercel.app/fallback/specimen-5.png'
+      image: 'ipfs://QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ'
     },
     '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE5666C1E41058CBFB1': {
       name: 'Specimen #203',
       description: 'The Final Broadcast. CRT resolution optimized.',
-      image: 'https://grossbros.vercel.app/fallback/specimen-203.png'
+      image: 'ipfs://QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ'
     }
   };
 
@@ -47,11 +47,25 @@ export default async function handler(req) {
   ];
 
   const BANNED_IDS = [
-    '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE5B8D51141058CBFA7', // Specimen #3
-    '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE59A541841058CBFAA'  // Specimen #6
+    '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE5B8D51141058CBFA7',
+    '000807D0FACF61119F5D27B29C245AB27DAE47EE1E031BE59A541841058CBFAA'
   ];
 
   try {
+    const dailySeed = Math.floor(Date.now() / 86400000);
+    const dailyIndex = dailySeed % FALLBACK_BROS.length;
+    const dailyBro = FALLBACK_BROS[dailyIndex];
+
+    if (searchParams.get('daily') === 'true') {
+      return new Response(JSON.stringify({ dailyBro: dailyBro }), {
+        status: 200,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
+
     let apiUrl = 'https://bithomp.com/api/v2/nfts?list=' + list + '&issuer=' + issuer + '&taxon=' + taxon;
     if (requestedOwner) {
       apiUrl += '&owner=' + requestedOwner;
@@ -68,7 +82,6 @@ export default async function handler(req) {
     let data = { nfts: [] };
     if (response.ok) {
       const rawData = await response.json();
-      // Handle potential Bithomp nesting: data.nfts or root array or rawData.data.nfts
       if (Array.isArray(rawData)) {
         data.nfts = rawData;
       } else if (rawData.nfts && Array.isArray(rawData.nfts)) {
