@@ -361,26 +361,31 @@ letter-spacing: 1px;
     }
 </style>
 <script type="module">
-  import { createAppKit } from 'https://esm.run/@reown/appkit/vue';
+  import { createAppKit } from 'https://esm.run/@reown/appkit';
   import { mainnet, arbitrum } from 'https://esm.run/@reown/appkit/networks';
   import { WagmiAdapter } from 'https://esm.run/@reown/appkit-adapter-wagmi';
 
-  window.initAppKit = () => {
-    const projectId = 'a16d6c0cad2df1ceea121c581b95cffb';
-    const networks = [mainnet, arbitrum];
-    const wagmiAdapter = new WagmiAdapter({ projectId, networks });
+  window.initAppKit = async () => {
+    try {
+      const projectId = 'a16d6c0cad2df1ceea121c581b95cffb';
+      const networks = [mainnet, arbitrum];
+      const wagmiAdapter = new WagmiAdapter({ projectId, networks });
 
-    window.appKit = createAppKit({
-      adapters: [wagmiAdapter],
-      networks,
-      projectId,
-      metadata: {
-        name: 'Galactic Gross Bros',
-        description: 'Neural CRT relay terminal',
-        url: window.location.origin,
-        icons: ['https://avatars.githubusercontent.com/u/37784886']
-      }
-    });
+      window.appKit = createAppKit({
+        adapters: [wagmiAdapter],
+        networks,
+        projectId,
+        metadata: {
+          name: 'Galactic Gross Bros',
+          description: 'Neural CRT relay terminal',
+          url: window.location.origin,
+          icons: ['https://avatars.githubusercontent.com/u/37784886']
+        }
+      });
+      console.log('Neural Adapter: AppKit Initialized');
+    } catch (e) {
+      console.error('Neural Adapter: Init Failure', e);
+    }
   };
 </script>
 </head>
@@ -1069,13 +1074,19 @@ letter-spacing: 1px;
     }
 
     async function connectMultiChain() {
-      if (!window.appKit) {
-        if (window.initAppKit) window.initAppKit();
-      }
-      if (window.appKit) {
-        await window.appKit.open();
-      } else {
-        alert('NEURAL ADAPTER FAILURE: REOWN NOT INITIALIZED');
+      try {
+        if (!window.appKit) {
+          console.warn('Neural Adapter: AppKit not ready, attempting re-init');
+          if (window.initAppKit) await window.initAppKit();
+        }
+        if (window.appKit) {
+          await window.appKit.open();
+        } else {
+          alert('NEURAL ADAPTER FAILURE: REOWN NOT INITIALIZED');
+        }
+      } catch (e) {
+        console.error('MultiChain Connection Error:', e);
+        alert('SIGNAL BREACH: MULTI-CHAIN MODULE FAILED');
       }
     }
 
