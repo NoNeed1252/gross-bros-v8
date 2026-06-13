@@ -848,16 +848,16 @@ letter-spacing: 1px;
         if (prices?.ripple?.usd) state.xrpPrice = prices.ripple.usd;
 
         const priceItems = [
-          'XRP: $' + (prices?.ripple?.usd || 'GUNKED'),
-          'BTC: $' + (prices?.bitcoin?.usd || 'GUNKED'),
-          'ETH: $' + (prices?.ethereum?.usd || 'GUNKED'),
-          'SOL: $' + (prices?.solana?.usd || 'GUNKED')
+          'XRP: $' + (prices?.ripple?.usd || 'OFFLINE'),
+          'BTC: $' + (prices?.bitcoin?.usd || 'OFFLINE'),
+          'ETH: $' + (prices?.ethereum?.usd || 'OFFLINE'),
+          'SOL: $' + (prices?.solana?.usd || 'OFFLINE')
         ];
 
         if (atmData?.data?.[0]?.attributes?.base_token_price_usd) {
           priceItems.push('ATM: $' + parseFloat(atmData.data[0].attributes.base_token_price_usd).toFixed(8));
         } else {
-          priceItems.push('ATM: GUNKED');
+          priceItems.push('ATM: OFFLINE');
         }
 
         let displayItems = [];
