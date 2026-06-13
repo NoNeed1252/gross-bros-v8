@@ -45,7 +45,10 @@ export default async function handler(req) {
   };
 
   try {
-    const apiUrl = 'https://bithomp.com/api/v2/nfts?list=' + list + '&issuer=' + issuer + '&taxon=' + taxon;
+    let apiUrl = 'https://bithomp.com/api/v2/nfts?list=' + list + '&issuer=' + issuer + '&taxon=' + taxon;
+    if (requestedOwner) {
+      apiUrl += '&owner=' + requestedOwner;
+    }
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: { 
