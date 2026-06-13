@@ -162,7 +162,7 @@
       height: 260px; overflow: auto; border: 1px solid rgba(0,255,200,.12); border-radius: 22px;
       background: rgba(0,0,0,.3); padding: 12px; display: flex; flex-direction: column; gap: 10px;
     }
-    .chat-terminal { display: grid; gap: 12px; max-width: 800px; margin: 0 auto; }
+    .chat-terminal { display: grid; gap: 12px; }
     
     .held-nft-panel {
       border: 1px solid rgba(0, 255, 200, 0.35); border-radius: 24px;
@@ -525,9 +525,31 @@
 
     const state = { connected: false, wallet: '', chat: [], fuseUnlocked: false, selectedNft: null, userNfts: [], tickerItems: [] };
 
+    function hexToUtf8(hex) {
+      if (!hex || typeof hex !== 'string') return '';
+      try {
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < hex.length; i += 2) {
+          bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+        }
+        return new TextDecoder().decode(bytes);
+      } catch (e) {
+        return '';
+      }
+    }
+
     function resolveIpfs(uri) {
       const value = String(uri || '').trim();
-      if (value.startsWith('ipfs://')) return CONFIG.GATEWAYS[0] + value.slice('ipfs://'.length).replace(/^\/+/, '');
+      if (!value) return '';
+      if (/^[0-9a-fA-F]+$/.test(value)) {
+        return resolveIpfs(hexToUtf8(value));
+      }
+      if (value.startsWith('ipfs://')) {
+        return CONFIG.GATEWAYS[0] + value.slice('ipfs://'.length).replace(/^\/+/, '');
+      }
+      if (value.startsWith('ar://')) {
+        return 'https://arweave.net/' + value.slice('ar://'.length).replace(/^\/+/, '');
+      }
       return value;
     }
 
