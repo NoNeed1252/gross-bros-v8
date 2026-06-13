@@ -821,8 +821,7 @@ letter-spacing: 1px;
         if (!dailyBro) throw new Error('No Daily Bro found');
         if (dailyBro.metadata && dailyBro.metadata.image) {
           imgEl.src = resolveIpfs(dailyBro.metadata.image);
-          const loreText = dailyBro.metadata.description || dailyBro.metadata.name || '';
-          descEl.textContent = cleanLoreText(loreText);
+          descEl.textContent = cleanLoreText(dailyBro.metadata);
           setBroOfDayStatus('Signal synchronized.');
         } else {
           throw new Error('Metadata missing');
