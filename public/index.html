@@ -673,8 +673,8 @@ letter-spacing: 1px;
         'https://dweb.link/ipfs/', 
         'https://fleek.ipfs.io/ipfs/'
       ], 
-      FALLBACK: 'https://grossbros.vercel.app/fallback/static.png',
-      FALLBACK_IMAGE: 'https://grossbros.vercel.app/fallback/static.png',
+      FALLBACK: 'https://placehold.co/600x800/000000/00ffc8?text=SIGNAL+LOST',
+      FALLBACK_IMAGE: 'https://placehold.co/600x800/000000/00ffc8?text=SIGNAL+LOST',
       ISSUER: 'rP1wMvanhfmsm7Af4FcHvSvfhash43LWSY',
       WC_PROJECT_ID: 'a16d6c0cad2df1ceea121c581b95cffb'
     };
@@ -695,7 +695,7 @@ letter-spacing: 1px;
        tokens: [
           { name: 'RLUSD', image: 'https://nftstorage.link/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ' },
           { name: 'ATM', image: 'https://nftstorage.link/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' },
-          { name: 'XRP', image: 'https://nftstorage.link/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' }
+          { name: 'XRP', image: 'https://nftstorage.link/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' }
        ],
        outposts: [
           { name: 'SECTOR 7-G', image: 'https://nftstorage.link/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ' },
@@ -764,18 +764,23 @@ letter-spacing: 1px;
     }
 
     function handleImageError(img) {
+      if (img.dataset.fallbackTried === 'true') return;
+      const currentSrc = img.src;
       if (gwIdx < CONFIG.GATEWAYS.length) {
-        const currentSrc = img.src;
         let cid = '';
         if (currentSrc.indexOf('/ipfs/') !== -1) {
           cid = currentSrc.split('/ipfs/')[1];
         }
+        const nextGw = CONFIG.GATEWAYS[gwIdx];
+        gwIdx++;
         if (cid) {
-          img.src = CONFIG.GATEWAYS[gwIdx++] + cid;
+          img.src = nextGw + cid;
         } else {
+          img.dataset.fallbackTried = 'true';
           img.src = CONFIG.FALLBACK_IMAGE;
         }
       } else { 
+        img.dataset.fallbackTried = 'true';
         img.src = CONFIG.FALLBACK_IMAGE; 
       }
     }
@@ -805,7 +810,8 @@ letter-spacing: 1px;
     }
 
     function cleanLoreText(metadata) {
-      const candidates = [metadata?.lore, metadata?.backstory, metadata?.story, metadata?.description];
+      if (!metadata) return 'Live NFT lore is loading from the full BRO collection.';
+      const candidates = [metadata.lore, metadata.backstory, metadata.story, metadata.description];
       const raw = candidates.find((value) => typeof value === 'string' && value.trim()) || '';
       return raw.replace(/\s{2,}/g, ' ').trim() || 'Live NFT lore is loading from the full BRO collection.';
     }
@@ -816,18 +822,20 @@ letter-spacing: 1px;
       try {
         setBroOfDayStatus('Crawl in progress...');
         const res = await safeFetch('/api/nft?daily=true');
+        if (!res.ok) throw new Error('API signal breach');
         const data = await res.json();
         const dailyBro = data.dailyBro;
-        if (!dailyBro) throw new Error('No Daily Bro found');
-        if (dailyBro.metadata && dailyBro.metadata.image) {
+        if (!dailyBro || !dailyBro.metadata) throw new Error('No Daily Bro metadata found');
+        
+        if (dailyBro.metadata.image) {
           imgEl.src = resolveIpfs(dailyBro.metadata.image);
           descEl.textContent = cleanLoreText(dailyBro.metadata);
           setBroOfDayStatus('Signal synchronized.');
         } else {
-          throw new Error('Metadata missing');
+          throw new Error('Image field missing in metadata');
         }
       } catch (e) {
-        console.error(e);
+        console.error('loadBroOfDay failure:', e);
         imgEl.src = CONFIG.FALLBACK_IMAGE;
         descEl.textContent = 'SIGNAL LOSS: FALLBACK ENGAGED';
         setBroOfDayStatus('SIGNAL BREACH: DEFAULTING TO STATIC');
@@ -880,7 +888,7 @@ letter-spacing: 1px;
 
     async function fetchUserNfts(address) {
       try {
-        const res = await fetch('/api/nft?owner=' + address + '&issuer=' + CONFIG.ISSUER + '&taxon=1&list=nfts');
+        const res = await fetch('/api/nft?owner=' + address + '&issuer=' + CONFIG.ISSUER + '&taxon=' + taxon);
         const data = await res.json();
         state.userNfts = [];
         for (const n of (data.nfts || [])) {
