@@ -91,10 +91,19 @@ export default async function handler(req) {
 
     const dailySeed = Math.floor(Date.now() / 86400000);
     const dailyIndex = dailySeed % filteredNfts.length;
-    const dailyBro = filteredNfts[dailyIndex];
+    let dailyBro = filteredNfts[dailyIndex];
 
-    if (dailyBro && CORE_METADATA[dailyBro.nftokenID]) {
-      dailyBro.metadata = CORE_METADATA[dailyBro.nftokenID];
+    if (dailyBro) {
+      if (CORE_METADATA[dailyBro.nftokenID]) {
+        dailyBro.metadata = CORE_METADATA[dailyBro.nftokenID];
+      }
+
+      if (dailyBro.metadata && dailyBro.metadata.image) {
+        const parts = dailyBro.metadata.image.split('/');
+        const fileName = parts.pop();
+        const encodedFileName = fileName.split('#').join('%23');
+        dailyBro.metadata.image = parts.join('/') + '/' + encodedFileName;
+      }
     }
 
     if (searchParams.get('daily') === 'true') {
