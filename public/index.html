@@ -807,7 +807,6 @@ letter-spacing: 1px;
         const seed = dailyRotationSeed();
         const selected = nfts[seed % nfts.length];
         
-        // Prefer metadata object directly if provided by API (Bithomp mode)
         let meta = selected.metadata;
         if (!meta && selected.uri) {
            const metaUri = xrplUriToHttp(selected.uri);
@@ -816,7 +815,8 @@ letter-spacing: 1px;
         
         if (!meta) throw new Error("Metadata unreachable.");
         
-        if (imgEl) imgEl.src = xrplUriToHttp(meta.image || meta.image_url || meta.image_file);
+        const image = meta.image || meta.image_url || meta.image_file;
+        if (imgEl) imgEl.src = xrplUriToHttp(image);
         if (descEl) descEl.textContent = cleanLoreText(meta);
         setBroOfDayStatus("Signal synchronized.");
       } catch (e) {
@@ -1006,7 +1006,7 @@ letter-spacing: 1px;
           adapters: [ethersAdapter],
           networks,
           metadata,
-          projectId: CONFIG.WC_PROJECT_ID,
+          projectId: CONFIG.PROJECT_ID || CONFIG.WC_PROJECT_ID,
           features: { analytics: true }
         });
 
@@ -1080,7 +1080,6 @@ letter-spacing: 1px;
         btn.disabled = false;
         status.textContent = address.slice(0, 6) + "..." + address.slice(-4);
         
-        // Also update burner info if exists
         const savedBurner = localStorage.getItem("ggb_burner_address_" + address);
         if (savedBurner) {
           const addrEl = document.getElementById("burner-address-display");
@@ -1117,9 +1116,10 @@ letter-spacing: 1px;
                 meta = await (await fetch(metaUri)).json();
              }
              if (meta) {
+               const image = meta.image || meta.image_url || meta.image_file;
                state.userNfts.push({
                  name: meta.name || "BRO #" + n.nftokenID.slice(-4),
-                 image: xrplUriToHttp(meta.image || meta.image_url || meta.image_file)
+                 image: xrplUriToHttp(image)
                });
              }
            } catch(e){}
@@ -1303,7 +1303,6 @@ letter-spacing: 1px;
                 log.scrollTop = log.scrollHeight;
               }
             } catch (e) {
-                // Fallback for non-streamed content if server sends raw JSON reply
                 try {
                     const directJson = JSON.parse(chunk);
                     if (directJson.reply) {
