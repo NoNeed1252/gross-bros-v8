@@ -360,6 +360,29 @@ letter-spacing: 1px;
       }
     }
 </style>
+<script type="module">
+  import { createAppKit } from 'https://esm.run/@reown/appkit/vue';
+  import { mainnet, arbitrum } from 'https://esm.run/@reown/appkit/networks';
+  import { WagmiAdapter } from 'https://esm.run/@reown/appkit-adapter-wagmi';
+
+  window.initAppKit = () => {
+    const projectId = 'a16d6c0cad2df1ceea121c581b95cffb';
+    const networks = [mainnet, arbitrum];
+    const wagmiAdapter = new WagmiAdapter({ projectId, networks });
+
+    window.appKit = createAppKit({
+      adapters: [wagmiAdapter],
+      networks,
+      projectId,
+      metadata: {
+        name: 'Galactic Gross Bros',
+        description: 'Neural CRT relay terminal',
+        url: window.location.origin,
+        icons: ['https://avatars.githubusercontent.com/u/37784886']
+      }
+    });
+  };
+</script>
 </head>
 <body>
   <div class="crt-overlay"></div>
@@ -367,6 +390,9 @@ letter-spacing: 1px;
   <div id="qr-overlay" onclick="this.style.display='none'">
     <div class="qr-container">
       <img id="qr-image" src="" alt="Scan with Xaman">
+    </div>
+    <div id="xaman-deep-link-container" style="display:none; margin-top:20px; text-align:center;">
+       <a id="xaman-deep-link" href="#" class="btn" style="display:inline-block; text-decoration:none;">OPEN IN XAMAN</a>
     </div>
     <p style="margin-top: 20px; font-family: Orbitron;">SCAN WITH XAMAN TO SYNC</p>
     <button class="btn" style="margin-top: 10px;">CANCEL</button>
@@ -580,7 +606,7 @@ letter-spacing: 1px;
                 </div>
               </div>
 
-              <div class='row' style='margin-top:20px;'>
+              <div class='row' style='margin-top:200px;'>
                 <button class='btn' style='border-color:#39ff14; color:#39ff14; background:rgba(57,255,20,.05);' onclick="toggleTradingBot(true)">START BOT</button>
                 <button class='btn' style='border-color:#ff3b6b; color:#ff3b6b; background:rgba(255,59,107,.05);' onclick="toggleTradingBot(false)">STOP BOT</button>
               </div>
@@ -854,22 +880,26 @@ letter-spacing: 1px;
           'SOL: $' + (prices?.solana?.usd || 'OFFLINE')
         ];
 
-        if (atmData?.data?.[0]?.attributes?.base_token_price_usd) {
-          priceItems.push('ATM: $' + parseFloat(atmData.data[0].attributes.base_token_price_usd).toFixed(8));
-        } else {
-          priceItems.push('ATM: OFFLINE');
-        }
-
         let displayItems = [];
         const rotationSeed = Math.floor(Date.now() / (6 * 60 * 60 * 1000));
         
         if (alertsData?.alerts?.length > 0) {
-           displayItems.push('[SYSTEM ALERT] ' + alertsData.alerts[rotationSeed % alertsData.alerts.length].message.toUpperCase());
+          alertsData.alerts.forEach(alert => {
+             displayItems.push('[SYSTEM ALERT] ' + alert.message.toUpperCase());
+          });
         } else {
            displayItems.push('[SYSTEM STATUS] ALPHA PROTOCOL ONLINE');
+           displayItems.push('[WARNING] SECTOR 7-G BREACH DETECTED');
+           displayItems.push('[BOLO] MUTANT SPECIMEN #042 AT LARGE');
         }
         
-        state.tickerItems = displayItems.concat(priceItems);
+        const combined = [];
+        for (let i = 0; i < Math.max(displayItems.length, priceItems.length); i++) {
+          if (displayItems[i]) combined.push(displayItems[i]);
+          if (priceItems[i]) combined.push(priceItems[i]);
+        }
+        
+        state.tickerItems = combined;
         renderTicker();
       } catch (e) { console.error(e); }
     }
@@ -1015,15 +1045,37 @@ letter-spacing: 1px;
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
     async function connectXaman() {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       const payload = await (await fetch('/api/xaman?action=create-payload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ txjson: { TransactionType: 'SignIn' } })
       })).json();
+      
       if (payload?.refs?.qr_png) {
         document.getElementById('qr-image').src = payload.refs.qr_png;
+        
+        if (isMobile && payload.next?.always) {
+           const deepLinkContainer = document.getElementById('xaman-deep-link-container');
+           const deepLinkBtn = document.getElementById('xaman-deep-link');
+           deepLinkBtn.href = payload.next.always;
+           deepLinkContainer.style.display = 'block';
+           window.location.href = payload.next.always;
+        }
+        
         document.getElementById('qr-overlay').style.display = 'flex';
         startPolling(payload.uuid);
+      }
+    }
+
+    async function connectMultiChain() {
+      if (!window.appKit) {
+        if (window.initAppKit) window.initAppKit();
+      }
+      if (window.appKit) {
+        await window.appKit.open();
+      } else {
+        alert('NEURAL ADAPTER FAILURE: REOWN NOT INITIALIZED');
       }
     }
 
@@ -1055,6 +1107,7 @@ letter-spacing: 1px;
         document.getElementById('xaman-status').textContent = saved.slice(0,6) + '...' + saved.slice(-4);
         fetchUserNfts(saved);
       }
+      if (window.initAppKit) window.initAppKit();
     }
 
     window.onload = init;
