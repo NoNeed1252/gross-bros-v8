@@ -360,34 +360,6 @@ letter-spacing: 1px;
       }
     }
 </style>
-<script type="module">
-  import { createAppKit } from 'https://esm.run/@reown/appkit';
-  import { mainnet, arbitrum } from 'https://esm.run/@reown/appkit/networks';
-  import { WagmiAdapter } from 'https://esm.run/@reown/appkit-adapter-wagmi';
-
-  window.initAppKit = async () => {
-    try {
-      const projectId = 'a16d6c0cad2df1ceea121c581b95cffb';
-      const networks = [mainnet, arbitrum];
-      const wagmiAdapter = new WagmiAdapter({ projectId, networks });
-
-      window.appKit = createAppKit({
-        adapters: [wagmiAdapter],
-        networks,
-        projectId,
-        metadata: {
-          name: 'Galactic Gross Bros',
-          description: 'Neural CRT relay terminal',
-          url: window.location.origin,
-          icons: ['https://avatars.githubusercontent.com/u/37784886']
-        }
-      });
-      console.log('Neural Adapter: AppKit Initialized');
-    } catch (e) {
-      console.error('Neural Adapter: Init Failure', e);
-    }
-  };
-</script>
 </head>
 <body>
   <div class="crt-overlay"></div>
@@ -696,6 +668,38 @@ letter-spacing: 1px;
   </div>
 
   <script src="/combat.js"></script>
+  <script type="module">
+    import { createAppKit } from 'https://esm.run/@reown/appkit';
+    import { mainnet, arbitrum } from 'https://esm.run/@reown/appkit/networks';
+    import { WagmiAdapter } from 'https://esm.run/@reown/appkit-adapter-wagmi';
+
+    window.initAppKit = async () => {
+      try {
+        const projectId = 'a16d6c0cad2df1ceea121c581b95cffb';
+        const networks = [mainnet, arbitrum];
+        const wagmiAdapter = new WagmiAdapter({ projectId, networks });
+
+        window.appKit = createAppKit({
+          adapters: [wagmiAdapter],
+          networks,
+          projectId,
+          metadata: {
+            name: 'Galactic Gross Bros',
+            description: 'Neural CRT relay terminal',
+            url: window.location.origin,
+            icons: ['https://avatars.githubusercontent.com/u/37784886']
+          }
+        });
+        console.log('Neural Adapter: AppKit Initialized');
+      } catch (e) {
+        console.error('Neural Adapter: Init Failure', e);
+      }
+    };
+    
+    // Auto-init AppKit when module loads
+    window.initAppKit();
+  </script>
+
   <script>
     const CONFIG = { 
       GATEWAYS: [
@@ -718,24 +722,6 @@ letter-spacing: 1px;
       { name: 'SPECIMEN #042', image: 'https://nftstorage.link/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' },
       { name: 'SPECIMEN #088', image: 'https://nftstorage.link/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' }
     ];
-
-    const COSMIC_ASSETS = {
-       nfts: [
-          { name: 'VOIDWALKER PROTOCOL', image: 'https://nftstorage.link/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ' },
-          { name: 'NEURAL SPIKE', image: 'https://nftstorage.link/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' },
-          { name: 'CORE FRAGMENT', image: 'https://nftstorage.link/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' }
-       ],
-       tokens: [
-          { name: 'RLUSD', image: 'https://nftstorage.link/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ' },
-          { name: 'ATM', image: 'https://nftstorage.link/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' },
-          { name: 'XRP', image: 'https://nftstorage.link/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' }
-       ],
-       outposts: [
-          { name: 'SECTOR 7-G', image: 'https://nftstorage.link/ipfs/QmZ8nyVf4XvK6mZqLpC3P1pXN3zYJ5GzW1R1vX7p6N3zYJ' },
-          { name: 'FUSION LAB DELTA', image: 'https://nftstorage.link/ipfs/QmXyN3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' },
-          { name: 'VOID STATION', image: 'https://nftstorage.link/ipfs/QmYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ5GzW1R1vX7p6N3zYJ' }
-       ]
-    };
 
     const state = { 
       connected: false, 
@@ -870,9 +856,8 @@ letter-spacing: 1px;
 
     async function updateTicker() {
       try {
-        const [prices, atmData, alertsData] = await Promise.allSettled([
+        const [prices, alertsData] = await Promise.allSettled([
           fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple,bitcoin,ethereum,solana&vs_currencies=usd').then(r => r.json()),
-          fetch('https://api.geckoterminal.com/api/v2/networks/xrpl/tokens/raqVwqakELDXTXmU8FQw53fJ9Sehr7hDTR/pools').then(r => r.json()),
           fetch('/api/alerts').then(r => r.json())
         ]).then(results => results.map(r => r.status === 'fulfilled' ? r.value : null));
 
@@ -886,8 +871,6 @@ letter-spacing: 1px;
         ];
 
         let displayItems = [];
-        const rotationSeed = Math.floor(Date.now() / (6 * 60 * 60 * 1000));
-        
         if (alertsData?.alerts?.length > 0) {
           alertsData.alerts.forEach(alert => {
              displayItems.push('[SYSTEM ALERT] ' + alert.message.toUpperCase());
@@ -918,14 +901,16 @@ letter-spacing: 1px;
 
     async function fetchUserNfts(address) {
       try {
-        const res = await fetch('/api/nft?owner=' + address + '&issuer=' + CONFIG.ISSUER + '&taxon=' + taxon);
+        const res = await fetch('/api/nft?owner=' + address + '&issuer=' + CONFIG.ISSUER);
         const data = await res.json();
         state.userNfts = [];
-        for (const n of (data.nfts || [])) {
-          try {
-            const meta = n.metadata || await (await safeFetch(resolveIpfs(n.uri))).json();
-            state.userNfts.push({ name: meta.name, image: resolveIpfs(meta.image) });
-          } catch(e){}
+        if (data.nfts && data.nfts.length > 0) {
+          for (const n of data.nfts) {
+            try {
+              const meta = n.metadata || await (await safeFetch(resolveIpfs(n.uri))).json();
+              state.userNfts.push({ name: meta.name, image: resolveIpfs(meta.image) });
+            } catch(e){}
+          }
         }
         if (state.userNfts.length === 0) state.userNfts = MOCK_NFTS;
         renderNftSelection();
@@ -952,9 +937,12 @@ letter-spacing: 1px;
       const nft = state.userNfts[index];
       if (!nft) return;
       state.selectedNft = nft;
-      document.getElementById('held-nft-empty').style.display = 'none';
-      document.getElementById('connected-nft-display').style.display = 'flex';
-      document.getElementById('connected-nft-image').src = nft.image;
+      const displayEmpty = document.getElementById('held-nft-empty');
+      const displayConnected = document.getElementById('connected-nft-display');
+      const displayImage = document.getElementById('connected-nft-image');
+      if (displayEmpty) displayEmpty.style.display = 'none';
+      if (displayConnected) displayConnected.style.display = 'flex';
+      if (displayImage) displayImage.src = nft.image;
       renderNftSelection();
     }
 
@@ -1117,8 +1105,10 @@ letter-spacing: 1px;
         document.getElementById('wallet-btn').textContent = 'LINKED';
         document.getElementById('xaman-status').textContent = saved.slice(0,6) + '...' + saved.slice(-4);
         fetchUserNfts(saved);
+      } else {
+        // Load mock NFTs for guest view in Fusion Lab
+        fetchUserNfts(null);
       }
-      if (window.initAppKit) window.initAppKit();
     }
 
     window.onload = init;
